@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "title": "五段步行视频重建的可导航桌位图",
-    "version": "3.0",
+    "title": "五段步行视频已覆盖范围的可导航桌位图",
+    "version": "3.1",
     "metricScale": false,
     "officialTableCount": false,
     "planType": "relative-operational",
@@ -72,7 +72,16 @@
           "reason": "设备区转围栏区"
         }
       ],
-      "rule": "只有摄像机越过桌端、柱列或固定空间节点才计为新事件；相邻近重复帧不重复计数"
+      "rule": "只有摄像机越过桌端、柱列或固定空间节点才计为新事件；相邻近重复帧不重复计数",
+      "longitudinalValidation": {
+        "primaryVideo": "0287",
+        "denseReviewWindows": [
+          [3.25, 10],
+          [18, 26.5]
+        ],
+        "eventTimesSecondsApprox": [1.5, 3.75, 6.75, 9.75, 12.75, 15, 17.25, 20.25, 23.25, 25.5, 27.75],
+        "result": "11次分隔事件闭合已行走覆盖段的至少12个纵向桌位；视频起点位于桌区内部，未闭合总排数"
+      }
     },
     "method": "五条视频先按固定墙、玻璃门带、柱列和重复展板建立横向轨迹顺序，再在不清楚的局部时间窗加密读取；不以固定帧数直接推导桌数"
   },
@@ -237,7 +246,7 @@
   "zones": [
     {
       "id": "Z1",
-      "name": "60桌主工作区",
+      "name": "已覆盖主工作区（至少60桌位）",
       "kind": "workspace",
       "bounds": [
         135,
@@ -341,16 +350,21 @@
     }
   ],
   "tableLayout": {
-    "status": "corroborated-video-reconstruction",
+    "status": "video-covered-lower-bound",
     "officialCount": false,
     "navigationUnit": "画面中可辨认的一张独立矩形工作桌占位",
-    "count": 60,
+    "totalCount": null,
+    "renderedMinimumCount": 60,
     "countBasis": {
       "bandCount": 5,
-      "longitudinalSlots": 12,
+      "longitudinalSlotsCoveredMinimum": 12,
+      "totalLongitudinalSlots": null,
       "separatorCrossings": 11,
-      "formula": "5 × 12 = 60",
-      "evidence": "五条路线确定横向边界；0287完整通道的11次桌端/线缆坡道穿越确定12个纵向桌位"
+      "formula": "5 × ≥12 = ≥60",
+      "evidence": "五条路线支持横向5条桌带；0287的11次桌端/线缆坡道穿越闭合从拍摄起点到展示端的至少12个纵向桌位",
+      "startBoundary": "open",
+      "startBoundaryEvidence": "0286、0287、0288、0289开头均已处在桌区内部，最近桌面被画面下缘截断且镜头未回拍身后",
+      "displayEndBoundary": "closed-by-transition-to-display-zone"
     },
     "idConvention": "T-{band}{row}",
     "tableSize": {
@@ -1106,7 +1120,7 @@
         "confidence": "medium-high"
       }
     ],
-    "warning": "60是用于导航原型的视频重建桌位数，不是企业确认的物料盘点；应以CAD或官方布展清单最终校正"
+    "warning": "当前只显式绘制视频覆盖到的至少60个主工作桌位。12是覆盖下限而非场馆总排数；拍摄起点后方可能还有未拍桌排，应以补拍、CAD或官方布展清单闭合"
   },
   "auxiliaryLayout": {
     "includedInMainTableCount": false,
@@ -1187,7 +1201,7 @@
     "nodes": [
       {
         "id": "DEEP",
-        "label": "工作区深处（入口未确认）",
+        "label": "视频起点后的未拍延伸区",
         "x": 615,
         "y": 1380,
         "confidence": "low"
@@ -1239,7 +1253,7 @@
       {
         "from": "DEEP",
         "to": "CROSS-1",
-        "status": "corroborated"
+        "status": "inferred"
       },
       {
         "from": "CROSS-1",
@@ -1271,10 +1285,10 @@
   "unresolved": [
     "视频未证明主入口位置；不得把疏散出口当作主入口",
     "展示端外边界与工作区深处外边界没有完整环拍",
+    "主视频从密集桌区内部开始，纵向总排数未知；目前只能确认至少12个覆盖桌段",
     "连续桌裙下的设备桌模块接缝不可见",
     "围栏服务区没有完整采集，辅助桌只记录可见下限",
     "所有尺寸和面积比例均未经过公制标定"
   ],
   "usageBoundary": "适合导航原型、补拍规划和企业数据对齐；不可直接用于施工、消防审批、官方物料盘点或厘米级室内定位"
 }
-
