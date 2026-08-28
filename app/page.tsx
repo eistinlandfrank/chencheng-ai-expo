@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ChangeEvent, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent, type KeyboardEvent } from 'react';
 import MapCanvas from './components/MapCanvas';
 import { DEFAULT_DATASET, ENTRANCES, type ExpoDataset, type Exhibitor } from './lib/data';
 import { distance, generatePlan, rankExhibitors, toMinutes, toTime, type GeneratedPlan, type PlanStop, type PlannerInput } from './lib/planner';
@@ -8,6 +8,19 @@ import { distance, generatePlan, rankExhibitors, toMinutes, toTime, type Generat
 type Profile = { name:string; company:string; role:string; offers:string; };
 type Meeting = { id:string; sourceId:string; company:string; contact:string; createdAt:string; notes:string; nextAction:string; deadline:string; summary:string; followup:string; };
 type EventLog = { id:string; type:string; label:string; at:string; };
+type HomeMessage = { id:string; role:'assistant'|'user'; text:string; plan?:GeneratedPlan; };
+type SpeechResult = { [index:number]:{ transcript:string } };
+type SpeechEvent = { results:ArrayLike<SpeechResult> };
+type SpeechRecognitionLike = { lang:string;continuous:boolean;interimResults:boolean;onresult:((event:SpeechEvent)=>void)|null;onerror:((event:{error:string})=>void)|null;onend:(()=>void)|null;start:()=>void;stop:()=>void; };
+type SpeechRecognitionConstructor = new()=>SpeechRecognitionLike;
+
+declare global { interface Window { SpeechRecognition?:SpeechRecognitionConstructor;webkitSpeechRecognition?:SpeechRecognitionConstructor; } }
+
+const HOME_EXAMPLES = [
+  '我只有两小时，想找环保包装供应商',
+  '从南入口进，帮我少走一点路',
+  '安排展位拜访，再推荐附近午餐',
+];
 
 const INITIAL_INPUT: PlannerInput = { query:'我想找环保美妆包装供应商，也想认识消费领域投资人', startTime:'14:00', endTime:'17:00', entranceId:'south', lessWalking:true, mealNeeded:false, mealBudget:80, dietary:'' };
 const INITIAL_PROFILE: Profile = { name:'陈同学', company:'独立项目团队', role:'采购与合作', offers:'产品设计、AI应用开发' };
@@ -71,11 +84,12 @@ export default function Home() {
   function log(type:string,label:string) { setLogs((current) => [{id:crypto.randomUUID(),type,label,at:new Date().toISOString()},...current]); }
   function go(page:string) { setActive(page); window.scrollTo({top:0,behavior:'smooth'}); }
 
-  function buildPlan() {
-    if (!input.query.trim()) return notify('请先描述一个真实目标');
-    const resolved = {...input};
-    const range = input.query.match(/(\d{1,2})(?::(\d{2}))?\s*[到至—-]\s*(\d{1,2})(?::(\d{2}))?/);
-    const duration = input.query.match(/(\d+(?:\.\d+)?|[一二两三四五六七八九十半]+)\s*(?:个)?小时/);
+  function buildPlan(queryOverride?:string):GeneratedPlan|null {
+    const source={...input,query:queryOverride?.trim()||input.query};
+    if (!source.query.trim()) { notify('请先描述一个真实目标'); return null; }
+    const resolved = {...source};
+    const range = source.query.match(/(\d{1,2})(?::(\d{2}))?\s*[到至—-]\s*(\d{1,2})(?::(\d{2}))?/);
+    const duration = source.query.match(/(\d+(?:\.\d+)?|[一二两三四五六七八九十半]+)\s*(?:个)?小时/);
     if (range) {
       resolved.startTime = `${range[1].padStart(2,'0')}:${(range[2]??'00').padStart(2,'0')}`;
       resolved.endTime = `${range[3].padStart(2,'0')}:${(range[4]??'00').padStart(2,'0')}`;
@@ -84,18 +98,21 @@ export default function Home() {
       const hours = Number(duration[1]) || hourMap[duration[1]] || (duration[1].endsWith('半') ? (hourMap[duration[1][0]]||0)+.5 : 0);
       if (hours>0) resolved.endTime = toTime(toMinutes(resolved.startTime) + Math.round(hours * 60));
     }
-    if (/东(?:门|入口)/.test(input.query)) resolved.entranceId='east';
-    if (/北(?:门|入口)/.test(input.query)) resolved.entranceId='north';
-    if (/南(?:门|入口)/.test(input.query)) resolved.entranceId='south';
-    if (/吃饭|用餐|午餐|晚餐|餐厅|美食/.test(input.query)) resolved.mealNeeded=true;
-    if (/不(?:吃饭|用餐)|无需(?:吃饭|用餐)/.test(input.query)) resolved.mealNeeded=false;
-    if (toMinutes(resolved.endTime) <= toMinutes(resolved.startTime)) return notify('结束时间需要晚于开始时间');
+    if (/东(?:门|入口)/.test(source.query)) resolved.entranceId='east';
+    if (/北(?:门|入口)/.test(source.query)) resolved.entranceId='north';
+    if (/南(?:门|入口)/.test(source.query)) resolved.entranceId='south';
+    if (/近一点|少走|不想走|少步行/.test(source.query)) resolved.lessWalking=true;
+    if (/不在意距离|不用少走/.test(source.query)) resolved.lessWalking=false;
+    if (/吃饭|用餐|午餐|晚餐|餐厅|美食/.test(source.query)) resolved.mealNeeded=true;
+    if (/不(?:吃饭|用餐)|无需(?:吃饭|用餐)/.test(source.query)) resolved.mealNeeded=false;
+    if (toMinutes(resolved.endTime) <= toMinutes(resolved.startTime)) { notify('结束时间需要晚于开始时间'); return null; }
     setInput(resolved);
     const next = generatePlan(dataset,resolved);
     setPlan(next);
     if (next.stops[0]) setSelectedId(next.stops[0].sourceId);
     log('plan_generated',`生成 ${next.stops.length} 站行程`);
     notify(`已计算 ${next.stops.length} 个可执行目标`);
+    return next;
   }
 
   function recalculate(stops:PlanStop[]) {
@@ -172,8 +189,8 @@ export default function Home() {
       <section className="app-main">
         <header className="app-topbar"><div><small>2026 首都会展 · 国家会议中心</small><b>{pageTitle}</b></div><div className="top-actions"><button type="button" className="ops-shortcut" onClick={()=>go('ops')}>运营</button><button className="user-chip" type="button" onClick={()=>setProfileOpen(true)}><span>{profile.company}</span><i>{profile.name.slice(0,1)}</i></button></div></header>
         <div className={`workspace workspace-${active}`}>
-          <div className="page-heading"><div><span>{pageTitle}</span><h1>{pageSubtitle}</h1></div>{active!=='home'&&<button type="button" onClick={()=>go('home')}>＋ 新建行程</button>}</div>
-          {active==='home'&&<HomePage input={input} setInput={setInput} plan={plan} buildPlan={buildPlan} go={go} />}
+          {active!=='home'&&<div className="page-heading"><div><span>{pageTitle}</span><h1>{pageSubtitle}</h1></div><button type="button" onClick={()=>go('home')}>＋ 新建行程</button></div>}
+          {active==='home'&&<HomePage buildPlan={buildPlan} go={go} />}
           {active==='match'&&<MatchPage matches={visibleMatches} search={search} setSearch={setSearch} category={category} setCategory={setCategory} categories={categories} plan={plan} select={(id)=>setSelectedId(id)} addToPlan={addToPlan} />}
           {active==='plan'&&<PlanPage plan={plan} move={moveStop} remove={removeStop} update={updateStop} go={go} />}
           {active==='map'&&<MapPage dataset={dataset} plan={plan} selected={selected} selectedId={selectedId} select={setSelectedId} input={input} setInput={setInput} addToPlan={addToPlan} go={go} update={updateStop} />}
@@ -188,13 +205,53 @@ export default function Home() {
   );
 }
 
-function PlannerForm({input,setInput,buildPlan}:{input:PlannerInput;setInput:(value:PlannerInput)=>void;buildPlan:()=>void}) {
-  return <section className="planner-card"><label htmlFor="goal">你今天想完成什么？</label><textarea id="goal" value={input.query} onChange={(e)=>setInput({...input,query:e.target.value})} rows={4} placeholder="例如：14:00 到 17:00，找两家能小批量打样的环保包装商，再见一位消费投资人。"/><div className="planner-controls"><label><span>开始</span><input type="time" value={input.startTime} onChange={(e)=>setInput({...input,startTime:e.target.value})}/></label><label><span>结束</span><input type="time" value={input.endTime} onChange={(e)=>setInput({...input,endTime:e.target.value})}/></label><label><span>从哪里进</span><select value={input.entranceId} onChange={(e)=>setInput({...input,entranceId:e.target.value})}>{ENTRANCES.map((item)=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div><details className="advanced-options"><summary>偏好设置</summary><div><label className="check-control"><input type="checkbox" checked={input.lessWalking} onChange={(e)=>setInput({...input,lessWalking:e.target.checked})}/><span>尽量少走路</span></label><label className="check-control"><input type="checkbox" checked={input.mealNeeded} onChange={(e)=>setInput({...input,mealNeeded:e.target.checked})}/><span>安排用餐</span></label>{input.mealNeeded&&<label className="budget-control"><span>预算</span><input type="number" min="20" max="500" value={input.mealBudget} onChange={(e)=>setInput({...input,mealBudget:Number(e.target.value)})}/></label>}</div></details><button className="generate-button" type="button" onClick={buildPlan}>生成行动路线 <span>→</span></button></section>;
-}
+function HomePage({buildPlan,go}:{buildPlan:(query:string)=>GeneratedPlan|null;go:(page:string)=>void}) {
+  const [messages,setMessages]=useState<HomeMessage[]>([]);
+  const [draft,setDraft]=useState('');
+  const [lastQuery,setLastQuery]=useState('');
+  const [thinking,setThinking]=useState(false);
+  const [listening,setListening]=useState(false);
+  const [voiceHint,setVoiceHint]=useState('');
+  const endRef=useRef<HTMLDivElement>(null);
+  const recognitionRef=useRef<SpeechRecognitionLike|null>(null);
 
-function HomePage({input,setInput,plan,buildPlan,go}:{input:PlannerInput;setInput:(value:PlannerInput)=>void;plan:GeneratedPlan|null;buildPlan:()=>void;go:(page:string)=>void}) {
-  const next=plan?.stops.find((stop)=>stop.status==='pending'||stop.status==='arrived');
-  return <><div className="home-grid"><PlannerForm input={input} setInput={setInput} buildPlan={buildPlan}/><aside className="today-card"><header><div><small>TODAY</small><h2>今日执行状态</h2></div><span>{plan?`${plan.stops.filter((s)=>s.status==='completed').length}/${plan.stops.length}`:'0/0'}</span></header>{plan&&next?<><div className="next-stop"><small>下一站 · {next.start}</small><strong>{next.booth}</strong><h3>{next.title}</h3><p>{next.subtitle}</p></div><div className="today-stats"><span><b>{plan.walkingMeters}m</b>预计步行</span><span><b>{plan.estimatedMinutes}min</b>总用时</span></div><button type="button" onClick={()=>go('plan')}>进入我的行程 →</button></>:<div className="mini-empty"><i>⌁</i><p>生成行程后，这里会显示下一站和执行进度。</p></div>}</aside></div>{plan&&<section className="quick-plan"><header><div><small>刚刚计算</small><h2>你的可执行路线</h2></div><button type="button" onClick={()=>go('map')}>在地图查看 →</button></header><div className="quick-stops">{plan.stops.map((stop,index)=><button key={stop.uid} type="button" onClick={()=>go('plan')}><i>{index+1}</i><span><small>{stop.start} · {stop.booth}</small><b>{stop.title}</b></span></button>)}</div>{plan.warnings.map((warning)=><p className="plan-warning" key={warning}>! {warning}</p>)}</section>}</>;
+  useEffect(()=>{try{const stored=localStorage.getItem('chencheng-home-chat-v2');if(stored)setMessages(JSON.parse(stored));const query=localStorage.getItem('chencheng-home-query-v2');if(query)setLastQuery(query);}catch{/* use fresh chat */}},[]);
+  useEffect(()=>{localStorage.setItem('chencheng-home-chat-v2',JSON.stringify(messages.slice(-30)));localStorage.setItem('chencheng-home-query-v2',lastQuery);endRef.current?.scrollIntoView({behavior:'smooth',block:'end'});},[messages,lastQuery,thinking]);
+  useEffect(()=>()=>recognitionRef.current?.stop(),[]);
+
+  function submit(event?:FormEvent){event?.preventDefault();const text=draft.trim();if(!text||thinking)return;const modifier=text.length<=18&&/近一点|少走|吃饭|用餐|东门|南门|北门|入口|重新/.test(text);const query=modifier&&lastQuery?`${lastQuery}，${text}`:text;setMessages((current)=>[...current,{id:crypto.randomUUID(),role:'user',text}]);setDraft('');setThinking(true);window.setTimeout(()=>{const next=buildPlan(query);if(next){const reply=next.stops.length?`安排好了。共 ${next.stops.length} 站，预计 ${next.estimatedMinutes} 分钟、步行约 ${next.walkingMeters} 米。`: '这段时间没有找到可执行目标，可以换个入口或延长时间。';setMessages((current)=>[...current,{id:crypto.randomUUID(),role:'assistant',text:reply,plan:next}]);setLastQuery(query);}setThinking(false);},280);}
+  function keyDown(event:KeyboardEvent<HTMLTextAreaElement>){if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submit();}}
+  function toggleVoice(){if(listening){recognitionRef.current?.stop();return;}const Recognition=window.SpeechRecognition??window.webkitSpeechRecognition;if(!Recognition){setVoiceHint('请使用 Chrome 或微信浏览器进行语音输入');return;}const recognition=new Recognition();recognition.lang='zh-CN';recognition.continuous=false;recognition.interimResults=true;recognition.onresult=(event)=>{let text='';for(let index=0;index<event.results.length;index+=1)text+=event.results[index][0]?.transcript??'';setDraft(text.trim());};recognition.onerror=()=>{setListening(false);setVoiceHint('没有听清，请再说一次');};recognition.onend=()=>{setListening(false);setVoiceHint('语音已转成文字，确认后发送');};recognitionRef.current=recognition;setListening(true);setVoiceHint('正在听…');recognition.start();}
+  function speak(message:HomeMessage){if(!('speechSynthesis'in window))return;window.speechSynthesis.cancel();const route=message.plan?.stops.map((stop,index)=>`第${index+1}站，${stop.start}，${stop.booth}，${stop.title}`).join('。')??'';const utterance=new SpeechSynthesisUtterance(`${message.text}。${route}`);utterance.lang='zh-CN';window.speechSynthesis.speak(utterance);}
+  function reset(){recognitionRef.current?.stop();setMessages([]);setDraft('');setLastQuery('');setVoiceHint('');}
+
+  const isFresh=messages.length===0&&!thinking;
+  const avatar=<span className="home-avatar" aria-hidden="true"><img src="/chencheng-bear.png" alt=""/></span>;
+
+  return <section className="home-chat">
+    <div className="home-chat-toolbar">
+      <div className="home-assistant-label"><i/><b>辰程</b><span>AI 会展向导</span></div>
+      <button type="button" onClick={reset}>＋ 新对话</button>
+    </div>
+    <div className="home-chat-stream">
+      {isFresh&&<section className="home-chat-intro">
+        <div className="home-mascot-stage"><span>在线</span><img src="/chencheng-bear.png" alt="辰程导航熊"/></div>
+        <small>CHENCHENG EXPO GUIDE</small>
+        <h1>今天想在展会完成什么？</h1>
+        <p>说出目标、时间和入口，我来找展位、排路线。</p>
+        <div className="home-example-list">{HOME_EXAMPLES.map((example)=><button type="button" key={example} onClick={()=>setDraft(example)}>{example}<span>↗</span></button>)}</div>
+      </section>}
+      {messages.length>0&&<div className="home-chat-date">今天</div>}
+      {messages.map((message)=><article className={`home-message home-message-${message.role}`} key={message.id}>{message.role==='assistant'&&avatar}<div><p>{message.text}</p>{message.plan&&message.plan.stops.length>0&&<section className="home-inline-plan"><header><span>{message.plan.input.startTime}–{message.plan.input.endTime}</span><b>{message.plan.stops.length} 站</b></header><ol>{message.plan.stops.map((stop,index)=><li key={stop.uid}><i>{index+1}</i><time>{stop.start}</time><span><b>{stop.booth} · {stop.title}</b><small>{stop.subtitle}</small></span></li>)}</ol><footer><button type="button" onClick={()=>speak(message)}>◉ 朗读</button><button type="button" onClick={()=>go('map')}>查看地图</button><button type="button" onClick={()=>go('plan')}>打开行程 →</button></footer></section>}</div></article>)}
+      {thinking&&<article className="home-message home-message-assistant">{avatar}<div className="home-thinking"><i/><i/><i/></div></article>}
+      <div ref={endRef}/>
+    </div>
+    <form className={`home-composer ${listening?'is-listening':''}`} onSubmit={submit}>
+      <textarea rows={1} value={draft} onChange={(event)=>setDraft(event.target.value)} onKeyDown={keyDown} placeholder={listening?'正在听…':'告诉辰程，你想找什么…'} aria-label="给辰程发送消息"/>
+      <div><button className="home-voice" type="button" onClick={toggleVoice} aria-label={listening?'停止语音输入':'开始语音输入'}><i/>{listening?'停止':'按住说话'}</button><span>{voiceHint||'Enter 发送 · Shift + Enter 换行'}</span><button className="home-send" type="submit" disabled={!draft.trim()||thinking} aria-label="发送消息">↑</button></div>
+    </form>
+    <small className="home-local-note">内容仅保存在当前设备</small>
+  </section>;
 }
 
 function MatchPage({matches,search,setSearch,category,setCategory,categories,plan,select,addToPlan}:{matches:ReturnType<typeof rankExhibitors>;search:string;setSearch:(v:string)=>void;category:string;setCategory:(v:string)=>void;categories:string[];plan:GeneratedPlan|null;select:(id:string)=>void;addToPlan:(e:Exhibitor)=>void}) {
