@@ -1,0 +1,72 @@
+{
+  "title": "视频推断场馆平面图",
+  "version": "1.0",
+  "source": {
+    "videos": [
+      "DJI_20260828180714_0286_D.MP4",
+      "DJI_20260828180824_0287_D.MP4",
+      "DJI_20260828180952_0288_D.MP4",
+      "DJI_20260828181117_0289_D.MP4",
+      "DJI_20260828181239_0290_D.MP4"
+    ],
+    "total_duration_seconds": 159.66,
+    "method": "以相邻镜头中的重复展板、柱网、桌列、玻璃幕墙和移动方向进行人工视觉拼接"
+  },
+  "coordinate_system": {
+    "type": "relative",
+    "canvas": { "width": 1600, "height": 1000 },
+    "north_definition": "赞助商及知乎活动宣传板集中的一端",
+    "east_definition": "玻璃幕墙和应急出口所在一侧",
+    "metric_scale_available": false
+  },
+  "boundary": {
+    "shape": "rectangular",
+    "x": 100,
+    "y": 140,
+    "width": 1400,
+    "height": 700,
+    "confidence": "medium"
+  },
+  "zones": [
+    { "id": "A1", "name": "参赛团队工作席主区", "category": "workspace", "x": 150, "y": 295, "width": 1020, "height": 505, "confidence": "high", "area_ratio_estimate": "75%-80% of visible occupied area" },
+    { "id": "A2", "name": "中央纵向主通道", "category": "aisle", "x": 650, "y": 280, "width": 105, "height": 540, "confidence": "high" },
+    { "id": "A3", "name": "横向联络通道组", "category": "aisle-network", "x": 150, "y": 405, "width": 1040, "height": 330, "confidence": "medium" },
+    { "id": "A4", "name": "玻璃幕墙侧边通道", "category": "aisle", "x": 1185, "y": 275, "width": 95, "height": 545, "confidence": "high" },
+    { "id": "B1", "name": "赞助商背景墙", "category": "sponsor", "x": 150, "y": 170, "width": 245, "height": 88, "confidence": "high" },
+    { "id": "B2", "name": "LiberNovo 清闲展示点", "category": "sponsor", "x": 415, "y": 170, "width": 235, "height": 88, "confidence": "high" },
+    { "id": "B3", "name": "SHENICEST / CODING展示点", "category": "sponsor", "x": 670, "y": 170, "width": 205, "height": 88, "confidence": "medium" },
+    { "id": "B4", "name": "HOTO互动展示区", "category": "sponsor", "x": 895, "y": 170, "width": 205, "height": 88, "confidence": "medium" },
+    { "id": "D1", "name": "知乎AI Builder创作活动宣传点", "category": "information", "x": 1120, "y": 170, "width": 165, "height": 88, "confidence": "high" },
+    { "id": "D2", "name": "招聘与知乎能力接入宣传板组", "category": "information", "x": 1305, "y": 170, "width": 155, "height": 88, "confidence": "high" },
+    { "id": "C1", "name": "Snapmaker 3D打印设备展示区", "category": "equipment", "x": 1300, "y": 300, "width": 160, "height": 225, "confidence": "high" },
+    { "id": "C2", "name": "人形机器人展示点", "category": "equipment", "x": 1300, "y": 545, "width": 160, "height": 100, "confidence": "high" },
+    { "id": "D3", "name": "志愿者或现场服务点", "category": "service", "x": 1030, "y": 272, "width": 130, "height": 62, "confidence": "low" },
+    { "id": "D4", "name": "后勤及设备暂存区", "category": "service", "x": 1300, "y": 665, "width": 160, "height": 135, "confidence": "medium" },
+    { "id": "E1", "name": "沿墙应急出口组", "category": "exit", "x": 1475, "y": 290, "width": 25, "height": 510, "confidence": "high" },
+    { "id": "E2", "name": "垃圾分类与回收点", "category": "service", "x": 112, "y": 700, "width": 38, "height": 85, "confidence": "medium" }
+  ],
+  "routing_skeleton": {
+    "confidence": "medium",
+    "nodes": [
+      { "id": "S0", "label": "视频起始侧", "x": 703, "y": 815 },
+      { "id": "J1", "label": "南部横向通道", "x": 703, "y": 720 },
+      { "id": "J2", "label": "中部横向通道", "x": 703, "y": 580 },
+      { "id": "J3", "label": "北部横向通道", "x": 703, "y": 430 },
+      { "id": "N0", "label": "品牌展示带", "x": 703, "y": 275 },
+      { "id": "E0", "label": "东侧通道北端", "x": 1230, "y": 275 },
+      { "id": "E1", "label": "东侧通道中段", "x": 1230, "y": 580 },
+      { "id": "E2", "label": "东侧通道南段", "x": 1230, "y": 815 }
+    ],
+    "edges": [
+      ["S0", "J1"], ["J1", "J2"], ["J2", "J3"], ["J3", "N0"],
+      ["N0", "E0"], ["E0", "E1"], ["E1", "E2"],
+      ["J1", "E2"], ["J2", "E1"], ["J3", "E0"]
+    ]
+  },
+  "limitations": [
+    "视频未覆盖完整主入口，图中南侧仅代表多数视频的起始侧",
+    "没有比例尺、已知距离或完整边界环拍，所有尺寸为相对比例",
+    "工作席没有可辨认的统一编号，因此按桌列分区而非逐桌建模",
+    "该图适合概念验证、导航原型和补拍规划，不可直接用于施工或消防疏散审批"
+  ]
+}
