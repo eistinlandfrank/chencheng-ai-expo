@@ -8,8 +8,10 @@
   "scripts": {
     "dev": "vinext dev",
     "build": "vinext build",
+    "build:pages": "npm run build && node scripts/prepare-pages-deploy.mjs",
+    "deploy:pages": "npm run build:pages && wrangler pages deploy .wrangler/pages-build --project-name chencheng-speedtest --branch main --no-bundle",
     "start": "vinext start",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern .wrangler"
   },
   "dependencies": {
     "next": "16.2.6",
