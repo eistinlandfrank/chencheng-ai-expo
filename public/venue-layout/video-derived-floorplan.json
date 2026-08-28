@@ -121,6 +121,32 @@
       "note": "临时堆放位置可能快速变化"
     }
   ],
+  "tableLayout": {
+    "status": "provisional-video-estimate",
+    "count": 56,
+    "idConvention": "T-{row}{column}",
+    "tableSize": { "width": 80, "height": 32 },
+    "columns": [
+      { "id": 1, "x": 170 }, { "id": 2, "x": 270 }, { "id": 3, "x": 370 }, { "id": 4, "x": 470 },
+      { "id": 5, "x": 610 }, { "id": 6, "x": 710 }, { "id": 7, "x": 810 }
+    ],
+    "rows": [
+      { "id": "A", "y": 300 }, { "id": "B", "y": 360 }, { "id": "C", "y": 420 }, { "id": "D", "y": 480 },
+      { "id": "E", "y": 560 }, { "id": "F", "y": 620 }, { "id": "G", "y": 680 }, { "id": "H", "y": 740 }
+    ],
+    "instances": [
+      { "id": "T-A1", "row": "A", "column": 1, "status": "imputed" }, { "id": "T-A2", "row": "A", "column": 2, "status": "imputed" }, { "id": "T-A3", "row": "A", "column": 3, "status": "imputed" }, { "id": "T-A4", "row": "A", "column": 4, "status": "imputed" }, { "id": "T-A5", "row": "A", "column": 5, "status": "imputed" }, { "id": "T-A6", "row": "A", "column": 6, "status": "imputed" }, { "id": "T-A7", "row": "A", "column": 7, "status": "imputed" },
+      { "id": "T-B1", "row": "B", "column": 1, "status": "imputed" }, { "id": "T-B2", "row": "B", "column": 2, "status": "observed" }, { "id": "T-B3", "row": "B", "column": 3, "status": "observed" }, { "id": "T-B4", "row": "B", "column": 4, "status": "observed" }, { "id": "T-B5", "row": "B", "column": 5, "status": "observed" }, { "id": "T-B6", "row": "B", "column": 6, "status": "observed" }, { "id": "T-B7", "row": "B", "column": 7, "status": "imputed" },
+      { "id": "T-C1", "row": "C", "column": 1, "status": "imputed" }, { "id": "T-C2", "row": "C", "column": 2, "status": "observed" }, { "id": "T-C3", "row": "C", "column": 3, "status": "observed" }, { "id": "T-C4", "row": "C", "column": 4, "status": "observed" }, { "id": "T-C5", "row": "C", "column": 5, "status": "observed" }, { "id": "T-C6", "row": "C", "column": 6, "status": "observed" }, { "id": "T-C7", "row": "C", "column": 7, "status": "imputed" },
+      { "id": "T-D1", "row": "D", "column": 1, "status": "imputed" }, { "id": "T-D2", "row": "D", "column": 2, "status": "observed" }, { "id": "T-D3", "row": "D", "column": 3, "status": "observed" }, { "id": "T-D4", "row": "D", "column": 4, "status": "observed" }, { "id": "T-D5", "row": "D", "column": 5, "status": "observed" }, { "id": "T-D6", "row": "D", "column": 6, "status": "observed" }, { "id": "T-D7", "row": "D", "column": 7, "status": "imputed" },
+      { "id": "T-E1", "row": "E", "column": 1, "status": "imputed" }, { "id": "T-E2", "row": "E", "column": 2, "status": "observed" }, { "id": "T-E3", "row": "E", "column": 3, "status": "observed" }, { "id": "T-E4", "row": "E", "column": 4, "status": "observed" }, { "id": "T-E5", "row": "E", "column": 5, "status": "observed" }, { "id": "T-E6", "row": "E", "column": 6, "status": "observed" }, { "id": "T-E7", "row": "E", "column": 7, "status": "imputed" },
+      { "id": "T-F1", "row": "F", "column": 1, "status": "imputed" }, { "id": "T-F2", "row": "F", "column": 2, "status": "observed" }, { "id": "T-F3", "row": "F", "column": 3, "status": "observed" }, { "id": "T-F4", "row": "F", "column": 4, "status": "observed" }, { "id": "T-F5", "row": "F", "column": 5, "status": "observed" }, { "id": "T-F6", "row": "F", "column": 6, "status": "observed" }, { "id": "T-F7", "row": "F", "column": 7, "status": "imputed" },
+      { "id": "T-G1", "row": "G", "column": 1, "status": "imputed" }, { "id": "T-G2", "row": "G", "column": 2, "status": "observed" }, { "id": "T-G3", "row": "G", "column": 3, "status": "observed" }, { "id": "T-G4", "row": "G", "column": 4, "status": "observed" }, { "id": "T-G5", "row": "G", "column": 5, "status": "observed" }, { "id": "T-G6", "row": "G", "column": 6, "status": "observed" }, { "id": "T-G7", "row": "G", "column": 7, "status": "imputed" },
+      { "id": "T-H1", "row": "H", "column": 1, "status": "imputed" }, { "id": "T-H2", "row": "H", "column": 2, "status": "imputed" }, { "id": "T-H3", "row": "H", "column": 3, "status": "imputed" }, { "id": "T-H4", "row": "H", "column": 4, "status": "imputed" }, { "id": "T-H5", "row": "H", "column": 5, "status": "imputed" }, { "id": "T-H6", "row": "H", "column": 6, "status": "imputed" }, { "id": "T-H7", "row": "H", "column": 7, "status": "imputed" }
+    ],
+    "confidenceRule": "B-G行、2-6列代表视频多次覆盖的核心桌区；最外圈用于补全连续桌列，必须由CAD或官方座位表校正",
+    "warning": "56不是官方桌数；手持视频存在遮挡、重复路径和未覆盖边缘，不能据此声称逐桌精确测量"
+  },
   "recognizedRegions": [
     { "name": "实体墙侧门带", "feature": "高白墙、多个棕色双开门、疏散标识", "type": "fixed" },
     { "name": "玻璃墙/门带", "feature": "连续玻璃隔断、门、消防箱与疏散标识", "type": "fixed" },
