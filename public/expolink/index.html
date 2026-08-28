@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f4f8fc" />
+  <title>ExpoLink · 智会展工作台</title>
+  <style>
+    :root {
+      --ink: #102744;
+      --ink-soft: #536b85;
+      --muted: #8da0b5;
+      --line: #e3ebf3;
+      --surface: #ffffff;
+      --canvas: #f4f8fc;
+      --blue: #1f74e8;
+      --blue-dark: #1559be;
+      --blue-pale: #eaf3ff;
+      --cyan: #25bfd3;
+      --purple: #8066e8;
+      --green: #1ba36f;
+      --amber: #e99735;
+      --red: #df5b65;
+      --shadow: 0 10px 32px rgba(39, 78, 120, .08);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-width: 320px; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible { outline: 3px solid rgba(31, 116, 232, .28); outline-offset: 2px; }
+    .app-shell { min-height: 100vh; }
+    .topbar {
+      height: 72px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+    }
+    .topbar-inner, .page {
+      width: min(1240px, calc(100% - 48px));
+      margin: 0 auto;
+    }
+    .topbar-inner {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 218px;
+      color: var(--ink);
+      text-decoration: none;
+      font-weight: 800;
+      letter-spacing: -.03em;
+    }
+    .brand-mark {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      overflow: hidden;
+      border-radius: 10px;
+      background: linear-gradient(145deg, #2589f4, #1656bc);
+      box-shadow: 0 5px 12px rgba(31, 116, 232, .25);
+    }
+    .brand-mark::before, .brand-mark::after {
+      content: "";
+      position: absolute;
+      border: 2px solid #fff;
+      border-radius: 7px;
+      transform: rotate(45deg);
+    }
+    .brand-mark::before { width: 12px; height: 12px; left: 5px; top: 8px; opacity: .95; }
+    .brand-mark::after { width: 9px; height: 9px; right: 4px; top: 11px; opacity: .6; }
+    .brand-copy { display: grid; line-height: 1.05; gap: 4px; }
+    .brand-copy strong { font-size: 15px; }
+    .brand-copy span { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .event-switcher {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--ink-soft);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .event-switcher svg { color: var(--blue); }
+    .event-switcher button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      color: var(--ink);
+      background: transparent;
+      border: 0;
+      border-radius: 8px;
+      font-weight: 800;
+    }
+    .event-switcher button:hover { background: var(--blue-pale); }
+    .top-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+    .icon-button {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      color: var(--ink-soft);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 10px;
+    }
+    .icon-button:hover { color: var(--blue); background: var(--blue-pale); }
+    .notification-dot { position: absolute; width: 7px; height: 7px; right: 7px; top: 6px; background: var(--red); border: 2px solid #fff; border-radius: 50%; }
+    .avatar { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; color: #fff; background: linear-gradient(135deg, #87a8ce, #476b95); font-size: 12px; font-weight: 800; }
+
+    .page { padding: 34px 0 56px; }
+    .page-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 25px; }
+    .eyebrow { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; color: var(--blue); font-size: 11px; font-weight: 800; letter-spacing: .08em; }
+    .live-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; box-shadow: 0 0 0 4px rgba(27, 163, 111, .12); }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 8px; font-size: clamp(27px, 3vw, 38px); line-height: 1.16; letter-spacing: -.045em; }
+    .heading-description { max-width: 620px; margin: 0; color: var(--ink-soft); font-size: 14px; }
+    .role-switcher { display: flex; padding: 4px; background: #e9f0f7; border-radius: 11px; }
+    .role-tab { min-width: 80px; padding: 8px 12px; color: var(--ink-soft); background: transparent; border: 0; border-radius: 8px; font-size: 12px; font-weight: 800; transition: .2s ease; }
+    .role-tab:hover { color: var(--ink); }
+    .role-tab[aria-selected="true"] { color: var(--blue-dark); background: #fff; box-shadow: 0 3px 9px rgba(43, 82, 120, .1); }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+    .stat-card { min-height: 105px; padding: 17px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 4px 15px rgba(51, 91, 130, .035); }
+    .stat-label { display: flex; align-items: center; justify-content: space-between; color: var(--ink-soft); font-size: 12px; font-weight: 700; }
+    .stat-icon { display: grid; place-items: center; width: 27px; height: 27px; color: var(--blue); background: var(--blue-pale); border-radius: 8px; }
+    .stat-value { margin-top: 12px; font-size: 25px; line-height: 1; font-weight: 850; letter-spacing: -.05em; }
+    .stat-value small { margin-left: 4px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 0; }
+    .stat-trend { margin-left: 6px; color: var(--green); font-size: 10px; font-weight: 800; letter-spacing: 0; }
+
+    .workspace { display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(340px, .82fr); gap: 18px; align-items: start; }
+    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .panel-header { display: flex; justify-content: space-between; align-items: start; gap: 14px; padding: 21px 22px 16px; }
+    .panel-title { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 16px; letter-spacing: -.02em; }
+    .panel-title-icon { display: grid; place-items: center; width: 28px; height: 28px; color: var(--purple); background: #f0edff; border-radius: 8px; }
+    .panel-subtitle { margin: 6px 0 0; color: var(--muted); font-size: 11px; }
+    .text-button { padding: 4px 0; color: var(--blue); background: none; border: 0; font-size: 12px; font-weight: 800; white-space: nowrap; }
+    .text-button:hover { color: var(--blue-dark); text-decoration: underline; }
+
+    .ai-banner { display: flex; align-items: center; gap: 12px; margin: 0 22px 15px; padding: 12px 13px; color: #365c86; background: linear-gradient(90deg, #f1f6ff, #f8f6ff); border: 1px solid #e4eafb; border-radius: 11px; font-size: 11px; }
+    .spark { flex: 0 0 auto; display: grid; place-items: center; width: 25px; height: 25px; color: #fff; background: linear-gradient(135deg, var(--blue), var(--purple)); border-radius: 7px; }
+    .match-list { display: grid; gap: 0; }
+    .match-card { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 12px; padding: 16px 22px; border-top: 1px solid #edf2f6; }
+    .match-card:first-child { border-top: 0; }
+    .company-logo { display: grid; place-items: center; width: 42px; height: 42px; color: #fff; border-radius: 12px; font-size: 14px; font-weight: 850; }
+    .logo-blue { background: linear-gradient(145deg, #47a2f6, #216bcf); }
+    .logo-purple { background: linear-gradient(145deg, #a287ee, #6e50c6); }
+    .logo-green { background: linear-gradient(145deg, #4cc5a0, #209a73); }
+    .match-name { margin: 0; font-size: 14px; font-weight: 850; letter-spacing: -.01em; }
+    .match-meta { margin: 2px 0 8px; color: var(--ink-soft); font-size: 11px; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 5px; }
+    .tag { padding: 3px 7px; color: #55708e; background: #f1f5f9; border-radius: 5px; font-size: 10px; font-weight: 700; }
+    .match-reasons { margin: 9px 0 0; padding-left: 16px; color: var(--ink-soft); font-size: 11px; }
+    .match-reasons li { margin: 3px 0; }
+    .match-actions { display: flex; flex-direction: column; align-items: end; gap: 7px; }
+    .score { color: var(--blue); font-size: 20px; line-height: 1; font-weight: 900; letter-spacing: -.06em; }
+    .score span { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: 0; text-align: right; }
+    .primary-button, .secondary-button { min-height: 34px; padding: 7px 11px; border-radius: 8px; font-size: 11px; font-weight: 800; transition: .18s ease; }
+    .primary-button { color: #fff; background: var(--blue); border: 1px solid var(--blue); box-shadow: 0 5px 12px rgba(31, 116, 232, .18); }
+    .primary-button:hover { background: var(--blue-dark); transform: translateY(-1px); }
+    .primary-button.is-done { color: var(--green); background: #e9f8f1; border-color: #c8eddd; box-shadow: none; }
+    .secondary-button { color: var(--ink-soft); background: #fff; border: 1px solid var(--line); }
+    .secondary-button:hover { color: var(--blue); border-color: #b7d4f8; background: var(--blue-pale); }
+    .panel-footer { display: flex; justify-content: center; padding: 13px; border-top: 1px solid #edf2f6; }
+
+    .schedule-panel { overflow: hidden; }
+    .schedule-filters { display: flex; gap: 5px; padding: 0 22px 14px; }
+    .filter-button { padding: 5px 9px; color: var(--muted); background: transparent; border: 0; border-radius: 6px; font-size: 10px; font-weight: 800; }
+    .filter-button:hover { color: var(--ink); background: #f1f5f9; }
+    .filter-button.is-active { color: var(--blue); background: var(--blue-pale); }
+    .schedule-list { padding: 0 22px 12px; }
+    .schedule-item { position: relative; display: grid; grid-template-columns: 48px 14px minmax(0, 1fr); gap: 10px; min-height: 81px; }
+    .schedule-item:not(:last-child)::after { content: ""; position: absolute; left: 54px; top: 28px; bottom: 0; border-left: 1px dashed #cad8e6; }
+    .schedule-time { padding-top: 2px; color: var(--ink-soft); font-size: 11px; font-weight: 850; }
+    .schedule-node { position: relative; z-index: 1; width: 12px; height: 12px; margin-top: 3px; background: #d6e0ea; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 0 0 1px #c8d5e3; }
+    .schedule-item.is-current .schedule-node { background: var(--blue); box-shadow: 0 0 0 4px #d9eaff; }
+    .schedule-item.is-done .schedule-node { background: var(--green); box-shadow: 0 0 0 1px #9bdfc4; }
+    .schedule-content { padding-bottom: 16px; }
+    .schedule-topline { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .schedule-title { margin: 0; font-size: 12px; font-weight: 850; }
+    .status { flex: 0 0 auto; padding: 3px 7px; border-radius: 5px; font-size: 9px; font-weight: 800; }
+    .status-confirmed { color: #1c7e60; background: #e8f8f1; }
+    .status-upcoming { color: #8a6a1b; background: #fff5dc; }
+    .status-current { color: var(--blue); background: var(--blue-pale); }
+    .status-done { color: var(--muted); background: #f1f4f7; }
+    .schedule-detail { margin: 4px 0 8px; color: var(--ink-soft); font-size: 10px; }
+    .schedule-action { padding: 0; color: var(--blue); background: none; border: 0; font-size: 10px; font-weight: 800; }
+    .schedule-action:hover { text-decoration: underline; }
+    .empty-state { padding: 25px 10px 32px; color: var(--muted); font-size: 12px; text-align: center; }
+
+    .insight-card { display: flex; align-items: center; gap: 13px; margin-top: 18px; padding: 16px 18px; background: #122f52; border-radius: var(--radius); color: #e6f1ff; box-shadow: 0 10px 25px rgba(18, 47, 82, .14); }
+    .insight-icon { flex: 0 0 auto; display: grid; place-items: center; width: 34px; height: 34px; color: #92d9ff; background: rgba(131, 198, 255, .14); border: 1px solid rgba(131, 198, 255, .25); border-radius: 10px; }
+    .insight-copy { min-width: 0; }
+    .insight-copy strong { display: block; margin-bottom: 2px; font-size: 12px; }
+    .insight-copy p { margin: 0; color: #b7cbe1; font-size: 11px; }
+    .insight-button { flex: 0 0 auto; margin-left: auto; padding: 7px 10px; color: #fff; background: rgba(255,255,255,.11); border: 1px solid rgba(255,255,255,.16); border-radius: 7px; font-size: 10px; font-weight: 800; }
+    .insight-button:hover { background: rgba(255,255,255,.2); }
+    .toast { position: fixed; z-index: 10; left: 50%; bottom: 24px; padding: 10px 14px; color: #fff; background: #163556; border: 1px solid rgba(255,255,255,.1); border-radius: 8px; box-shadow: 0 10px 30px rgba(16, 39, 68, .22); font-size: 12px; font-weight: 700; transform: translate(-50%, 18px); opacity: 0; pointer-events: none; transition: .25s ease; }
+    .toast.is-visible { transform: translate(-50%, 0); opacity: 1; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+    @media (max-width: 900px) {
+      .topbar-inner, .page { width: min(100% - 32px, 680px); }
+      .topbar { height: auto; }
+      .topbar-inner { min-height: 70px; flex-wrap: wrap; gap: 10px 18px; padding: 12px 0; }
+      .brand { min-width: auto; }
+      .event-switcher { order: 3; width: 100%; padding-top: 8px; border-top: 1px solid #edf2f6; }
+      .top-actions { margin-left: auto; }
+      .page { padding-top: 27px; }
+      .page-heading { align-items: start; flex-direction: column; }
+      .role-switcher { width: 100%; }
+      .role-tab { flex: 1; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .workspace { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .topbar-inner, .page { width: calc(100% - 28px); }
+      .page { padding-bottom: 35px; }
+      h1 { font-size: 28px; }
+      .heading-description { font-size: 13px; }
+      .stats-grid { gap: 9px; }
+      .stat-card { min-height: 96px; padding: 13px; }
+      .stat-value { font-size: 22px; }
+      .panel-header { padding: 17px 15px 13px; }
+      .ai-banner { margin: 0 15px 11px; }
+      .match-card { grid-template-columns: 36px minmax(0, 1fr); gap: 10px; padding: 14px 15px; }
+      .company-logo { width: 36px; height: 36px; border-radius: 10px; font-size: 12px; }
+      .match-actions { grid-column: 2; flex-direction: row; align-items: center; justify-content: space-between; }
+      .score span { display: inline; margin-left: 2px; }
+      .schedule-filters, .schedule-list { padding-left: 15px; padding-right: 15px; }
+      .schedule-item { grid-template-columns: 42px 14px minmax(0, 1fr); gap: 8px; }
+      .schedule-item:not(:last-child)::after { left: 49px; }
+      .insight-card { align-items: start; flex-wrap: wrap; padding: 14px; }
+      .insight-button { margin-left: 47px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="#" aria-label="ExpoLink 智会展工作台首页">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand-copy"><strong>ExpoLink 智会展</strong><span>Smart Expo Workspace</span></span>
+        </a>
+        <div class="event-switcher">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
+          <span>当前展会</span>
+          <button type="button" id="eventButton">2026 智能制造展 <span aria-hidden="true">⌄</span></button>
+        </div>
+        <div class="top-actions">
+          <button class="icon-button" type="button" aria-label="查看通知" data-action="notify"><span class="notification-dot"></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></button>
+          <button class="avatar" type="button" aria-label="打开个人资料" data-action="profile">李</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="page-heading" aria-labelledby="pageTitle">
+        <div>
+          <p class="eyebrow"><span class="live-dot" aria-hidden="true"></span><span>LIVE · 展会进行中</span></p>
+          <h1 id="pageTitle">早上好，李先生</h1>
+          <p class="heading-description" id="pageDescription">今天，帮你找到最值得见的人。AI 已根据你的参展目标，准备好了一份高效行程。</p>
+        </div>
+        <div class="role-switcher" role="tablist" aria-label="选择工作角色">
+          <button class="role-tab" role="tab" aria-selected="true" aria-controls="workspace" data-role="customer">客户</button>
+          <button class="role-tab" role="tab" aria-selected="false" aria-controls="workspace" data-role="exhibitor">展商</button>
+          <button class="role-tab" role="tab" aria-selected="false" aria-controls="workspace" data-role="organizer">主办方</button>
+        </div>
+      </section>
+
+      <section class="stats-grid" id="statsGrid" aria-label="今日关键数据"></section>
+
+      <section class="workspace" id="workspace" aria-label="智能工作区">
+        <article class="panel" aria-labelledby="matchTitle">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title" id="matchTitle"><span class="panel-title-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 11a8.1 8.1 0 0 1-8 8 8.1 8.1 0 0 1-8-8 8.1 8.1 0 0 1 8-8 8.1 8.1 0 0 1 8 8Z"/><path d="m16 8-5 5-3-3"/></svg></span>AI 智能匹配</h2>
+              <p class="panel-subtitle" id="matchSubtitle">基于你的目标、行业偏好与现场状态生成</p>
+            </div>
+            <button class="text-button" type="button" data-action="allMatches">查看全部 <span aria-hidden="true">→</span></button>
+          </div>
+          <div class="ai-banner"><span class="spark" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.6 5.4L5 10l5.4 1.6L12 17l1.6-5.4L19 10l-5.4-1.6L12 3ZM19 16l-.8 2.2L16 19l2.2.8L19 22l.8-2.2L22 19l-2.2-.8L19 16Z"/></svg></span><span id="aiBannerText">已为你筛选出 3 家最匹配的企业，优先推荐现在可以见面的对象。</span></div>
+          <div class="match-list" id="matchList"></div>
+          <div class="panel-footer"><button class="text-button" type="button" data-action="refreshMatches">重新生成匹配 <span aria-hidden="true">↗</span></button></div>
+        </article>
+
+        <article class="panel schedule-panel" aria-labelledby="scheduleTitle">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title" id="scheduleTitle"><span class="panel-title-icon" style="color:var(--blue);background:var(--blue-pale)" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg></span>今日行程</h2>
+              <p class="panel-subtitle" id="scheduleSubtitle">8 月 28 日 · 上海新国际博览中心</p>
+            </div>
+            <button class="text-button" type="button" data-action="addSchedule">＋ 添加</button>
+          </div>
+          <div class="schedule-filters" role="group" aria-label="筛选行程">
+            <button class="filter-button is-active" type="button" data-filter="all">全部</button>
+            <button class="filter-button" type="button" data-filter="pending">待处理</button>
+            <button class="filter-button" type="button" data-filter="done">已完成</button>
+          </div>
+          <div class="schedule-list" id="scheduleList"></div>
+        </article>
+      </section>
+
+      <aside class="insight-card" aria-label="AI 行动建议">
+        <span class="insight-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18h6M10 22h4M8.5 15.5A6.5 6.5 0 1 1 16 15.2c-.8.5-1 1.1-1 2.8H9c0-1.4-.1-2-0.5-2.5Z"/><path d="M12 2v1M4.2 5.2l.7.7M19.8 5.2l-.7.7"/></svg></span>
+        <div class="insight-copy"><strong id="insightTitle">AI 行动建议</strong><p id="insightText">你在 A 区的下一场会面还有 18 分钟，建议现在出发；沿途有 1 家高匹配备选展商。</p></div>
+        <button class="insight-button" type="button" data-action="insight">查看建议</button>
+      </aside>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const data = {
+      customer: {
+        heading: '早上好，李先生',
+        description: '今天，帮你找到最值得见的人。AI 已根据你的参展目标，准备好了一份高效行程。',
+        stats: [['今日匹配', '12', '家', '+4'], ['待确认会面', '3', '场', ''], ['今日剩余', '5', '项', ''], ['匹配准确度', '94', '%', '+8%']],
+        matchSubtitle: '基于你的目标、行业偏好与现场状态生成',
+        banner: '已为你筛选出 3 家最匹配的企业，优先推荐现在可以见面的对象。',
+        matchTitle: 'AI 智能匹配',
+        matches: [
+          { initials: 'NR', logo: 'logo-blue', name: 'Nova Robotics', meta: '展商 · A 区 A12 · 现在可交流', score: 96, tags: ['工业 AI', '自动化'], reasons: ['符合你的智能制造升级需求', '技术负责人已确认 14:00 有空'], action: '发起会面' },
+          { initials: '远', logo: 'logo-purple', name: '远航制造', meta: '展商 · B 区 B08 · 30 分钟后有空', score: 92, tags: ['柔性生产', '数字孪生'], reasons: ['拥有 3 个相似行业落地案例', '支持小批量试产'], action: '查看详情' },
+          { initials: '星', logo: 'logo-green', name: '星源新材料', meta: '展商 · B 区 B21 · 需提前预约', score: 88, tags: ['新能源', '材料供应'], reasons: ['满足海外认证要求', '可提供华东区域快速交付'], action: '预约会面' }
+        ],
+        schedule: [
+          { time: '09:30', title: '智能制造方案交流', detail: 'Nova Robotics  ·  A 区展位 A12', status: 'done', statusText: '已完成', action: '查看纪要' },
+          { time: '11:00', title: 'AI 供应链合作会谈', detail: '远航制造  ·  B 区展位 B08', status: 'confirmed', statusText: '已确认', action: '开始导航' },
+          { time: '14:00', title: '新能源材料需求沟通', detail: '星源新材料  ·  B 区展位 B21', status: 'current', statusText: '即将开始', action: '查看准备' },
+          { time: '15:30', title: '智能工厂主题论坛', detail: '主舞台  ·  预计 45 分钟', status: 'upcoming', statusText: '待确认', action: '加入行程' }
+        ],
+        insight: '你在 A 区的下一场会面还有 18 分钟，建议现在出发；沿途有 1 家高匹配备选展商。'
+      },
+      exhibitor: {
+        heading: '早上好，Nova Robotics',
+        description: '今天，帮你把客流变成商机。AI 正在为展位筛选最值得优先接待的访客。',
+        stats: [['今日有效线索', '28', '条', '+12%'], ['待接待客户', '6', '位', ''], ['团队在线', '4', '人', ''], ['线索转化率', '89', '%', '+6%']],
+        matchSubtitle: '基于客户需求、决策权限与到场意愿排序',
+        banner: '有 3 位高意向客户将在 2 小时内到访，建议提前安排技术负责人。',
+        matchTitle: '高意向客户',
+        matches: [
+          { initials: '远', logo: 'logo-purple', name: '远航制造', meta: '潜在客户 · 采购负责人 · 14:00 到访', score: 93, tags: ['智能工厂', '明确采购'], reasons: ['已表达自动化升级需求', '具备项目决策权限'], action: '安排接待' },
+          { initials: '启', logo: 'logo-blue', name: '启明汽车零部件', meta: '潜在客户 · 技术总监 · 15:20 到访', score: 87, tags: ['机器视觉', '华东'], reasons: ['与你的机器视觉方案高度匹配', '近 7 日主动浏览过产品资料'], action: '查看需求' },
+          { initials: '禾', logo: 'logo-green', name: '禾木电子', meta: '潜在客户 · 业务经理 · 意向待确认', score: 79, tags: ['产线升级', '待沟通'], reasons: ['所在行业属于重点拓展方向', '建议先发送案例摘要'], action: '发送资料' }
+        ],
+        schedule: [
+          { time: '10:20', title: '展位晨会与人员分工', detail: '展位 A12  ·  销售 / 技术 / 管理层', status: 'done', statusText: '已完成', action: '查看记录' },
+          { time: '12:30', title: '远航制造 · 需求预沟通', detail: '远航制造  ·  线上需求摘要', status: 'confirmed', statusText: '已确认', action: '查看客户' },
+          { time: '14:00', title: '远航制造 · 现场会面', detail: '展位 A12  ·  建议技术经理接待', status: 'current', statusText: '即将开始', action: '安排人员' },
+          { time: '16:10', title: '今日线索复盘', detail: '展位会议区  ·  全体接待团队', status: 'upcoming', statusText: '待处理', action: '加入行程' }
+        ],
+        insight: '14:00 的客户关注交付周期和部署成本，建议安排技术经理，并提前打开「柔性产线」案例。'
+      },
+      organizer: {
+        heading: '活动运营中心，早上好',
+        description: '今天，帮你让整个展会运行得更高效。实时数据与 AI 建议都已就绪。',
+        stats: [['当前在馆', '3,286', '人', '+18%'], ['有效撮合', '186', '组', '+24%'], ['活跃展商', '86', '%', ''], ['会面完成率', '91', '%', '+5%']],
+        matchSubtitle: '基于供需互补、现场容量与双方意愿生成',
+        banner: '检测到 12 组高潜连接机会，A2 馆预计 15 分钟后达到拥堵阈值。',
+        matchTitle: '重点连接机会',
+        matches: [
+          { initials: 'A2', logo: 'logo-blue', name: 'A2 馆 · 智能物流专场', meta: '运营洞察 · 12 组高潜连接 · 拥堵中', score: 94, tags: ['高意向', '需分流'], reasons: ['采购方与展商需求互补度高', '建议将部分会面引导至 B1 馆'], action: '查看方案' },
+          { initials: 'B1', logo: 'logo-green', name: 'B1 馆 · 新材料专区', meta: '推荐区域 · 当前承载 42% · 仍有余量', score: 90, tags: ['承载充足', '高匹配'], reasons: ['拥有 5 家可替代展商', '步行距离与 A2 馆相近'], action: '推广区域' },
+          { initials: '×', logo: 'logo-purple', name: '远航制造 × Nova Robotics', meta: '撮合成功 · 14:00 · A 区展位 A12', score: 89, tags: ['已预约', '技术合作'], reasons: ['双方均确认具备决策权限', '会面目标已自动结构化'], action: '查看会面' }
+        ],
+        schedule: [
+          { time: '09:00', title: '展馆开放与现场巡检', detail: '运营中心  ·  各区域负责人', status: 'done', statusText: '已完成', action: '查看报告' },
+          { time: '11:30', title: 'A2 馆人流分布检查', detail: 'A2 馆  ·  当前拥堵预警', status: 'current', statusText: '进行中', action: '查看人流' },
+          { time: '14:00', title: '重点撮合会面波次', detail: 'A 区 / B 区  ·  预计 42 组会面', status: 'confirmed', statusText: '已排期', action: '查看详情' },
+          { time: '17:30', title: '今日运营数据复盘', detail: '运营中心  ·  生成展会日报', status: 'upcoming', statusText: '待处理', action: '加入行程' }
+        ],
+        insight: 'A2 馆将在 15 分钟后进入高拥堵区间，建议向 B1 馆分流 120 位尚未预约的访客。'
+      }
+    };
+
+    function readStorage(key, fallback) {
+      try { return localStorage.getItem(key) || fallback; } catch (_) { return fallback; }
+    }
+    let currentRole = readStorage('expolink-role', 'customer');
+    let currentFilter = 'all';
+    let actionState = {};
+    try { actionState = JSON.parse(readStorage('expolink-actions', '{}')) || {}; } catch (_) { actionState = {}; }
+
+    const icons = {
+      target: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v2M22 12h-2M12 22v-2M2 12h2"/></svg>',
+      calendar: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>',
+      clock: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+      chart: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5M4 19h17"/><path d="m7 15 4-4 3 2 5-6"/></svg>'
+    };
+
+    function saveState() {
+      try { localStorage.setItem('expolink-role', currentRole); localStorage.setItem('expolink-actions', JSON.stringify(actionState)); } catch (_) {}
+    }
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message; toast.classList.add('is-visible');
+      clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove('is-visible'), 2300);
+    }
+    function renderStats(items) {
+      const labels = ['匹配', '会面', '进度', '准确度'];
+      document.getElementById('statsGrid').innerHTML = items.map((item, i) => `<div class="stat-card"><div class="stat-label"><span>${labels[i]}</span><span class="stat-icon">${icons[['target','calendar','clock','chart'][i]]}</span></div><div class="stat-value">${item[1]}<small>${item[2]}</small>${item[3] ? `<span class="stat-trend">${item[3]}</span>` : ''}</div></div>`).join('');
+    }
+    function renderMatches(roleData) {
+      document.getElementById('matchList').innerHTML = roleData.matches.map((match, index) => {
+        const key = `${currentRole}-match-${index}`;
+        const done = Boolean(actionState[key]);
+        const actionText = done ? '请求已发送' : match.action;
+        return `<div class="match-card"><div class="company-logo ${match.logo}" aria-hidden="true">${match.initials}</div><div><h3 class="match-name">${match.name}</h3><p class="match-meta">${match.meta}</p><div class="tag-row">${match.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div><ul class="match-reasons">${match.reasons.map(reason => `<li>${reason}</li>`).join('')}</ul></div><div class="match-actions"><div class="score">${match.score}<span>% 匹配</span></div><button class="${done ? 'primary-button is-done' : 'primary-button'} match-action" type="button" data-index="${index}" ${done ? 'aria-pressed="true"' : ''}>${actionText}</button><button class="secondary-button detail-action" type="button" data-index="${index}">匹配原因</button></div></div>`;
+      }).join('');
+      document.querySelectorAll('.match-action').forEach(button => button.addEventListener('click', () => {
+        const key = `${currentRole}-match-${button.dataset.index}`;
+        actionState[key] = true; saveState(); renderMatches(data[currentRole]);
+        showToast(currentRole === 'exhibitor' ? '接待任务已加入团队待办' : currentRole === 'organizer' ? '运营方案已生成，可前往查看' : '会面请求已发送，等待对方确认');
+      }));
+      document.querySelectorAll('.detail-action').forEach(button => button.addEventListener('click', () => showToast(`已展开「${roleData.matches[button.dataset.index].name}」的推荐依据`)));
+    }
+    function getFilteredSchedule(items) {
+      if (currentFilter === 'done') return items.filter(item => item.status === 'done');
+      if (currentFilter === 'pending') return items.filter(item => item.status !== 'done');
+      return items;
+    }
+    function renderSchedule(roleData) {
+      const items = getFilteredSchedule(roleData.schedule);
+      const list = document.getElementById('scheduleList');
+      if (!items.length) { list.innerHTML = '<div class="empty-state">这里还没有已完成的行程</div>'; return; }
+      list.innerHTML = items.map((item, index) => `<div class="schedule-item is-${item.status}"><div class="schedule-time">${item.time}</div><div class="schedule-node" aria-hidden="true"></div><div class="schedule-content"><div class="schedule-topline"><h3 class="schedule-title">${item.title}</h3><span class="status status-${item.status}">${item.statusText}</span></div><p class="schedule-detail">${item.detail}</p><button class="schedule-action" type="button" data-schedule="${index}">${item.action} <span aria-hidden="true">→</span></button></div></div>`).join('');
+      document.querySelectorAll('.schedule-action').forEach(button => button.addEventListener('click', () => {
+        const item = items[button.dataset.schedule];
+        showToast(`${item.title}：${item.action}已完成`);
+      }));
+    }
+    function render() {
+      const roleData = data[currentRole];
+      document.getElementById('pageTitle').textContent = roleData.heading;
+      document.getElementById('pageDescription').textContent = roleData.description;
+      document.getElementById('matchTitle').lastChild.textContent = roleData.matchTitle;
+      document.getElementById('matchSubtitle').textContent = roleData.matchSubtitle;
+      document.getElementById('aiBannerText').textContent = roleData.banner;
+      document.getElementById('insightText').textContent = roleData.insight;
+      renderStats(roleData.stats); renderMatches(roleData); renderSchedule(roleData);
+      document.querySelectorAll('.role-tab').forEach(tab => tab.setAttribute('aria-selected', String(tab.dataset.role === currentRole)));
+      document.querySelectorAll('.filter-button').forEach(button => button.classList.toggle('is-active', button.dataset.filter === currentFilter));
+    }
+
+    document.querySelectorAll('.role-tab').forEach(tab => tab.addEventListener('click', () => { currentRole = tab.dataset.role; currentFilter = 'all'; saveState(); render(); showToast(`已切换至${tab.textContent}工作台`); }));
+    document.querySelectorAll('.filter-button').forEach(button => button.addEventListener('click', () => { currentFilter = button.dataset.filter; renderSchedule(data[currentRole]); document.querySelectorAll('.filter-button').forEach(item => item.classList.toggle('is-active', item === button)); }));
+    document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', () => {
+      const action = button.dataset.action;
+      if (action === 'notify') showToast('你有 3 条新的会面与运营提醒');
+      if (action === 'profile') showToast('个人资料功能即将开放');
+      if (action === 'allMatches') showToast('正在打开全部匹配结果');
+      if (action === 'refreshMatches') showToast('AI 正在结合现场状态重新计算');
+      if (action === 'addSchedule') showToast('可从推荐、论坛或自定义事项添加行程');
+      if (action === 'insight') showToast(data[currentRole].insight);
+    }));
+    document.getElementById('eventButton').addEventListener('click', () => showToast('当前仅有 1 个进行中的展会'));
+    render();
+  </script>
+</body>
+</html>
