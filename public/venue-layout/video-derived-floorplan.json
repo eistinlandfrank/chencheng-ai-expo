@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "title": "五段步行视频已覆盖范围的可导航桌位图",
-    "version": "3.1",
+    "title": "五段视频拓扑与用户确认22排的可导航桌位图",
+    "version": "4.0",
     "metricScale": false,
     "officialTableCount": false,
     "planType": "relative-operational",
@@ -10,7 +10,8 @@
       "right": "玻璃墙/门带侧",
       "confidence": "high",
       "note": "仅为视频内局部方向，不代表地理北向"
-    }
+    },
+    "userConfirmedRows": true
   },
   "source": {
     "videos": [
@@ -76,20 +77,47 @@
       "longitudinalValidation": {
         "primaryVideo": "0287",
         "denseReviewWindows": [
-          [3.25, 10],
-          [18, 26.5]
+          [
+            3.25,
+            10
+          ],
+          [
+            18,
+            26.5
+          ]
         ],
-        "eventTimesSecondsApprox": [1.5, 3.75, 6.75, 9.75, 12.75, 15, 17.25, 20.25, 23.25, 25.5, 27.75],
+        "eventTimesSecondsApprox": [
+          1.5,
+          3.75,
+          6.75,
+          9.75,
+          12.75,
+          15,
+          17.25,
+          20.25,
+          23.25,
+          25.5,
+          27.75
+        ],
         "result": "11次分隔事件闭合已行走覆盖段的至少12个纵向桌位；视频起点位于桌区内部，未闭合总排数"
       }
     },
-    "method": "五条视频先按固定墙、玻璃门带、柱列和重复展板建立横向轨迹顺序，再在不清楚的局部时间窗加密读取；不以固定帧数直接推导桌数"
+    "method": "五条视频先按固定墙、玻璃门带、柱列和重复展板建立横向轨迹顺序，再在不清楚的局部时间窗加密读取；不以固定帧数直接推导桌数",
+    "authoritativeInputs": [
+      {
+        "type": "user-confirmed",
+        "field": "main-workspace-longitudinal-row-count",
+        "value": 22,
+        "receivedDate": "2026-08-28",
+        "note": "用户明确确认一共有22排"
+      }
+    ]
   },
   "coordinateSystem": {
     "type": "relative-canvas",
     "canvas": {
       "width": 1240,
-      "height": 1700
+      "height": 2520
     },
     "knownSides": [
       "实体墙侧",
@@ -149,7 +177,7 @@
       "label": "实体墙与棕色双开门带",
       "position": {
         "x": 90,
-        "y": 850
+        "y": 1250
       },
       "confidence": "high",
       "evidence": [
@@ -162,7 +190,7 @@
       "label": "连续玻璃墙/门带",
       "position": {
         "x": 1135,
-        "y": 850
+        "y": 1250
       },
       "confidence": "high",
       "evidence": [
@@ -176,7 +204,7 @@
       "label": "玻璃墙内侧固定大柱列",
       "position": {
         "x": 1035,
-        "y": 850
+        "y": 1250
       },
       "confidence": "high",
       "evidence": [
@@ -246,16 +274,16 @@
   "zones": [
     {
       "id": "Z1",
-      "name": "已覆盖主工作区（至少60桌位）",
+      "name": "22排主工作区（按5桌带绘制110桌位）",
       "kind": "workspace",
       "bounds": [
         135,
         405,
         960,
-        1345
+        2160
       ],
-      "status": "corroborated",
-      "confidence": "medium-high"
+      "status": "user-confirmed-rows-plus-corroborated-bands",
+      "confidence": "high"
     },
     {
       "id": "Z2",
@@ -265,7 +293,7 @@
         245,
         405,
         795,
-        1345
+        2160
       ],
       "status": "corroborated",
       "confidence": "high"
@@ -278,7 +306,7 @@
         980,
         390,
         1120,
-        1370
+        2190
       ],
       "status": "corroborated",
       "confidence": "high"
@@ -350,21 +378,19 @@
     }
   ],
   "tableLayout": {
-    "status": "video-covered-lower-bound",
+    "status": "user-confirmed-rows-plus-video-reconstructed-bands",
     "officialCount": false,
     "navigationUnit": "画面中可辨认的一张独立矩形工作桌占位",
-    "totalCount": null,
-    "renderedMinimumCount": 60,
+    "totalCount": 110,
     "countBasis": {
       "bandCount": 5,
-      "longitudinalSlotsCoveredMinimum": 12,
-      "totalLongitudinalSlots": null,
-      "separatorCrossings": 11,
-      "formula": "5 × ≥12 = ≥60",
-      "evidence": "五条路线支持横向5条桌带；0287的11次桌端/线缆坡道穿越闭合从拍摄起点到展示端的至少12个纵向桌位",
-      "startBoundary": "open",
-      "startBoundaryEvidence": "0286、0287、0288、0289开头均已处在桌区内部，最近桌面被画面下缘截断且镜头未回拍身后",
-      "displayEndBoundary": "closed-by-transition-to-display-zone"
+      "longitudinalRows": 22,
+      "rowCountSource": "user-confirmed",
+      "videoCoveredRows": 12,
+      "videoCoveredRowsRole": "lower-bound-and-spacing-reference",
+      "formula": "5 × 22 = 110",
+      "assumption": "22排均延续视频闭合的5条桌带；若末端个别排存在缺列，需按现场清单局部删减",
+      "evidence": "横向5桌带来自五段视频拓扑闭合；纵向22排由用户现场确认"
     },
     "idConvention": "T-{band}{row}",
     "tableSize": {
@@ -411,51 +437,113 @@
     "rows": [
       {
         "id": "01",
-        "y": 430
+        "y": 430,
+        "source": "video-covered"
       },
       {
         "id": "02",
-        "y": 508
+        "y": 508,
+        "source": "video-covered"
       },
       {
         "id": "03",
-        "y": 586
+        "y": 586,
+        "source": "video-covered"
       },
       {
         "id": "04",
-        "y": 664
+        "y": 664,
+        "source": "video-covered"
       },
       {
         "id": "05",
-        "y": 742
+        "y": 742,
+        "source": "video-covered"
       },
       {
         "id": "06",
-        "y": 820
+        "y": 820,
+        "source": "video-covered"
       },
       {
         "id": "07",
-        "y": 898
+        "y": 898,
+        "source": "video-covered"
       },
       {
         "id": "08",
-        "y": 976
+        "y": 976,
+        "source": "video-covered"
       },
       {
         "id": "09",
-        "y": 1054
+        "y": 1054,
+        "source": "video-covered"
       },
       {
         "id": "10",
-        "y": 1132
+        "y": 1132,
+        "source": "video-covered"
       },
       {
         "id": "11",
-        "y": 1210
+        "y": 1210,
+        "source": "video-covered"
       },
       {
         "id": "12",
-        "y": 1288
+        "y": 1288,
+        "source": "video-covered"
+      },
+      {
+        "id": "13",
+        "y": 1366,
+        "source": "user-confirmed-row-count"
+      },
+      {
+        "id": "14",
+        "y": 1444,
+        "source": "user-confirmed-row-count"
+      },
+      {
+        "id": "15",
+        "y": 1522,
+        "source": "user-confirmed-row-count"
+      },
+      {
+        "id": "16",
+        "y": 1600,
+        "source": "user-confirmed-row-count"
+      },
+      {
+        "id": "17",
+        "y": 1678,
+        "source": "user-confirmed-row-count"
+      },
+      {
+        "id": "18",
+        "y": 1756,
+        "source": "user-confirmed-row-count"
+      },
+      {
+        "id": "19",
+        "y": 1834,
+        "source": "user-confirmed-row-count"
+      },
+      {
+        "id": "20",
+        "y": 1912,
+        "source": "user-confirmed-row-count"
+      },
+      {
+        "id": "21",
+        "y": 1990,
+        "source": "user-confirmed-row-count"
+      },
+      {
+        "id": "22",
+        "y": 2068,
+        "source": "user-confirmed-row-count"
       }
     ],
     "instances": [
@@ -592,6 +680,116 @@
         "confidence": "medium-high"
       },
       {
+        "id": "T-A13",
+        "band": "A",
+        "row": "13",
+        "x": 190,
+        "y": 1366,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-A14",
+        "band": "A",
+        "row": "14",
+        "x": 190,
+        "y": 1444,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-A15",
+        "band": "A",
+        "row": "15",
+        "x": 190,
+        "y": 1522,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-A16",
+        "band": "A",
+        "row": "16",
+        "x": 190,
+        "y": 1600,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-A17",
+        "band": "A",
+        "row": "17",
+        "x": 190,
+        "y": 1678,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-A18",
+        "band": "A",
+        "row": "18",
+        "x": 190,
+        "y": 1756,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-A19",
+        "band": "A",
+        "row": "19",
+        "x": 190,
+        "y": 1834,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-A20",
+        "band": "A",
+        "row": "20",
+        "x": 190,
+        "y": 1912,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-A21",
+        "band": "A",
+        "row": "21",
+        "x": 190,
+        "y": 1990,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-A22",
+        "band": "A",
+        "row": "22",
+        "x": 190,
+        "y": 2068,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
         "id": "T-B01",
         "band": "B",
         "row": "01",
@@ -722,6 +920,116 @@
         "height": 50,
         "status": "video-reconstructed",
         "confidence": "medium-high"
+      },
+      {
+        "id": "T-B13",
+        "band": "B",
+        "row": "13",
+        "x": 355,
+        "y": 1366,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-B14",
+        "band": "B",
+        "row": "14",
+        "x": 355,
+        "y": 1444,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-B15",
+        "band": "B",
+        "row": "15",
+        "x": 355,
+        "y": 1522,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-B16",
+        "band": "B",
+        "row": "16",
+        "x": 355,
+        "y": 1600,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-B17",
+        "band": "B",
+        "row": "17",
+        "x": 355,
+        "y": 1678,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-B18",
+        "band": "B",
+        "row": "18",
+        "x": 355,
+        "y": 1756,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-B19",
+        "band": "B",
+        "row": "19",
+        "x": 355,
+        "y": 1834,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-B20",
+        "band": "B",
+        "row": "20",
+        "x": 355,
+        "y": 1912,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-B21",
+        "band": "B",
+        "row": "21",
+        "x": 355,
+        "y": 1990,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-B22",
+        "band": "B",
+        "row": "22",
+        "x": 355,
+        "y": 2068,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
       },
       {
         "id": "T-C01",
@@ -856,6 +1164,116 @@
         "confidence": "medium-high"
       },
       {
+        "id": "T-C13",
+        "band": "C",
+        "row": "13",
+        "x": 520,
+        "y": 1366,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-C14",
+        "band": "C",
+        "row": "14",
+        "x": 520,
+        "y": 1444,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-C15",
+        "band": "C",
+        "row": "15",
+        "x": 520,
+        "y": 1522,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-C16",
+        "band": "C",
+        "row": "16",
+        "x": 520,
+        "y": 1600,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-C17",
+        "band": "C",
+        "row": "17",
+        "x": 520,
+        "y": 1678,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-C18",
+        "band": "C",
+        "row": "18",
+        "x": 520,
+        "y": 1756,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-C19",
+        "band": "C",
+        "row": "19",
+        "x": 520,
+        "y": 1834,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-C20",
+        "band": "C",
+        "row": "20",
+        "x": 520,
+        "y": 1912,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-C21",
+        "band": "C",
+        "row": "21",
+        "x": 520,
+        "y": 1990,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-C22",
+        "band": "C",
+        "row": "22",
+        "x": 520,
+        "y": 2068,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
         "id": "T-D01",
         "band": "D",
         "row": "01",
@@ -988,6 +1406,116 @@
         "confidence": "medium-high"
       },
       {
+        "id": "T-D13",
+        "band": "D",
+        "row": "13",
+        "x": 685,
+        "y": 1366,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-D14",
+        "band": "D",
+        "row": "14",
+        "x": 685,
+        "y": 1444,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-D15",
+        "band": "D",
+        "row": "15",
+        "x": 685,
+        "y": 1522,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-D16",
+        "band": "D",
+        "row": "16",
+        "x": 685,
+        "y": 1600,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-D17",
+        "band": "D",
+        "row": "17",
+        "x": 685,
+        "y": 1678,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-D18",
+        "band": "D",
+        "row": "18",
+        "x": 685,
+        "y": 1756,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-D19",
+        "band": "D",
+        "row": "19",
+        "x": 685,
+        "y": 1834,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-D20",
+        "band": "D",
+        "row": "20",
+        "x": 685,
+        "y": 1912,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-D21",
+        "band": "D",
+        "row": "21",
+        "x": 685,
+        "y": 1990,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-D22",
+        "band": "D",
+        "row": "22",
+        "x": 685,
+        "y": 2068,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
         "id": "T-E01",
         "band": "E",
         "row": "01",
@@ -1118,9 +1646,121 @@
         "height": 50,
         "status": "video-reconstructed",
         "confidence": "medium-high"
+      },
+      {
+        "id": "T-E13",
+        "band": "E",
+        "row": "13",
+        "x": 850,
+        "y": 1366,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-E14",
+        "band": "E",
+        "row": "14",
+        "x": 850,
+        "y": 1444,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-E15",
+        "band": "E",
+        "row": "15",
+        "x": 850,
+        "y": 1522,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-E16",
+        "band": "E",
+        "row": "16",
+        "x": 850,
+        "y": 1600,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-E17",
+        "band": "E",
+        "row": "17",
+        "x": 850,
+        "y": 1678,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-E18",
+        "band": "E",
+        "row": "18",
+        "x": 850,
+        "y": 1756,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-E19",
+        "band": "E",
+        "row": "19",
+        "x": 850,
+        "y": 1834,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-E20",
+        "band": "E",
+        "row": "20",
+        "x": 850,
+        "y": 1912,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-E21",
+        "band": "E",
+        "row": "21",
+        "x": 850,
+        "y": 1990,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
+      },
+      {
+        "id": "T-E22",
+        "band": "E",
+        "row": "22",
+        "x": 850,
+        "y": 2068,
+        "width": 110,
+        "height": 50,
+        "status": "user-confirmed-imputed-position",
+        "confidence": "medium"
       }
     ],
-    "warning": "当前只显式绘制视频覆盖到的至少60个主工作桌位。12是覆盖下限而非场馆总排数；拍摄起点后方可能还有未拍桌排，应以补拍、CAD或官方布展清单闭合"
+    "warning": "22排为用户现场确认值；110桌位建立在每排均有5条桌带的假设上。前12排位置受视频支持，第13–22排为保持同一节距的示意延伸，待CAD或官方布展表校准局部缺桌与精确间距",
+    "userConfirmedRows": true,
+    "renderedTableCount": 110
   },
   "auxiliaryLayout": {
     "includedInMainTableCount": false,
@@ -1201,23 +1841,23 @@
     "nodes": [
       {
         "id": "DEEP",
-        "label": "视频起点后的未拍延伸区",
+        "label": "第22排末端（用户确认）",
         "x": 615,
-        "y": 1380,
-        "confidence": "low"
+        "y": 2160,
+        "confidence": "medium"
       },
       {
         "id": "CROSS-1",
         "label": "工作区横向通道",
         "x": 615,
-        "y": 1060,
+        "y": 1750,
         "confidence": "high"
       },
       {
         "id": "CROSS-2",
         "label": "工作区横向通道",
         "x": 615,
-        "y": 745,
+        "y": 1120,
         "confidence": "high"
       },
       {
@@ -1283,12 +1923,12 @@
     ]
   },
   "unresolved": [
+    "22排由用户现场确认；第13–22排的精确空间位置和可能缺列仍待CAD或官方布展表校准",
     "视频未证明主入口位置；不得把疏散出口当作主入口",
-    "展示端外边界与工作区深处外边界没有完整环拍",
-    "主视频从密集桌区内部开始，纵向总排数未知；目前只能确认至少12个覆盖桌段",
     "连续桌裙下的设备桌模块接缝不可见",
     "围栏服务区没有完整采集，辅助桌只记录可见下限",
     "所有尺寸和面积比例均未经过公制标定"
   ],
-  "usageBoundary": "适合导航原型、补拍规划和企业数据对齐；不可直接用于施工、消防审批、官方物料盘点或厘米级室内定位"
+  "usageBoundary": "适合导航原型、补拍规划和企业数据对齐；22排可作为用户确认的产品数据使用，但110桌的逐桌物理盘点仍需核对末端缺列与官方清单"
 }
+
