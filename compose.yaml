@@ -1,0 +1,9 @@
+services:
+  chencheng-web:
+    build:
+      context: .
+    image: chencheng-ai-expo:latest
+    container_name: chencheng-web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3100:3000"
