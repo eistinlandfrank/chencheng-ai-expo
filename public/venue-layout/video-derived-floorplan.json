@@ -1,6 +1,16 @@
 {
-  "title": "视频推断场馆平面图",
-  "version": "1.0",
+  "metadata": {
+    "title": "五段步行视频的证据拓扑平面图",
+    "version": "2.0",
+    "metricScale": false,
+    "planType": "relative-topological",
+    "orientation": {
+      "up": "展示/设备端",
+      "right": "玻璃墙/门带侧",
+      "confidence": "high",
+      "note": "仅为视频内局部方向，不代表地理北向"
+    }
+  },
   "source": {
     "videos": [
       "DJI_20260828180714_0286_D.MP4",
@@ -9,64 +19,147 @@
       "DJI_20260828181117_0289_D.MP4",
       "DJI_20260828181239_0290_D.MP4"
     ],
-    "total_duration_seconds": 159.66,
-    "method": "以相邻镜头中的重复展板、柱网、桌列、玻璃幕墙和移动方向进行人工视觉拼接"
+    "totalDurationSeconds": 159.66,
+    "sampling": {
+      "timelineIntervalSeconds": 0.75,
+      "indexedTimelineFrames": 213,
+      "selectedEvidenceFrames": 120,
+      "overviewSheetsInspected": 5,
+      "transitionSheetsInspected": 6
+    },
+    "method": "先重建五条连续步行轨迹，再使用固定墙面、玻璃门带、柱列和重复展板闭合空间关系；不以单帧透视估算精确尺寸"
   },
-  "coordinate_system": {
-    "type": "relative",
-    "canvas": { "width": 1600, "height": 1000 },
-    "north_definition": "赞助商及知乎活动宣传板集中的一端",
-    "east_definition": "玻璃幕墙和应急出口所在一侧",
-    "metric_scale_available": false
+  "coordinateSystem": {
+    "type": "normalized-relative",
+    "canvas": { "width": 1000, "height": 1000 },
+    "knownSides": ["实体墙侧", "玻璃墙/门带侧"],
+    "unclosedSides": ["展示端外边界", "工作区深处外边界"]
   },
-  "boundary": {
-    "shape": "rectangular",
-    "x": 100,
-    "y": 140,
-    "width": 1400,
-    "height": 700,
-    "confidence": "medium"
-  },
-  "zones": [
-    { "id": "A1", "name": "参赛团队工作席主区", "category": "workspace", "x": 150, "y": 295, "width": 1020, "height": 505, "confidence": "high", "area_ratio_estimate": "75%-80% of visible occupied area" },
-    { "id": "A2", "name": "中央纵向主通道", "category": "aisle", "x": 650, "y": 280, "width": 105, "height": 540, "confidence": "high" },
-    { "id": "A3", "name": "横向联络通道组", "category": "aisle-network", "x": 150, "y": 405, "width": 1040, "height": 330, "confidence": "medium" },
-    { "id": "A4", "name": "玻璃幕墙侧边通道", "category": "aisle", "x": 1185, "y": 275, "width": 95, "height": 545, "confidence": "high" },
-    { "id": "B1", "name": "赞助商背景墙", "category": "sponsor", "x": 150, "y": 170, "width": 245, "height": 88, "confidence": "high" },
-    { "id": "B2", "name": "LiberNovo 清闲展示点", "category": "sponsor", "x": 415, "y": 170, "width": 235, "height": 88, "confidence": "high" },
-    { "id": "B3", "name": "SHENICEST / CODING展示点", "category": "sponsor", "x": 670, "y": 170, "width": 205, "height": 88, "confidence": "medium" },
-    { "id": "B4", "name": "HOTO互动展示区", "category": "sponsor", "x": 895, "y": 170, "width": 205, "height": 88, "confidence": "medium" },
-    { "id": "D1", "name": "知乎AI Builder创作活动宣传点", "category": "information", "x": 1120, "y": 170, "width": 165, "height": 88, "confidence": "high" },
-    { "id": "D2", "name": "招聘与知乎能力接入宣传板组", "category": "information", "x": 1305, "y": 170, "width": 155, "height": 88, "confidence": "high" },
-    { "id": "C1", "name": "Snapmaker 3D打印设备展示区", "category": "equipment", "x": 1300, "y": 300, "width": 160, "height": 225, "confidence": "high" },
-    { "id": "C2", "name": "人形机器人展示点", "category": "equipment", "x": 1300, "y": 545, "width": 160, "height": 100, "confidence": "high" },
-    { "id": "D3", "name": "志愿者或现场服务点", "category": "service", "x": 1030, "y": 272, "width": 130, "height": 62, "confidence": "low" },
-    { "id": "D4", "name": "后勤及设备暂存区", "category": "service", "x": 1300, "y": 665, "width": 160, "height": 135, "confidence": "medium" },
-    { "id": "E1", "name": "沿墙应急出口组", "category": "exit", "x": 1475, "y": 290, "width": 25, "height": 510, "confidence": "high" },
-    { "id": "E2", "name": "垃圾分类与回收点", "category": "service", "x": 112, "y": 700, "width": 38, "height": 85, "confidence": "medium" }
+  "trajectoryPasses": [
+    { "video": "DJI_20260828180714_0286_D.MP4", "start": "密集工作桌区内部", "end": "LiberNovo展板近景", "direction": "朝展示端", "relation": "从工作桌通道连续到临时展板群", "confidence": "high" },
+    { "video": "DJI_20260828180824_0287_D.MP4", "start": "密集工作桌区内部", "end": "围栏后的开放展示/服务区", "direction": "朝展示端", "relation": "从另一条工作桌通道连续到围栏交界", "confidence": "high" },
+    { "video": "DJI_20260828180952_0288_D.MP4", "start": "密集工作桌区内部", "end": "LiberNovo展板近景", "direction": "朝展示端", "relation": "与0286从不同通道汇聚到同一展板节点", "confidence": "high" },
+    { "video": "DJI_20260828181117_0289_D.MP4", "start": "固定柱列附近工作桌区", "end": "设备桌、围栏和信息板交界", "direction": "沿玻璃墙侧朝展示端", "relation": "工作区侧边通道连续连接设备列和信息区", "confidence": "high" },
+    { "video": "DJI_20260828181239_0290_D.MP4", "start": "玻璃墙侧机器人/设备点", "end": "围栏与信息板交界", "direction": "沿玻璃墙侧朝展示端", "relation": "玻璃门带、设备点、纸箱后勤段和围栏信息区连续相邻", "confidence": "high" }
   ],
-  "routing_skeleton": {
-    "confidence": "medium",
+  "anchors": [
+    {
+      "id": "wall-solid", "type": "wall", "label": "实体墙与棕色双开门带", "position": { "x": 110, "y": 560 },
+      "evidence": [{ "video": "0286", "time": 15.0 }, { "video": "0286", "time": 22.5 }], "confidence": "high"
+    },
+    {
+      "id": "wall-glass", "type": "wall", "label": "连续玻璃墙/门带", "position": { "x": 900, "y": 560 },
+      "evidence": [{ "video": "0289", "time": 18.8 }, { "video": "0290", "time": 15.0 }, { "video": "0290", "time": 30.8 }], "confidence": "high"
+    },
+    {
+      "id": "columns-glass-side", "type": "column-row", "label": "玻璃墙内侧固定大柱列", "position": { "x": 735, "y": 560 },
+      "evidence": [{ "video": "0289", "time": 15.0 }, { "video": "0290", "time": 16.5 }], "confidence": "high"
+    },
+    {
+      "id": "panel-libernovo", "type": "temporary-sign", "label": "LiberNovo临时展板节点", "position": { "x": 420, "y": 185 },
+      "evidence": [{ "video": "0286", "time": 27.0 }, { "video": "0286", "time": 29.2 }, { "video": "0288", "time": 28.5 }, { "video": "0288", "time": 31.5 }],
+      "confidence": "high", "note": "0286和0288画面背景及相邻物料一致，按同一节点处理"
+    },
+    {
+      "id": "equipment-row", "type": "temporary-equipment", "label": "箱式设备/桌面3D打印设备列", "position": { "x": 785, "y": 310 },
+      "evidence": [{ "video": "0289", "time": 27.8 }, { "video": "0289", "time": 30.0 }], "confidence": "high"
+    },
+    {
+      "id": "robot-demo", "type": "temporary-equipment", "label": "人形机器人演示点（数量未确认）", "position": { "x": 820, "y": 255 },
+      "evidence": [{ "video": "0290", "time": 0.0 }, { "video": "0290", "time": 24.8 }], "confidence": "medium"
+    },
+    {
+      "id": "barrier-info", "type": "temporary-barrier", "label": "围栏、立牌与信息/服务交界", "position": { "x": 790, "y": 145 },
+      "evidence": [{ "video": "0287", "time": 29.2 }, { "video": "0289", "time": 33.8 }, { "video": "0290", "time": 30.8 }], "confidence": "high"
+    }
+  ],
+  "zones": [
+    {
+      "id": "Z1", "name": "参赛团队工作桌主区", "kind": "workspace",
+      "geometry": { "type": "polygon", "points": [[150, 260], [700, 260], [700, 900], [150, 900]] },
+      "status": "corroborated", "areaEstimate": "约占视频可见占用区域的70%-80%",
+      "evidence": ["0286 00:00-00:24", "0287 00:00-00:24", "0288 00:00-00:24", "0289 00:00-00:22"], "confidence": "high"
+    },
+    {
+      "id": "Z2", "name": "工作桌平行通道网络", "kind": "circulation",
+      "geometry": { "type": "area", "bounds": [180, 285, 670, 880] },
+      "status": "corroborated", "evidence": ["0286/0287/0288三条不同通道均通向展示端"], "confidence": "high"
+    },
+    {
+      "id": "Z3", "name": "玻璃墙侧连续通道", "kind": "circulation",
+      "geometry": { "type": "polygon", "points": [[735, 220], [875, 220], [875, 900], [735, 900]] },
+      "status": "corroborated", "evidence": ["0289 00:18.8-00:33.8", "0290 00:00-00:30.8"], "confidence": "high"
+    },
+    {
+      "id": "Z4", "name": "展示/设备过渡带", "kind": "display",
+      "geometry": { "type": "polygon", "points": [[150, 105], [875, 105], [875, 245], [150, 245]] },
+      "status": "corroborated", "evidence": ["五条路径末段均进入该过渡带"], "confidence": "high",
+      "note": "临时布局；外边界和内部精确顺序未完全闭合"
+    },
+    {
+      "id": "Z5", "name": "临时展板群（LiberNovo等）", "kind": "display",
+      "geometry": { "type": "polygon", "points": [[230, 135], [570, 135], [570, 220], [230, 220]] },
+      "status": "corroborated", "evidence": ["0286 00:26.2-00:29.2", "0288 00:26.2-00:31.5"], "confidence": "high",
+      "note": "仅确认成组存在及其位于工作区末端，不确认各品牌左右顺序"
+    },
+    {
+      "id": "Z6", "name": "设备/机器人演示段", "kind": "equipment",
+      "geometry": { "type": "polygon", "points": [[690, 205], [865, 205], [865, 390], [690, 390]] },
+      "status": "corroborated", "evidence": ["0289 00:27.8-00:31.5", "0290 00:00-00:01.5", "0290 00:24.8-00:25.5"], "confidence": "high",
+      "note": "机器人数量与设备品牌/型号待现场核对"
+    },
+    {
+      "id": "Z7", "name": "围栏内信息/服务区", "kind": "service",
+      "geometry": { "type": "polygon", "points": [[610, 105], [875, 105], [875, 205], [610, 205]] },
+      "status": "corroborated", "evidence": ["0287 00:27.8-00:30.8", "0289 00:30.0-00:33.8", "0290 00:27.8-00:30.8"], "confidence": "medium",
+      "note": "功能名称来自现场形态推测，需企业数据确认"
+    },
+    {
+      "id": "Z8", "name": "纸箱与设备后勤段", "kind": "logistics",
+      "geometry": { "type": "polygon", "points": [[700, 390], [865, 390], [865, 470], [700, 470]] },
+      "status": "observed", "evidence": ["0290 00:22.5-00:29.2"], "confidence": "medium",
+      "note": "临时堆放位置可能快速变化"
+    }
+  ],
+  "recognizedRegions": [
+    { "name": "实体墙侧门带", "feature": "高白墙、多个棕色双开门、疏散标识", "type": "fixed" },
+    { "name": "玻璃墙/门带", "feature": "连续玻璃隔断、门、消防箱与疏散标识", "type": "fixed" },
+    { "name": "工作桌主区", "feature": "密集白色长桌、折叠椅/办公椅、地面线缆坡道", "type": "temporary" },
+    { "name": "临时展板群", "feature": "LiberNovo黑色展板及相邻灰色/黑色宣传物料", "type": "temporary" },
+    { "name": "设备演示段", "feature": "多台箱式设备、桌面3D打印设备和人形机器人", "type": "temporary" },
+    { "name": "信息/服务区", "feature": "金属围栏、排队柱、立牌、少量空桌", "type": "temporary-inferred-function" },
+    { "name": "后勤段", "feature": "纸箱、器材箱及临时设备桌", "type": "temporary" }
+  ],
+  "routeGraph": {
     "nodes": [
-      { "id": "S0", "label": "视频起始侧", "x": 703, "y": 815 },
-      { "id": "J1", "label": "南部横向通道", "x": 703, "y": 720 },
-      { "id": "J2", "label": "中部横向通道", "x": 703, "y": 580 },
-      { "id": "J3", "label": "北部横向通道", "x": 703, "y": 430 },
-      { "id": "N0", "label": "品牌展示带", "x": 703, "y": 275 },
-      { "id": "E0", "label": "东侧通道北端", "x": 1230, "y": 275 },
-      { "id": "E1", "label": "东侧通道中段", "x": 1230, "y": 580 },
-      { "id": "E2", "label": "东侧通道南段", "x": 1230, "y": 815 }
+      { "id": "W0", "label": "工作区深处（入口未确认）", "x": 440, "y": 875, "confidence": "low" },
+      { "id": "A1", "label": "工作区横向通道1", "x": 440, "y": 700, "confidence": "high" },
+      { "id": "A2", "label": "工作区横向通道2", "x": 440, "y": 500, "confidence": "high" },
+      { "id": "A3", "label": "展示端前横向通道", "x": 440, "y": 260, "confidence": "high" },
+      { "id": "P", "label": "临时展板群", "x": 420, "y": 185, "confidence": "high" },
+      { "id": "G0", "label": "玻璃墙侧通道深处", "x": 805, "y": 875, "confidence": "medium" },
+      { "id": "G1", "label": "设备/机器人段", "x": 805, "y": 320, "confidence": "high" },
+      { "id": "G2", "label": "围栏信息区入口", "x": 805, "y": 180, "confidence": "high" }
     ],
     "edges": [
-      ["S0", "J1"], ["J1", "J2"], ["J2", "J3"], ["J3", "N0"],
-      ["N0", "E0"], ["E0", "E1"], ["E1", "E2"],
-      ["J1", "E2"], ["J2", "E1"], ["J3", "E0"]
+      { "from": "W0", "to": "A1", "status": "inferred" },
+      { "from": "A1", "to": "A2", "status": "corroborated" },
+      { "from": "A2", "to": "A3", "status": "corroborated" },
+      { "from": "A3", "to": "P", "status": "observed" },
+      { "from": "A1", "to": "G0", "status": "observed" },
+      { "from": "A2", "to": "G1", "status": "observed" },
+      { "from": "A3", "to": "G1", "status": "observed" },
+      { "from": "G0", "to": "G1", "status": "observed" },
+      { "from": "G1", "to": "G2", "status": "observed" }
     ]
   },
-  "limitations": [
-    "视频未覆盖完整主入口，图中南侧仅代表多数视频的起始侧",
-    "没有比例尺、已知距离或完整边界环拍，所有尺寸为相对比例",
-    "工作席没有可辨认的统一编号，因此按桌列分区而非逐桌建模",
-    "该图适合概念验证、导航原型和补拍规划，不可直接用于施工或消防疏散审批"
-  ]
+  "unresolved": [
+    "视频未证明主入口位置；不得把疏散出口当作主入口",
+    "展示端外边界与工作区深处外边界没有完整环拍",
+    "所有尺寸和面积比例均未经过公制标定",
+    "临时展板之间的精确左右顺序未闭合",
+    "0290两次看到的机器人是否同一台尚未确认",
+    "信息/服务区的官方名称和权限边界需要企业数据确认"
+  ],
+  "usageBoundary": "适合导航原型、补拍规划和企业数据对齐；不可直接用于施工、消防审批或厘米级室内定位"
 }
