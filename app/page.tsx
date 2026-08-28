@@ -1,270 +1,224 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ChangeEvent, type CSSProperties } from 'react';
+import MapCanvas from './components/MapCanvas';
+import { DEFAULT_DATASET, ENTRANCES, type ExpoDataset, type Exhibitor } from './lib/data';
+import { distance, generatePlan, rankExhibitors, toMinutes, toTime, type GeneratedPlan, type PlanStop, type PlannerInput } from './lib/planner';
 
-type ViewMode = 'visitor' | 'organizer';
+type Profile = { name:string; company:string; role:string; offers:string; };
+type Meeting = { id:string; sourceId:string; company:string; contact:string; createdAt:string; notes:string; nextAction:string; deadline:string; summary:string; followup:string; };
+type EventLog = { id:string; type:string; label:string; at:string; };
 
-type Stop = {
-  id: string;
-  time: string;
-  title: string;
-  meta: string;
-  kind: 'business' | 'event' | 'meal';
-  status: string;
+const INITIAL_INPUT: PlannerInput = { query:'我想找环保美妆包装供应商，也想认识消费领域投资人', startTime:'14:00', endTime:'17:00', entranceId:'south', lessWalking:true, mealNeeded:false, mealBudget:80, dietary:'' };
+const INITIAL_PROFILE: Profile = { name:'陈同学', company:'独立项目团队', role:'采购与合作', offers:'产品设计、AI应用开发' };
+const NAV = [['home','行动台','⌂'],['match','找商机','◎'],['plan','我的行程','◷'],['map','场馆地图','▦'],['meetings','会面记录','◇'],['ops','数据与运营','◫']];
+const PAGE_META: Record<string,[string,string]> = {
+  home:['行动台','告诉我你要找什么，我直接排好展位和路线'],match:['找商机','按真实需求筛选展商'],plan:['我的行程','按顺序执行，时间和距离自动更新'],map:['场馆地图','点展位查看详情，沿路线直接行动'],meetings:['会面记录','记下结论，生成下一步跟进'],ops:['数据与运营','导入企业数据，查看现场使用结果'],
 };
 
-const samplePrompt = '我下午只有两个半小时，想找做美妆环保包装的供应商，也想认识消费领域投资人。不要走太多路，17点前吃饭，人均80元以内。';
-
-const recommendations = [
-  { id: 'A12', score: 92, type: '供应商', name: '青禾循环包装', offer: '甘蔗浆模塑 · 小批量打样', reason: '你的“环保美妆包装”需求与其供给直接匹配', available: '14:00–15:00', distance: '步行 6 分钟', accent: 'lime' },
-  { id: 'B07', score: 86, type: '材料伙伴', name: '沐川生物材料', offer: '可降解涂层 · 食品级认证', reason: '能补充包装方案的防水与阻隔能力', available: '14:30–16:30', distance: '步行 4 分钟', accent: 'mint' },
-  { id: 'C21', score: 81, type: '投资机构', name: '澄明消费基金', offer: '消费科技 · A轮前投资', reason: '关注可持续消费，现场负责人可预约', available: '15:30 / 16:00', distance: '步行 8 分钟', accent: 'orange' },
-];
-
-const originalStops: Stop[] = [
-  { id: 'A12', time: '14:10', title: '青禾循环包装', meta: '预计交流 25 分钟', kind: 'business', status: '已确认在场' },
-  { id: 'B07', time: '14:45', title: '沐川生物材料', meta: '预计交流 20 分钟', kind: 'business', status: '可直接前往' },
-  { id: 'C21', time: '15:30', title: '澄明消费基金', meta: '预约交流 20 分钟', kind: 'business', status: '待对方确认' },
-  { id: 'F02', time: '16:10', title: '场馆二层 · 京味小馆', meta: '人均 ¥68 · 无需出馆', kind: 'meal', status: '当前无需排队' },
-];
-
-const replannedStops: Stop[] = [
-  { id: 'A12', time: '14:10', title: '青禾循环包装', meta: '预计交流 25 分钟', kind: 'business', status: '已确认在场' },
-  { id: 'B07', time: '14:45', title: '沐川生物材料', meta: '预计交流 20 分钟', kind: 'business', status: '可直接前往' },
-  { id: 'F02', time: '15:25', title: '场馆二层 · 京味小馆', meta: '人均 ¥68 · 无需出馆', kind: 'meal', status: '已为你提前' },
-  { id: 'C21', time: '16:00', title: '澄明消费基金', meta: '预约交流 20 分钟', kind: 'business', status: '新时段已锁定' },
-];
-
-function deriveTags(text: string) {
-  const tags = [];
-  if (/包装|材料|供应/.test(text)) tags.push('环保包装供应商');
-  if (/投资|融资|基金/.test(text)) tags.push('消费投资人');
-  if (/论坛|活动|分享/.test(text)) tags.push('主题活动');
-  if (/少走|距离|步行/.test(text)) tags.push('低步行强度');
-  if (/吃|饭|餐/.test(text)) tags.push('17:00 前用餐');
-  return tags.length ? tags : ['高价值商机', '有限时间', '可执行路线'];
-}
-
 export default function Home() {
-  const [prompt, setPrompt] = useState(samplePrompt);
-  const [viewMode, setViewMode] = useState<ViewMode>('visitor');
-  const [planning, setPlanning] = useState(false);
-  const [planned, setPlanned] = useState(false);
-  const [replanned, setReplanned] = useState(false);
-  const [saved, setSaved] = useState<string[]>(['A12', 'B07', 'C21']);
-  const [selectedBooth, setSelectedBooth] = useState('A12');
-  const [checkedIn, setCheckedIn] = useState(false);
-  const [followupReady, setFollowupReady] = useState(false);
-  const [toast, setToast] = useState('');
+  const [active,setActive] = useState('home');
+  const [input,setInput] = useState<PlannerInput>(INITIAL_INPUT);
+  const [profile,setProfile] = useState<Profile>(INITIAL_PROFILE);
+  const [dataset,setDataset] = useState<ExpoDataset>(DEFAULT_DATASET);
+  const [plan,setPlan] = useState<GeneratedPlan | null>(null);
+  const [meetings,setMeetings] = useState<Meeting[]>([]);
+  const [logs,setLogs] = useState<EventLog[]>([]);
+  const [selectedId,setSelectedId] = useState(DEFAULT_DATASET.exhibitors[0].id);
+  const [search,setSearch] = useState('');
+  const [category,setCategory] = useState('全部');
+  const [profileOpen,setProfileOpen] = useState(false);
+  const [toast,setToast] = useState('');
+  const [hydrated,setHydrated] = useState(false);
+  const [meetingDraft,setMeetingDraft] = useState({ notes:'',nextAction:'',deadline:'' });
+  const [newExhibitor,setNewExhibitor] = useState({ name:'',booth:'',category:'',offers:'',wants:'',contact:'' });
 
-  const tags = useMemo(() => deriveTags(prompt), [prompt]);
-  const stops = replanned ? replannedStops : originalStops;
-  const selected = recommendations.find((item) => item.id === selectedBooth) ?? recommendations[0];
+  useEffect(() => {
+    try {
+      const storedInput = localStorage.getItem('chencheng-input');
+      const storedProfile = localStorage.getItem('chencheng-profile');
+      const storedData = localStorage.getItem('chencheng-dataset');
+      const storedPlan = localStorage.getItem('chencheng-plan');
+      const storedMeetings = localStorage.getItem('chencheng-meetings');
+      const storedLogs = localStorage.getItem('chencheng-logs');
+      if (storedInput) setInput(JSON.parse(storedInput));
+      if (storedProfile) setProfile(JSON.parse(storedProfile));
+      if (storedData) setDataset(JSON.parse(storedData));
+      if (storedPlan) setPlan(JSON.parse(storedPlan));
+      if (storedMeetings) setMeetings(JSON.parse(storedMeetings));
+      if (storedLogs) setLogs(JSON.parse(storedLogs));
+    } catch { /* keep valid defaults */ }
+    setHydrated(true);
+  },[]);
 
-  function notify(message: string) {
-    setToast(message);
-    window.setTimeout(() => setToast(''), 2400);
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem('chencheng-input',JSON.stringify(input));
+    localStorage.setItem('chencheng-profile',JSON.stringify(profile));
+    localStorage.setItem('chencheng-dataset',JSON.stringify(dataset));
+    localStorage.setItem('chencheng-meetings',JSON.stringify(meetings));
+    localStorage.setItem('chencheng-logs',JSON.stringify(logs.slice(0,200)));
+    if (plan) localStorage.setItem('chencheng-plan',JSON.stringify(plan)); else localStorage.removeItem('chencheng-plan');
+  },[input,profile,dataset,plan,meetings,logs,hydrated]);
+
+  const ranked = useMemo(() => rankExhibitors(dataset,{...input,query:search.trim() || input.query}),[dataset,input,search]);
+  const categories = useMemo(() => ['全部',...new Set(dataset.exhibitors.map((item) => item.category))],[dataset]);
+  const visibleMatches = ranked.filter(({exhibitor}) => category === '全部' || exhibitor.category === category);
+  const selected = dataset.exhibitors.find((item) => item.id === selectedId) ?? dataset.exhibitors[0];
+  const activeStop = plan?.stops.find((stop) => stop.status === 'arrived') ?? plan?.stops.find((stop) => stop.status === 'pending');
+
+  function notify(message:string) { setToast(message); window.setTimeout(() => setToast(''),2200); }
+  function log(type:string,label:string) { setLogs((current) => [{id:crypto.randomUUID(),type,label,at:new Date().toISOString()},...current]); }
+  function go(page:string) { setActive(page); window.scrollTo({top:0,behavior:'smooth'}); }
+
+  function buildPlan() {
+    if (!input.query.trim()) return notify('请先描述一个真实目标');
+    const resolved = {...input};
+    const range = input.query.match(/(\d{1,2})(?::(\d{2}))?\s*[到至—-]\s*(\d{1,2})(?::(\d{2}))?/);
+    const duration = input.query.match(/(\d+(?:\.\d+)?|[一二两三四五六七八九十半]+)\s*(?:个)?小时/);
+    if (range) {
+      resolved.startTime = `${range[1].padStart(2,'0')}:${(range[2]??'00').padStart(2,'0')}`;
+      resolved.endTime = `${range[3].padStart(2,'0')}:${(range[4]??'00').padStart(2,'0')}`;
+    } else if (duration) {
+      const hourMap:Record<string,number>={一:1,二:2,两:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9,十:10,半:.5};
+      const hours = Number(duration[1]) || hourMap[duration[1]] || (duration[1].endsWith('半') ? (hourMap[duration[1][0]]||0)+.5 : 0);
+      if (hours>0) resolved.endTime = toTime(toMinutes(resolved.startTime) + Math.round(hours * 60));
+    }
+    if (/东(?:门|入口)/.test(input.query)) resolved.entranceId='east';
+    if (/北(?:门|入口)/.test(input.query)) resolved.entranceId='north';
+    if (/南(?:门|入口)/.test(input.query)) resolved.entranceId='south';
+    if (/吃饭|用餐|午餐|晚餐|餐厅|美食/.test(input.query)) resolved.mealNeeded=true;
+    if (/不(?:吃饭|用餐)|无需(?:吃饭|用餐)/.test(input.query)) resolved.mealNeeded=false;
+    if (toMinutes(resolved.endTime) <= toMinutes(resolved.startTime)) return notify('结束时间需要晚于开始时间');
+    setInput(resolved);
+    const next = generatePlan(dataset,resolved);
+    setPlan(next);
+    if (next.stops[0]) setSelectedId(next.stops[0].sourceId);
+    log('plan_generated',`生成 ${next.stops.length} 站行程`);
+    notify(`已计算 ${next.stops.length} 个可执行目标`);
   }
 
-  function handlePlan() {
-    if (!prompt.trim()) {
-      notify('先告诉我你今天最想完成什么');
+  function recalculate(stops:PlanStop[]) {
+    if (!plan) return;
+    const entrance = ENTRANCES.find((item) => item.id === plan.input.entranceId) ?? ENTRANCES[0];
+    let cursor = entrance.position;
+    let clock = toMinutes(plan.input.startTime);
+    let walking = 0;
+    const updated = stops.map((stop) => {
+      const walk = distance(cursor,stop.position);
+      clock += Math.max(2,Math.ceil(walk/65));
+      const duration = Math.max(20,toMinutes(stop.end)-toMinutes(stop.start));
+      if (stop.type === 'event') clock = Math.max(clock,toMinutes(stop.start));
+      const next = {...stop,start:toTime(clock),end:toTime(clock+duration)};
+      clock += duration; cursor=stop.position; walking+=walk;
+      return next;
+    });
+    setPlan({...plan,stops:updated,walkingMeters:walking,estimatedMinutes:clock-toMinutes(plan.input.startTime)});
+  }
+
+  function addToPlan(exhibitor:Exhibitor) {
+    const match = ranked.find((item) => item.exhibitor.id === exhibitor.id);
+    if (plan?.stops.some((stop) => stop.sourceId === exhibitor.id)) return notify('这个展商已经在行程中');
+    const base = plan ?? generatePlan(dataset,{...input,query:input.query || exhibitor.keywords.join(' ')});
+    if (base.stops.some((stop) => stop.sourceId === exhibitor.id)) {
+      setPlan(base);
+      notify(`${exhibitor.booth} 已在自动生成的行程中`);
       return;
     }
-    setPlanning(true);
-    window.setTimeout(() => {
-      setPlanning(false);
-      setPlanned(true);
-      window.setTimeout(() => document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' }), 60);
-    }, 900);
+    const stop:PlanStop = { uid:`manual-${crypto.randomUUID()}`,sourceId:exhibitor.id,type:'exhibitor',booth:exhibitor.booth,title:exhibitor.name,subtitle:`${exhibitor.contact} · ${exhibitor.role}`,start:input.startTime,end:toTime(toMinutes(input.startTime)+25),position:exhibitor.position,score:match?.score ?? 60,reasons:match?.reasons ?? ['手动加入'],status:'pending' };
+    const stops=[...base.stops,stop];
+    let cursor=ENTRANCES.find((item)=>item.id===base.input.entranceId)?.position ?? ENTRANCES[0].position;
+    let clock=toMinutes(base.input.startTime); let walking=0;
+    const updated=stops.map((item)=>{const walk=distance(cursor,item.position);clock+=Math.max(2,Math.ceil(walk/65));const duration=item.type==='food'?35:25;const next={...item,start:toTime(clock),end:toTime(clock+duration)};clock+=duration;cursor=item.position;walking+=walk;return next;});
+    setPlan({...base,stops:updated,walkingMeters:walking,estimatedMinutes:clock-toMinutes(base.input.startTime)});
+    log('recommendation_accepted',`加入 ${exhibitor.booth} ${exhibitor.name}`);
+    notify(`${exhibitor.booth} 已加入行程`);
   }
 
-  function toggleSaved(id: string) {
-    setSaved((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  function removeStop(index:number) { if (!plan) return; recalculate(plan.stops.filter((_,i)=>i!==index)); }
+  function moveStop(index:number,direction:-1|1) { if (!plan) return; const target=index+direction;if(target<0||target>=plan.stops.length)return;const stops=[...plan.stops];[stops[index],stops[target]]=[stops[target],stops[index]];recalculate(stops); }
+  function updateStop(index:number,status:PlanStop['status']) { if(!plan)return;const stops=plan.stops.map((stop,i)=>i===index?{...stop,status}:stop);setPlan({...plan,stops});const stop=stops[index];log(status==='arrived'?'checkin':'stop_updated',`${stop.booth} ${status}`);if(status==='arrived'&&stop.type==='exhibitor'){setSelectedId(stop.sourceId);go('meetings');} }
+
+  function saveMeeting() {
+    if (!selected || !meetingDraft.notes.trim()) return notify('请先记录会谈内容');
+    const summary=meetingDraft.notes.trim().slice(0,120);
+    const nextAction=meetingDraft.nextAction.trim() || '发送资料并确认下一次沟通时间';
+    const followup=`${selected.contact}老师您好，感谢今天在${selected.booth}的交流。我们讨论了：${summary}。下一步计划：${nextAction}${meetingDraft.deadline?`，希望在${meetingDraft.deadline}前完成`:''}。期待继续沟通。`;
+    const meeting:Meeting={id:crypto.randomUUID(),sourceId:selected.id,company:selected.name,contact:selected.contact,createdAt:new Date().toISOString(),notes:meetingDraft.notes,nextAction,deadline:meetingDraft.deadline,summary,followup};
+    setMeetings((current)=>[meeting,...current]);setMeetingDraft({notes:'',nextAction:'',deadline:''});
+    if(plan)setPlan({...plan,stops:plan.stops.map((stop)=>stop.sourceId===selected.id?{...stop,status:'completed'}:stop)});
+    log('meeting_completed',`完成与 ${selected.name} 的会面`);notify('会面纪要和跟进消息已保存');
   }
 
-  function switchMode(mode: ViewMode) {
-    setViewMode(mode);
-    window.setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 30);
+  async function importData(event:ChangeEvent<HTMLInputElement>) {
+    const file=event.target.files?.[0];if(!file)return;
+    try {
+      const text=await file.text();let next:ExpoDataset;
+      if(file.name.toLowerCase().endsWith('.json')) { const parsed=JSON.parse(text);next=Array.isArray(parsed)?{...dataset,exhibitors:parsed}:{...dataset,...parsed}; }
+      else { const lines=text.split(/\r?\n/).filter(Boolean);const headers=lines[0].split(',').map((item)=>item.trim());const exhibitors=lines.slice(1).map((line,index)=>{const values=line.split(',').map((item)=>item.trim());const row=Object.fromEntries(headers.map((header,i)=>[header,values[i]??'']));return {id:row.id||`import-${Date.now()}-${index}`,name:row.name,booth:row.booth,category:row.category||'未分类',offers:(row.offers||'').split('|').filter(Boolean),wants:(row.wants||'').split('|').filter(Boolean),keywords:(row.keywords||row.offers||'').split('|').filter(Boolean),intro:row.intro||'',position:{x:Number(row.x)||15+(index*11)%75,y:Number(row.y)||20+(index*17)%65},availability:[row.available_from||'09:00',row.available_to||'17:00'] as [string,string],contact:row.contact||'现场负责人',role:row.role||'商务'};});next={...dataset,exhibitors}; }
+      if(!Array.isArray(next.exhibitors)||next.exhibitors.length===0||!next.exhibitors.every((item)=>item.name&&item.booth))throw new Error('数据为空，或缺少 name / booth');
+      setDataset(next);setPlan(null);log('data_imported',`导入 ${next.exhibitors.length} 家展商`);notify(`已导入 ${next.exhibitors.length} 家展商`);
+    } catch(error) { notify(`导入失败：${error instanceof Error?error.message:'格式错误'}`); }
+    event.target.value='';
   }
 
+  function exportData() { const blob=new Blob([JSON.stringify(dataset,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const anchor=document.createElement('a');anchor.href=url;anchor.download='辰程AI-会展数据.json';anchor.click();URL.revokeObjectURL(url); }
+  function addExhibitor() { if(!newExhibitor.name||!newExhibitor.booth)return notify('请填写企业名称和展位号');const index=dataset.exhibitors.length;const item:Exhibitor={id:`custom-${crypto.randomUUID()}`,name:newExhibitor.name,booth:newExhibitor.booth,category:newExhibitor.category||'未分类',offers:newExhibitor.offers.split(/[、|,]/).filter(Boolean),wants:newExhibitor.wants.split(/[、|,]/).filter(Boolean),keywords:`${newExhibitor.offers} ${newExhibitor.wants}`.split(/[、|,\s]/).filter(Boolean),intro:'现场新增展商',position:{x:15+(index*13)%75,y:18+(index*19)%68},availability:['09:00','17:00'],contact:newExhibitor.contact||'现场负责人',role:'商务'};setDataset({...dataset,exhibitors:[...dataset.exhibitors,item]});setNewExhibitor({name:'',booth:'',category:'',offers:'',wants:'',contact:''});log('exhibitor_added',`新增 ${item.name}`);notify('展商已加入数据集'); }
+
+  const [pageTitle,pageSubtitle]=PAGE_META[active];
   return (
-    <main className="site-shell">
-      <header className="topbar">
-        <button className="brand brand-button" type="button" onClick={() => switchMode('visitor')} aria-label="辰程 AI 首页">
-          <span className="brand-mark">辰</span>
-          <span><strong>辰程 AI</strong><small>EXPO ACTION AGENT</small></span>
-        </button>
-        <nav className="desktop-nav" aria-label="主导航">
-          <button className={viewMode === 'visitor' ? 'active' : ''} type="button" onClick={() => switchMode('visitor')}>观众行程</button>
-          <button type="button" onClick={() => { switchMode('visitor'); window.setTimeout(() => document.getElementById('discover')?.scrollIntoView({ behavior: 'smooth' }), 80); }}>发现商机</button>
-          <button type="button" onClick={() => { switchMode('visitor'); window.setTimeout(() => document.getElementById('map')?.scrollIntoView({ behavior: 'smooth' }), 80); }}>场馆地图</button>
-        </nav>
-        <div className="top-actions">
-          <button className="organizer-entry" type="button" onClick={() => switchMode(viewMode === 'organizer' ? 'visitor' : 'organizer')}>{viewMode === 'organizer' ? '返回观众端' : '运营端'}</button>
-          <div className="live-pill"><i /> 场馆数据已同步</div>
+    <main className="app-shell">
+      <aside className="side-nav"><button className="app-brand" type="button" onClick={()=>go('home')}><span>辰</span><b>辰程 AI</b></button><nav>{NAV.map(([id,label,icon])=><button key={id} className={active===id?'active':''} type="button" onClick={()=>go(id)}><i>{icon}</i><span>{label}</span>{id==='plan'&&plan?.stops.length?<em>{plan.stops.length}</em>:null}</button>)}</nav><div className="sync-state"><i/>数据保存在当前设备</div></aside>
+      <section className="app-main">
+        <header className="app-topbar"><div><small>2026 首都会展 · 国家会议中心</small><b>{pageTitle}</b></div><div className="top-actions"><button type="button" className="ops-shortcut" onClick={()=>go('ops')}>运营</button><button className="user-chip" type="button" onClick={()=>setProfileOpen(true)}><span>{profile.company}</span><i>{profile.name.slice(0,1)}</i></button></div></header>
+        <div className={`workspace workspace-${active}`}>
+          <div className="page-heading"><div><span>{pageTitle}</span><h1>{pageSubtitle}</h1></div>{active!=='home'&&<button type="button" onClick={()=>go('home')}>＋ 新建行程</button>}</div>
+          {active==='home'&&<HomePage input={input} setInput={setInput} plan={plan} buildPlan={buildPlan} go={go} />}
+          {active==='match'&&<MatchPage matches={visibleMatches} search={search} setSearch={setSearch} category={category} setCategory={setCategory} categories={categories} plan={plan} select={(id)=>setSelectedId(id)} addToPlan={addToPlan} />}
+          {active==='plan'&&<PlanPage plan={plan} move={moveStop} remove={removeStop} update={updateStop} go={go} />}
+          {active==='map'&&<MapPage dataset={dataset} plan={plan} selected={selected} selectedId={selectedId} select={setSelectedId} input={input} setInput={setInput} addToPlan={addToPlan} go={go} update={updateStop} />}
+          {active==='meetings'&&<MeetingsPage exhibitors={dataset.exhibitors} selected={selected} select={setSelectedId} draft={meetingDraft} setDraft={setMeetingDraft} save={saveMeeting} meetings={meetings} notify={notify} />}
+          {active==='ops'&&<OpsPage dataset={dataset} plan={plan} meetings={meetings} logs={logs} importData={importData} exportData={exportData} newExhibitor={newExhibitor} setNewExhibitor={setNewExhibitor} addExhibitor={addExhibitor} reset={()=>{if(confirm('确定恢复演示数据？已导入展商会被替换。')){setDataset(DEFAULT_DATASET);setPlan(null);notify('已恢复演示数据');}}} />}
         </div>
-      </header>
-
-      {viewMode === 'visitor' ? (
-        <>
-          <section className="hero" id="top">
-            <div className="hero-copy">
-              <div className="eyebrow"><span>01</span> YOUR DAY, ORCHESTRATED</div>
-              <h1>把一个展会，变成一条<br /><em>可以执行的路线。</em></h1>
-              <p className="lead">说出你今天想完成的事。AI 会替你找到人、排好时间、规划路线，并把每一次推荐推进到真实会面。</p>
-
-              <div className="intent-card" id="plan">
-                <div className="intent-head"><label htmlFor="intent">今天来展会，最想完成什么？</label><span>AI 正在听</span></div>
-                <textarea id="intent" value={prompt} onChange={(event) => setPrompt(event.target.value)} rows={4} placeholder="例如：我有2小时，想找3家包装供应商……" />
-                <div className="quick-row">
-                  {['找供应商', '找投资人', '听一场论坛', '少走路'].map((item) => (
-                    <button key={item} type="button" onClick={() => setPrompt((value) => value.includes(item) ? value : `${value} ${item}`)}>{item}</button>
-                  ))}
-                </div>
-                <button className="primary-action" type="button" onClick={handlePlan} disabled={planning}>
-                  <span>{planning ? '正在理解需求并规划…' : '生成我的今日行程'}</span><b>{planning ? '···' : '↗'}</b>
-                </button>
-              </div>
-            </div>
-
-            <aside className={`day-card ${planned ? 'is-planned' : ''}`} aria-live="polite">
-              <div className="day-card-head">
-                <div><small>AUG 27 · THU</small><h2>{planned ? '你的半日行程' : '行程预览'}</h2></div>
-                <span className="score">92<small>最高匹配度</small></span>
-              </div>
-              <div className="route-map" aria-label="场馆路线预览">
-                <div className="map-grid" />
-                <div className="booth booth-a">A12</div><div className="booth booth-b">B07</div><div className="booth booth-c">C21</div>
-                <div className="route-line route-one" /><div className="route-line route-two" /><span className="you-are-here">你</span>
-              </div>
-              <ol className="mini-timeline">
-                {stops.slice(0, 3).map((stop, index) => (
-                  <li key={`${stop.id}-${stop.time}`}><time>{stop.time}</time><span><b>{stop.id} {stop.title}</b><small>{stop.status}</small></span><i>0{index + 1}</i></li>
-                ))}
-              </ol>
-              <div className="day-summary"><span><b>3</b> 个高价值目标</span><span><b>{replanned ? '1.0km' : '1.2km'}</b> 预计步行</span><span><b>42min</b> 节省时间</span></div>
-            </aside>
-          </section>
-
-          <section className={`results ${planned ? 'results-visible' : ''}`} id="results" aria-hidden={!planned}>
-            <div className="section-wrap">
-              <div className="result-intro">
-                <div><div className="eyebrow light"><span>02</span> INTENT → ACTION</div><h2>AI 已经理解你的目标</h2></div>
-                <div className="constraint-row">{tags.map((tag) => <span key={tag}>✓ {tag}</span>)}<span>✓ 14:00–17:00</span><span>✓ 预算 ¥80</span></div>
-              </div>
-
-              <div className="section-title" id="discover">
-                <div><small>SMART MATCHING</small><h3>最值得去的 3 个地方</h3></div>
-                <p>不是关键词相似，而是需求、供给、时间与位置同时成立。</p>
-              </div>
-              <div className="recommendation-grid">
-                {recommendations.map((item, index) => (
-                  <article className={`recommendation-card accent-${item.accent}`} key={item.id}>
-                    <div className="rec-top"><span className="rec-index">0{index + 1}</span><span className="rec-score">{item.score}<small>% MATCH</small></span></div>
-                    <div className="rec-type">{item.type} · {item.id}</div><h4>{item.name}</h4><p className="rec-offer">{item.offer}</p>
-                    <div className="reason-box"><small>为什么推荐</small><p>{item.reason}</p></div>
-                    <div className="rec-meta"><span>◷ {item.available}</span><span>⌁ {item.distance}</span></div>
-                    <button className={saved.includes(item.id) ? 'saved' : ''} type="button" onClick={() => toggleSaved(item.id)}>{saved.includes(item.id) ? '已加入行程 ✓' : '加入行程 +'}</button>
-                  </article>
-                ))}
-              </div>
-
-              <div className="route-section" id="map">
-                <div className="route-panel">
-                  <div className="route-panel-head"><div><small>YOUR ROUTE</small><h3>{replanned ? '更新后的行程' : '你的半日行程'}</h3></div><span>{replanned ? '1.0 km' : '1.2 km'} · 约 2.5 小时</span></div>
-                  <ol className="full-timeline">
-                    {stops.map((stop, index) => (
-                      <li className={stop.kind} key={`${stop.id}-${stop.time}`}>
-                        <time>{stop.time}</time><div className="timeline-node">{stop.kind === 'meal' ? '食' : index + 1}</div>
-                        <div className="stop-copy"><div><span>{stop.id}</span><small>{stop.status}</small></div><h4>{stop.title}</h4><p>{stop.meta}</p></div>
-                        {stop.kind === 'business' && <button type="button" onClick={() => { setSelectedBooth(stop.id); document.getElementById('map-canvas')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}>地图</button>}
-                      </li>
-                    ))}
-                  </ol>
-                  {!replanned ? (
-                    <div className="change-alert"><span>!</span><div><b>C21 负责人临时推迟至 16:00</b><small>原行程将产生 30 分钟等待</small></div><button type="button" onClick={() => { setReplanned(true); notify('行程已重新规划，预计少走 200 米'); }}>一键重排</button></div>
-                  ) : (
-                    <div className="success-alert"><span>✓</span><div><b>已重新规划</b><small>用餐提前，C21 新时段已锁定，共少走 200 米</small></div></div>
-                  )}
-                </div>
-
-                <div className="map-panel" id="map-canvas">
-                  <div className="map-toolbar"><div><small>NATIONAL CONVENTION CENTER</small><b>一层 · A/B/C 展区</b></div><div><button type="button">－</button><button type="button">＋</button></div></div>
-                  <div className={`big-map ${replanned ? 'map-replanned' : ''}`}>
-                    <div className="big-grid" />
-                    {['A03','A08','A12','B02','B07','B11','C04','C13','C21','F02'].map((booth) => (
-                      <button key={booth} type="button" className={`map-booth map-${booth.toLowerCase()} ${selectedBooth === booth ? 'selected' : ''} ${['A12','B07','C21','F02'].includes(booth) ? 'on-route' : ''}`} onClick={() => setSelectedBooth(booth)}>{booth}</button>
-                    ))}
-                    <div className="path p1" /><div className="path p2" /><div className="path p3" /><div className="path p4" />
-                    <span className="map-user">你</span>
-                    <div className="map-detail"><small>当前目标 · {selected.id}</small><b>{selected.name}</b><span>{selected.distance} · {selected.available}</span><button type="button" onClick={() => notify(`已开始前往 ${selected.id}`)}>开始导航 →</button></div>
-                  </div>
-                  <div className="map-legend"><span><i className="legend-user" />你的位置</span><span><i className="legend-route" />推荐路线</span><span><i className="legend-booth" />目标展位</span></div>
-                </div>
-              </div>
-
-              <section className="meeting-section">
-                <div className="meeting-copy"><div className="eyebrow"><span>03</span> MEET → CONVERT</div><h3>抵达不是终点，<br />让一次交流留下下一步。</h3><p>到达展位后扫码确认。AI 会给出会谈开场、记录双方承诺，并生成可发送的跟进信息。</p></div>
-                <div className="meeting-card">
-                  <div className="meeting-person"><span>林</span><div><small>A12 · 青禾循环包装</small><b>林悦 / 商务负责人</b></div><i>{checkedIn ? '会面中' : '现场可接待'}</i></div>
-                  {!checkedIn ? (
-                    <><div className="qr-placeholder"><div className="qr-grid">{Array.from({ length: 25 }).map((_, i) => <i key={i} className={i % 3 === 0 || i % 7 === 0 ? 'dark' : ''} />)}</div><span>扫描展位二维码<br />确认双方已到场</span></div><button className="meeting-action" type="button" onClick={() => { setCheckedIn(true); notify('已确认到达 A12'); }}>模拟扫码到场</button></>
-                  ) : !followupReady ? (
-                    <div className="conversation-panel"><small>AI 建议从这里开始</small><h4>“你们的小批量打样最低可以做到多少件？”</h4><textarea defaultValue="双方讨论了 5000 件起订的小批量试产，展商承诺两天内发送材料样册，我方需要补充包装尺寸。" rows={4} /><button className="meeting-action" type="button" onClick={() => setFollowupReady(true)}>结束会面并生成下一步</button></div>
-                  ) : (
-                    <div className="followup-panel"><span>✓</span><h4>会面纪要已生成</h4><ul><li>展商：8月29日前发送材料样册</li><li>你方：发送包装尺寸与预计采购量</li><li>线索阶段：有效需求 / 建议本周跟进</li></ul><button className="meeting-action" type="button" onClick={() => notify('跟进消息已复制')}>复制跟进消息</button></div>
-                  )}
-                </div>
-              </section>
-            </div>
-          </section>
-
-          <section className="pre-footer"><span>辰程 AI</span><h2>让真正互相需要的人，<br />在正确的时间抵达彼此。</h2><button type="button" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); document.getElementById('intent')?.focus(); }}>重新规划一天 ↗</button></section>
-        </>
-      ) : (
-        <OrganizerDashboard onBack={() => switchMode('visitor')} />
-      )}
-
-      <nav className="mobile-nav" aria-label="移动端导航">
-        <button className={viewMode === 'visitor' ? 'active' : ''} type="button" onClick={() => switchMode('visitor')}><span>⌁</span>行程</button>
-        <button type="button" onClick={() => { switchMode('visitor'); window.setTimeout(() => document.getElementById('discover')?.scrollIntoView({ behavior: 'smooth' }), 80); }}><span>◎</span>商机</button>
-        <button type="button" onClick={() => { switchMode('visitor'); window.setTimeout(() => document.getElementById('map')?.scrollIntoView({ behavior: 'smooth' }), 80); }}><span>▦</span>地图</button>
-        <button className={viewMode === 'organizer' ? 'active' : ''} type="button" onClick={() => switchMode('organizer')}><span>◫</span>运营</button>
-      </nav>
-      {toast && <div className="toast" role="status">✓ {toast}</div>}
+      </section>
+      <nav className="mobile-tabs">{NAV.slice(0,5).map(([id,label,icon])=><button key={id} className={active===id?'active':''} type="button" onClick={()=>go(id)}><i>{icon}</i><span>{label.replace('我的','')}</span></button>)}</nav>
+      {profileOpen&&<div className="modal-layer" onMouseDown={(event)=>{if(event.target===event.currentTarget)setProfileOpen(false)}}><section className="profile-modal"><header><div><small>本地个人档案</small><h2>让匹配更了解你</h2></div><button type="button" onClick={()=>setProfileOpen(false)}>×</button></header><label>姓名<input value={profile.name} onChange={(e)=>setProfile({...profile,name:e.target.value})}/></label><label>公司/团队<input value={profile.company} onChange={(e)=>setProfile({...profile,company:e.target.value})}/></label><label>参展身份<input value={profile.role} onChange={(e)=>setProfile({...profile,role:e.target.value})}/></label><label>你能提供什么<textarea rows={3} value={profile.offers} onChange={(e)=>setProfile({...profile,offers:e.target.value})}/></label><button className="solid-button" type="button" onClick={()=>{setProfileOpen(false);notify('个人档案已保存')}}>保存档案</button></section></div>}
+      {toast&&<div className="toast" role="status">✓ {toast}</div>}
     </main>
   );
 }
 
-function OrganizerDashboard({ onBack }: { onBack: () => void }) {
-  const metrics = [
-    { label: '需求提交', value: '1,284', delta: '+18.2%' },
-    { label: '接受推荐', value: '892', delta: '+12.4%' },
-    { label: '确认到场', value: '516', delta: '+23.1%' },
-    { label: '有效会面', value: '384', delta: '+31.6%' },
-  ];
-  return (
-    <section className="dashboard-page">
-      <div className="dashboard-head"><div><div className="eyebrow"><span>OPS</span> LIVE OPERATION CENTER</div><h1>商机转化驾驶舱</h1><p>把展会从“来了多少人”，推进到“发生了多少次有效连接”。</p></div><button type="button" onClick={onBack}>查看观众体验 →</button></div>
-      <div className="metric-grid">{metrics.map((item) => <article key={item.label}><small>{item.label}</small><strong>{item.value}</strong><span>↗ {item.delta}</span></article>)}</div>
-      <div className="dashboard-grid">
-        <article className="dash-card funnel-card"><div className="dash-title"><div><small>CONVERSION FUNNEL</small><h3>从推荐到真实会面</h3></div><span>今日 · 实时</span></div>
-          <div className="funnel-chart">
-            {[['推荐曝光','1,284','100%'],['接受推荐','892','69%'],['生成行程','704','55%'],['确认到场','516','40%'],['有效会面','384','30%'],['创建跟进','271','21%']].map((row, index) => <div key={row[0]}><span>{row[0]}</span><i style={{ width: `${100 - index * 13}%` }} /><b>{row[1]}</b><small>{row[2]}</small></div>)}
-          </div>
-        </article>
-        <article className="dash-card heat-card"><div className="dash-title"><div><small>LIVE FLOOR</small><h3>场馆实时热度</h3></div><span className="green-dot">运行正常</span></div>
-          <div className="heat-map"><div className="heat-grid" /><i className="heat h1" /><i className="heat h2" /><i className="heat h3" /><i className="heat h4" /><span className="zone z1">A区 · 76%</span><span className="zone z2">B区 · 48%</span><span className="zone z3">C区 · 62%</span></div>
-          <p className="heat-note"><b>AI 分流建议</b>A区将在 20 分钟后达到峰值，建议将 14% 的可替代推荐分流至 B 区。</p>
-        </article>
-        <article className="dash-card demand-card"><div className="dash-title"><div><small>DEMAND SIGNALS</small><h3>正在发生的需求</h3></div><span>共 437 条</span></div>
-          <div className="demand-list">{[['环保包装','128','+24%'],['AI 营销服务','94','+17%'],['渠道合作','76','+9%'],['消费投资','61','+31%'],['出海合规','43','+12%']].map((item, index) => <div key={item[0]}><i>{index + 1}</i><span>{item[0]}</span><b>{item[1]}</b><small>{item[2]}</small></div>)}</div>
-        </article>
-        <article className="dash-card insight-card"><div className="dash-title"><div><small>AI INSIGHT</small><h3>今天值得关注</h3></div><span>3 条</span></div>
-          <div className="insights"><div><span>01</span><p><b>高意向需求未被满足</b>有 36 位观众寻找“小批量环保包装”，当前仅 2 家展商可承接。</p></div><div><span>02</span><p><b>C区会面转化率最高</b>虽然客流低于 A 区，但有效会面率高出 18%，建议增加定向导流。</p></div><div><span>03</span><p><b>17:00 后跟进率显著下降</b>建议在会面后 10 分钟内自动提醒双方确认下一步。</p></div></div>
-        </article>
-      </div>
-    </section>
-  );
+function PlannerForm({input,setInput,buildPlan}:{input:PlannerInput;setInput:(value:PlannerInput)=>void;buildPlan:()=>void}) {
+  return <section className="planner-card"><label htmlFor="goal">你今天想完成什么？</label><textarea id="goal" value={input.query} onChange={(e)=>setInput({...input,query:e.target.value})} rows={4} placeholder="例如：14:00 到 17:00，找两家能小批量打样的环保包装商，再见一位消费投资人。"/><div className="planner-controls"><label><span>开始</span><input type="time" value={input.startTime} onChange={(e)=>setInput({...input,startTime:e.target.value})}/></label><label><span>结束</span><input type="time" value={input.endTime} onChange={(e)=>setInput({...input,endTime:e.target.value})}/></label><label><span>从哪里进</span><select value={input.entranceId} onChange={(e)=>setInput({...input,entranceId:e.target.value})}>{ENTRANCES.map((item)=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div><details className="advanced-options"><summary>偏好设置</summary><div><label className="check-control"><input type="checkbox" checked={input.lessWalking} onChange={(e)=>setInput({...input,lessWalking:e.target.checked})}/><span>尽量少走路</span></label><label className="check-control"><input type="checkbox" checked={input.mealNeeded} onChange={(e)=>setInput({...input,mealNeeded:e.target.checked})}/><span>安排用餐</span></label>{input.mealNeeded&&<label className="budget-control"><span>预算</span><input type="number" min="20" max="500" value={input.mealBudget} onChange={(e)=>setInput({...input,mealBudget:Number(e.target.value)})}/></label>}</div></details><button className="generate-button" type="button" onClick={buildPlan}>生成行动路线 <span>→</span></button></section>;
 }
+
+function HomePage({input,setInput,plan,buildPlan,go}:{input:PlannerInput;setInput:(value:PlannerInput)=>void;plan:GeneratedPlan|null;buildPlan:()=>void;go:(page:string)=>void}) {
+  const next=plan?.stops.find((stop)=>stop.status==='pending'||stop.status==='arrived');
+  return <><div className="home-grid"><PlannerForm input={input} setInput={setInput} buildPlan={buildPlan}/><aside className="today-card"><header><div><small>TODAY</small><h2>今日执行状态</h2></div><span>{plan?`${plan.stops.filter((s)=>s.status==='completed').length}/${plan.stops.length}`:'0/0'}</span></header>{plan&&next?<><div className="next-stop"><small>下一站 · {next.start}</small><strong>{next.booth}</strong><h3>{next.title}</h3><p>{next.subtitle}</p></div><div className="today-stats"><span><b>{plan.walkingMeters}m</b>预计步行</span><span><b>{plan.estimatedMinutes}min</b>总用时</span></div><button type="button" onClick={()=>go('plan')}>进入我的行程 →</button></>:<div className="mini-empty"><i>⌁</i><p>生成行程后，这里会显示下一站和执行进度。</p></div>}</aside></div>{plan&&<section className="quick-plan"><header><div><small>刚刚计算</small><h2>你的可执行路线</h2></div><button type="button" onClick={()=>go('map')}>在地图查看 →</button></header><div className="quick-stops">{plan.stops.map((stop,index)=><button key={stop.uid} type="button" onClick={()=>go('plan')}><i>{index+1}</i><span><small>{stop.start} · {stop.booth}</small><b>{stop.title}</b></span></button>)}</div>{plan.warnings.map((warning)=><p className="plan-warning" key={warning}>! {warning}</p>)}</section>}</>;
+}
+
+function MatchPage({matches,search,setSearch,category,setCategory,categories,plan,select,addToPlan}:{matches:ReturnType<typeof rankExhibitors>;search:string;setSearch:(v:string)=>void;category:string;setCategory:(v:string)=>void;categories:string[];plan:GeneratedPlan|null;select:(id:string)=>void;addToPlan:(e:Exhibitor)=>void}) {
+  return <><div className="filter-bar"><label className="search-box">⌕<input value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="搜索企业、产品、能力或需求"/></label><select value={category} onChange={(e)=>setCategory(e.target.value)}>{categories.map((item)=><option key={item}>{item}</option>)}</select><span>{matches.length} 个结果</span></div><div className="match-grid">{matches.map(({exhibitor,score,reasons,distance:meters})=><article className="match-card" key={exhibitor.id}><header><span>{exhibitor.booth}</span><b>{score}<small>%</small></b></header><small>{exhibitor.category}</small><h2>{exhibitor.name}</h2><p>{exhibitor.intro}</p><div className="tag-row">{exhibitor.offers.slice(0,3).map((tag)=><span key={tag}>{tag}</span>)}</div><div className="reason-list">{reasons.slice(0,2).map((reason)=><p key={reason}>✓ {reason}</p>)}</div><footer><span>距入口约 {meters}m</span><div><button type="button" onClick={()=>select(exhibitor.id)}>详情</button><button className="primary-small" type="button" onClick={()=>addToPlan(exhibitor)}>{plan?.stops.some((stop)=>stop.sourceId===exhibitor.id)?'已在行程':'加入行程'}</button></div></footer></article>)}</div></>;
+}
+
+function PlanPage({plan,move,remove,update,go}:{plan:GeneratedPlan|null;move:(i:number,d:-1|1)=>void;remove:(i:number)=>void;update:(i:number,s:PlanStop['status'])=>void;go:(p:string)=>void}) {
+  if(!plan)return <EmptyPanel icon="◷" title="还没有行程" text="先在行动台输入目标，系统会计算访问顺序和时间。" action="去生成行程" onAction={()=>go('home')}/>;
+  const completed=plan.stops.filter((s)=>s.status==='completed').length;
+  return <><section className="plan-dashboard"><div><small>执行进度</small><h2>{completed} / {plan.stops.length} 站已完成</h2><p>用上下按钮调整顺序，时间与距离会自动重算。</p></div><div className="progress-ring" style={{'--progress':`${plan.stops.length?completed/plan.stops.length*360:0}deg`} as CSSProperties}><span>{Math.round(plan.stops.length?completed/plan.stops.length*100:0)}%</span></div></section><ol className="editable-plan">{plan.stops.map((stop,index)=><li key={stop.uid} className={`status-${stop.status}`}><div className="stop-time"><b>{stop.start}</b><small>{stop.end}</small></div><i>{index+1}</i><div className="stop-main"><small>{stop.type==='exhibitor'?`${stop.booth} · ${stop.score}% 匹配`:stop.booth}</small><h3>{stop.title}</h3><p>{stop.subtitle}</p><span>{stop.status==='pending'?'待前往':stop.status==='arrived'?'已到场':stop.status==='completed'?'已完成':'已跳过'}</span></div><div className="stop-actions"><button type="button" disabled={index===0} onClick={()=>move(index,-1)}>↑</button><button type="button" disabled={index===plan.stops.length-1} onClick={()=>move(index,1)}>↓</button><button type="button" onClick={()=>remove(index)}>移除</button>{stop.status==='pending'&&<button className="primary-small" type="button" onClick={()=>update(index,'arrived')}>我已到达</button>}{stop.status==='arrived'&&<button className="primary-small" type="button" onClick={()=>update(index,'completed')}>完成</button>}</div></li>)}</ol><div className="plan-footer"><span>预计步行 <b>{plan.walkingMeters} 米</b></span><span>行程用时 <b>{plan.estimatedMinutes} 分钟</b></span><button type="button" onClick={()=>go('map')}>打开地图导航 →</button></div></>;
+}
+
+function MapPage({dataset,plan,selected,selectedId,select,input,setInput,addToPlan,go,update}:{dataset:ExpoDataset;plan:GeneratedPlan|null;selected:Exhibitor;selectedId:string;select:(id:string)=>void;input:PlannerInput;setInput:(v:PlannerInput)=>void;addToPlan:(e:Exhibitor)=>void;go:(p:string)=>void;update:(i:number,s:PlanStop['status'])=>void}) {
+  const stopIndex=plan?.stops.findIndex((stop)=>stop.sourceId===selectedId)??-1;
+  return <div className="map-workspace"><section className="map-stage"><header><label>当前位置<select value={input.entranceId} onChange={(e)=>setInput({...input,entranceId:e.target.value})}>{ENTRANCES.map((item)=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label><div><span><i className="route-key"/>行程路线</span><span><i className="target-key"/>目标展位</span></div></header><div className="canvas-wrap"><MapCanvas dataset={dataset} stops={plan?.stops??[]} entranceId={input.entranceId} selectedId={selectedId} onSelect={select}/></div></section><aside className="map-detail-panel"><span className="booth-badge">{selected.booth}</span><small>{selected.category}</small><h2>{selected.name}</h2><p>{selected.intro}</p><dl><div><dt>现场联系人</dt><dd>{selected.contact} · {selected.role}</dd></div><div><dt>可接待时间</dt><dd>{selected.availability.join('–')}</dd></div><div><dt>提供能力</dt><dd>{selected.offers.join('、')}</dd></div><div><dt>希望对接</dt><dd>{selected.wants.join('、')}</dd></div></dl>{stopIndex>=0?<><button className="solid-button" type="button" onClick={()=>update(stopIndex,'arrived')}>我已到达，开始会面</button><button className="ghost-button" type="button" onClick={()=>go('plan')}>查看完整行程</button></>:<button className="solid-button" type="button" onClick={()=>addToPlan(selected)}>加入我的行程</button>}</aside></div>;
+}
+
+function MeetingsPage({exhibitors,selected,select,draft,setDraft,save,meetings,notify}:{exhibitors:Exhibitor[];selected:Exhibitor;select:(id:string)=>void;draft:{notes:string;nextAction:string;deadline:string};setDraft:(v:{notes:string;nextAction:string;deadline:string})=>void;save:()=>void;meetings:Meeting[];notify:(m:string)=>void}) {
+  return <div className="meeting-grid"><section className="meeting-editor"><header><div><small>记录一次真实会面</small><h2>{selected.name}</h2></div><select value={selected.id} onChange={(e)=>select(e.target.value)}>{exhibitors.map((item)=><option key={item.id} value={item.id}>{item.booth} · {item.name}</option>)}</select></header><div className="contact-strip"><span>{selected.contact.slice(0,1)}</span><div><b>{selected.contact}</b><small>{selected.role} · {selected.booth}</small></div><i>现场可接待</i></div><label>会谈记录<textarea rows={7} value={draft.notes} onChange={(e)=>setDraft({...draft,notes:e.target.value})} placeholder="记录需求、报价、样品、双方承诺等。系统会据此生成纪要。"/></label><div className="meeting-fields"><label>下一步行动<input value={draft.nextAction} onChange={(e)=>setDraft({...draft,nextAction:e.target.value})} placeholder="例如：发送包装尺寸"/></label><label>截止日期<input type="date" value={draft.deadline} onChange={(e)=>setDraft({...draft,deadline:e.target.value})}/></label></div><button className="solid-button" type="button" onClick={save}>保存纪要并生成跟进消息</button></section><section className="meeting-history"><header><div><small>MEETING MEMORY</small><h2>已保存 {meetings.length} 次会面</h2></div></header>{meetings.length?meetings.map((meeting)=><article key={meeting.id}><div><span>{meeting.company.slice(0,1)}</span><div><b>{meeting.company}</b><small>{new Date(meeting.createdAt).toLocaleString('zh-CN')}</small></div></div><p>{meeting.summary}</p><dl><dt>下一步</dt><dd>{meeting.nextAction}{meeting.deadline?` · ${meeting.deadline}`:''}</dd></dl><button type="button" onClick={()=>{navigator.clipboard?.writeText(meeting.followup);notify('跟进消息已复制')}}>复制跟进消息</button></article>):<EmptyPanel icon="◇" title="还没有会面记录" text="到达展位后，在这里记录交流内容和下一步。"/>}</section></div>;
+}
+
+function OpsPage({dataset,plan,meetings,logs,importData,exportData,newExhibitor,setNewExhibitor,addExhibitor,reset}:{dataset:ExpoDataset;plan:GeneratedPlan|null;meetings:Meeting[];logs:EventLog[];importData:(e:ChangeEvent<HTMLInputElement>)=>void;exportData:()=>void;newExhibitor:{name:string;booth:string;category:string;offers:string;wants:string;contact:string};setNewExhibitor:(v:typeof newExhibitor)=>void;addExhibitor:()=>void;reset:()=>void}) {
+  const arrived=plan?.stops.filter((s)=>s.status==='arrived'||s.status==='completed').length??0;
+  return <><div className="metric-row"><article><small>展商数据</small><b>{dataset.exhibitors.length}</b><span>家企业</span></article><article><small>当前行程</small><b>{plan?.stops.length??0}</b><span>个目标</span></article><article><small>确认到场</small><b>{arrived}</b><span>次</span></article><article><small>有效会面</small><b>{meetings.length}</b><span>条记录</span></article></div><div className="ops-grid"><section className="data-panel"><header><div><small>企业数据</small><h2>导入与维护</h2></div><div><label className="file-button">导入 JSON / CSV<input type="file" accept=".json,.csv" onChange={importData}/></label><button type="button" onClick={exportData}>导出</button></div></header><p className="data-help">CSV 字段：name, booth, category, offers, wants, keywords, intro, x, y, available_from, available_to, contact, role。多个标签用 | 分隔。</p><div className="add-form"><input placeholder="企业名称*" value={newExhibitor.name} onChange={(e)=>setNewExhibitor({...newExhibitor,name:e.target.value})}/><input placeholder="展位号*" value={newExhibitor.booth} onChange={(e)=>setNewExhibitor({...newExhibitor,booth:e.target.value})}/><input placeholder="类别" value={newExhibitor.category} onChange={(e)=>setNewExhibitor({...newExhibitor,category:e.target.value})}/><input placeholder="能提供什么，用、分隔" value={newExhibitor.offers} onChange={(e)=>setNewExhibitor({...newExhibitor,offers:e.target.value})}/><input placeholder="希望对接什么" value={newExhibitor.wants} onChange={(e)=>setNewExhibitor({...newExhibitor,wants:e.target.value})}/><input placeholder="联系人" value={newExhibitor.contact} onChange={(e)=>setNewExhibitor({...newExhibitor,contact:e.target.value})}/><button className="solid-button" type="button" onClick={addExhibitor}>添加展商</button></div><div className="data-table"><div className="table-head"><span>展位</span><span>企业</span><span>类别</span><span>提供能力</span></div>{dataset.exhibitors.slice(0,12).map((item)=><div key={item.id}><span>{item.booth}</span><b>{item.name}</b><span>{item.category}</span><span>{item.offers.slice(0,2).join('、')}</span></div>)}</div><button className="danger-link" type="button" onClick={reset}>恢复内置演示数据</button></section><aside className="activity-panel"><header><small>真实操作日志</small><h2>最近活动</h2></header>{logs.length?logs.slice(0,12).map((item)=><div className="log-row" key={item.id}><i/><span><b>{item.label}</b><small>{new Date(item.at).toLocaleString('zh-CN')}</small></span></div>):<p className="no-log">生成行程、加入展商、到场和保存会面后，这里会出现真实记录。</p>}</aside></div></>;
+}
+
+function EmptyPanel({icon,title,text,action,onAction}:{icon:string;title:string;text:string;action?:string;onAction?:()=>void}) { return <section className="empty-state"><i className="empty-icon">{icon}</i><h2>{title}</h2><p>{text}</p>{action&&<button type="button" onClick={onAction}>{action} →</button>}</section>; }
