@@ -1,0 +1,487 @@
+/* 观众端样式 — Expo Service AI · 您的智能逛展助手 */
+/* 主色 #52C41A 绿白系 */
+
+.au-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  background: #F7F8FA;
+  font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
+  color: #1F1F1F;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* === 顶栏 === */
+.au-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #fff;
+  border-bottom: 1px solid #EAEAEA;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.au-topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.au-logo {
+  font-size: 24px;
+}
+
+.au-brand-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #52C41A;
+}
+
+.au-brand-sub {
+  font-size: 11px;
+  color: #999;
+}
+
+.au-topbar-title {
+  font-size: 13px;
+  color: #666;
+}
+
+/* === 内容区 === */
+.au-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 60px; /* 为底栏留空 */
+}
+
+/* === 底栏 Tab === */
+.au-tabs {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: #fff;
+  border-top: 1px solid #EAEAEA;
+  z-index: 100;
+}
+
+.au-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  font-size: 10px;
+  transition: color 0.2s;
+}
+
+.au-tab-active {
+  color: #52C41A;
+}
+
+.au-tab-icon {
+  font-size: 18px;
+}
+
+.au-tab-label {
+  font-size: 10px;
+}
+
+/* === 地图 Tab === */
+.au-map-tab {
+  padding: 12px;
+}
+
+.au-day-switcher {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+}
+
+.au-day-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #D9D9D9;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  color: #666;
+}
+
+.au-day-btn:hover {
+  border-color: #52C41A;
+}
+
+.au-day-active {
+  background: #52C41A;
+  color: #fff;
+  border-color: #52C41A;
+}
+
+/* 分区详情弹层 */
+.au-zone-detail {
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.au-zone-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #F0F0F0;
+}
+
+.au-zone-detail-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.au-close-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #999;
+  cursor: pointer;
+}
+
+.au-zone-detail-body {
+  padding: 16px;
+}
+
+.au-zone-access {
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.au-zone-access.accessible {
+  background: #F6FFED;
+  color: #52C41A;
+}
+
+.au-zone-access.restricted {
+  background: #FFF2F0;
+  color: #FF4D4F;
+}
+
+.au-zone-note {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 12px;
+}
+
+.au-zone-empty {
+  font-size: 13px;
+  color: #BBB;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.au-booth-list h4 {
+  font-size: 13px;
+  color: #666;
+  margin: 12px 0 8px;
+}
+
+.au-booth-card {
+  padding: 10px;
+  background: #FAFAFA;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.au-booth-name {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.au-booth-status {
+  font-size: 12px;
+  color: #52C41A;
+}
+
+.au-booth-hours {
+  font-size: 12px;
+  color: #999;
+}
+
+.au-booth-summary {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.au-map-btn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-top: 12px;
+  background: #52C41A;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* === 行程 Tab === */
+.au-schedule {
+  padding: 16px;
+}
+
+.au-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+
+.au-schedule-date {
+  font-size: 14px;
+  font-weight: 600;
+  color: #52C41A;
+  margin: 16px 0 8px;
+}
+
+.au-timeline {
+  position: relative;
+  padding-left: 20px;
+}
+
+.au-timeline::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #E8E8E8;
+}
+
+.au-timeline-card {
+  position: relative;
+  padding: 10px 0 10px 12px;
+}
+
+.au-timeline-dot {
+  position: absolute;
+  left: -17px;
+  top: 14px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #52C41A;
+  border: 2px solid #fff;
+}
+
+.au-timeline-time {
+  font-size: 12px;
+  color: #52C41A;
+  font-weight: 500;
+}
+
+.au-timeline-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.au-timeline-note {
+  font-size: 12px;
+  color: #999;
+}
+
+/* === 附近 Tab === */
+.au-nearby {
+  padding: 12px;
+}
+
+.au-search-bar {
+  margin-bottom: 10px;
+}
+
+.au-search-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #E8E8E8;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.au-search-input:focus {
+  border-color: #52C41A;
+}
+
+.au-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin-bottom: 12px;
+  padding-bottom: 4px;
+}
+
+.au-chip {
+  padding: 5px 12px;
+  border-radius: 14px;
+  border: 1px solid #E8E8E8;
+  background: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  color: #666;
+}
+
+.au-chip-active {
+  background: #52C41A;
+  color: #fff;
+  border-color: #52C41A;
+}
+
+.au-nearby-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.au-nearby-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.au-nearby-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.au-nearby-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.au-nearby-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.au-nearby-kind {
+  font-size: 11px;
+  color: #999;
+  margin-left: auto;
+}
+
+.au-nearby-booths {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.au-nearby-booth {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 4px 0;
+  border-top: 1px solid #F5F5F5;
+}
+
+.au-booth-badge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+
+.au-badge-open { background: #F6FFED; color: #52C41A; }
+.au-badge-busy { background: #FFF7E6; color: #FA8C16; }
+.au-badge-break { background: #F0F0F0; color: #999; }
+.au-badge-closed { background: #FFF2F0; color: #FF4D4F; }
+
+.au-nearby-empty, .au-nearby-none {
+  font-size: 12px;
+  color: #BBB;
+  text-align: center;
+  padding: 12px 0;
+}
+
+/* === 须知 Tab === */
+.au-info {
+  padding: 16px;
+}
+
+.au-info-section {
+  margin-bottom: 20px;
+}
+
+.au-info-section h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #52C41A;
+  margin: 0 0 8px;
+}
+
+.au-info-section p, .au-info-section li {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #444;
+}
+
+.au-info-section ul, .au-info-section ol {
+  padding-left: 20px;
+  margin: 4px 0;
+}
+
+.au-link-card {
+  display: block;
+  padding: 10px 14px;
+  background: #F6FFED;
+  border: 1px solid #B7EB8F;
+  border-radius: 8px;
+  color: #52C41A;
+  text-decoration: none;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.au-info-footer {
+  text-align: center;
+  padding: 20px 0;
+  color: #BBB;
+  font-size: 12px;
+}
+
+/* 桌面适配 */
+@media (min-width: 481px) {
+  .au-shell {
+    border-left: 1px solid #E8E8E8;
+    border-right: 1px solid #E8E8E8;
+  }
+}
