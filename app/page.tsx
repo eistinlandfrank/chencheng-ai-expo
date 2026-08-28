@@ -187,7 +187,7 @@ export default function Home() {
     <main className="app-shell">
       <aside className="side-nav"><button className="app-brand" type="button" onClick={()=>go('home')}><span>辰</span><b>辰程 AI</b></button><nav>{NAV.map(([id,label,icon])=><button key={id} className={active===id?'active':''} type="button" onClick={()=>go(id)}><i>{icon}</i><span>{label}</span>{id==='plan'&&plan?.stops.length?<em>{plan.stops.length}</em>:null}</button>)}</nav><div className="sync-state"><i/>数据保存在当前设备</div></aside>
       <section className="app-main">
-        <header className="app-topbar"><div><small>2026 首都会展 · 国家会议中心</small><b>{pageTitle}</b></div><div className="top-actions"><button type="button" className="ops-shortcut" onClick={()=>go('ops')}>运营</button><button className="user-chip" type="button" onClick={()=>setProfileOpen(true)}><span>{profile.company}</span><i>{profile.name.slice(0,1)}</i></button></div></header>
+        <header className="app-topbar"><div><small>2026 首都会展 · 国家会议中心</small><b>{pageTitle}</b></div><div className="top-actions"><a className="portal-link portal-link-primary" href="/audience">观众端</a><a className="portal-link" href="/admin">主办端</a><button className="user-chip" type="button" onClick={()=>setProfileOpen(true)}><span>{profile.company}</span><i>{profile.name.slice(0,1)}</i></button></div></header>
         <div className={`workspace workspace-${active}`}>
           {active!=='home'&&<div className="page-heading"><div><span>{pageTitle}</span><h1>{pageSubtitle}</h1></div><button type="button" onClick={()=>go('home')}>＋ 新建行程</button></div>}
           {active==='home'&&<HomePage buildPlan={buildPlan} go={go} />}

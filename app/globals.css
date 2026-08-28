@@ -39,8 +39,10 @@ textarea,input,select { outline:none; }
 .app-topbar small { color:var(--muted); font-size:9px; }
 .app-topbar b { margin-top:3px; font-size:12px; }
 .top-actions { display:flex; align-items:center; gap:8px; }
-.ops-shortcut,.user-chip { height:34px; background:#fff; border:1px solid var(--line); }
-.ops-shortcut { padding:0 12px; font-size:10px; }
+.portal-link,.user-chip { height:34px; background:#fff; border:1px solid var(--line); }
+.portal-link { padding:0 12px; display:flex; align-items:center; color:var(--ink); text-decoration:none; font-size:10px; }
+.portal-link:hover { border-color:var(--ink); }
+.portal-link-primary { background:var(--accent); border-color:var(--ink); font-weight:800; }
 .user-chip { padding:2px 3px 2px 11px; display:flex; align-items:center; gap:10px; font-size:10px; }
 .user-chip i { width:27px; height:27px; display:grid; place-items:center; color:#fff; background:var(--ink); border-radius:50%; font-style:normal; }
 
@@ -392,6 +394,7 @@ textarea,input,select { outline:none; }
 }
 
 @media (max-width:480px) {
+  .portal-link { padding:0 8px; font-size:8px; }
   .home-chat-toolbar { padding:0 10px; }
   .home-assistant-label > span { display:none; }
   .home-chat-intro > p { font-size:10px; }
