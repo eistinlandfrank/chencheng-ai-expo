@@ -36,3 +36,10 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+
+# Local-only venue analysis visuals and extracted frames
+/public/venue-layout/*.png
+/public/venue-layout/*.svg
+/public/venue-layout/*.jpg
+/public/venue-layout/*.jpeg
+/public/venue-layout/frames/
