@@ -260,6 +260,88 @@ export const categoryOptions = ['全部赛道', ...showcaseEvent.tracks];
 export const maxKeywordCount = searchKeywords[0]?.count ?? 1;
 export const hotBooth = getBooth('T-E05');
 
+export type TrafficTier = 'S' | 'A' | 'B' | 'C';
+
+export const pricingModel = {
+  baseFee: 12000,
+  perVisitor: 8,
+  perLead: 80,
+  hotPremium: 0.25,
+  hotCount: 4,
+};
+
+export const trafficTierLabels: Record<TrafficTier, string> = {
+  S: '热区溢价',
+  A: '旺区加价',
+  B: '标准位',
+  C: '冷区招商',
+};
+
+export type BoothCommercial = {
+  id: string;
+  companyName: string;
+  category: string;
+  col: BoothCol;
+  visitorCount: number;
+  avgDwellMinutes: number;
+  businessLeads: number;
+  heatScore: number;
+  tier: TrafficTier;
+  premium: boolean;
+  fee: number;
+};
+
+export function priceBooth(booth: Pick<ShowcaseBooth, 'visitorCount' | 'businessLeads'>, premium: boolean) {
+  const raw = pricingModel.baseFee + booth.visitorCount * pricingModel.perVisitor + booth.businessLeads * pricingModel.perLead;
+  const priced = premium ? raw * (1 + pricingModel.hotPremium) : raw;
+  return Math.round(priced / 100) * 100;
+}
+
+function tierForRank(rank: number, visitorCount: number): TrafficTier {
+  if (rank < pricingModel.hotCount) return 'S';
+  if (rank < 10) return 'A';
+  if (visitorCount >= 250) return 'B';
+  return 'C';
+}
+
+export const boothCommercials: BoothCommercial[] = [...occupiedBooths]
+  .sort((a, b) => b.visitorCount - a.visitorCount)
+  .map((booth, rank) => {
+    const premium = rank < pricingModel.hotCount;
+    return {
+      id: booth.id,
+      companyName: booth.companyName,
+      category: booth.category,
+      col: booth.col,
+      visitorCount: booth.visitorCount,
+      avgDwellMinutes: booth.avgDwellMinutes,
+      businessLeads: booth.businessLeads,
+      heatScore: booth.heatScore,
+      tier: tierForRank(rank, booth.visitorCount),
+      premium,
+      fee: priceBooth(booth, premium),
+    };
+  });
+
+export const zoneCommercials = (['A', 'B', 'C', 'D', 'E'] as BoothCol[]).map((col) => {
+  const rows = boothCommercials.filter((item) => item.col === col);
+  return {
+    col,
+    label: `${col}区`,
+    booths: rows.length,
+    visitors: rows.reduce((sum, item) => sum + item.visitorCount, 0),
+    revenue: rows.reduce((sum, item) => sum + item.fee, 0),
+  };
+});
+
+export const commercialSummary = {
+  revenue: boothCommercials.reduce((sum, item) => sum + item.fee, 0),
+  visitors: boothCommercials.reduce((sum, item) => sum + item.visitorCount, 0),
+  hotCount: boothCommercials.filter((item) => item.tier === 'S').length,
+  vacant: showcaseBooths.length - occupiedBooths.length,
+  top: boothCommercials[0],
+};
+
 export const demoNotices = [
   { id: 9001, title: 'E区主通道拥堵，请引导分流', content: 'E区主通道通行速率下降，请引导访客从 4 号门 / 南侧辅道进入，避开 T-E05 门口排队。', audience: '全体观众', status: '已发布', createdAt: '10:48' },
   { id: 9002, title: '主论坛延迟 15 分钟', content: '主舞台「具身智能产业化」论坛预计 13:45 开始。已预约观众无需重新签到。', audience: '全体观众', status: '已发布', createdAt: '10:45' },

@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   BarChart3,
@@ -38,10 +38,11 @@ import VenueMap from '@/components/VenueMap';
 import { places, venue } from '@/lib/venue';
 import { emptyMapFieldChecks, type ClosedGroup, type MapFieldChecks, type OpsNotice as Notice, type OpsState, type OpsTicket } from '@/lib/state-types';
 import { protectedJsonHeaders } from '@/lib/csrf';
-import { demoAnalytics, demoMembers, demoNotices, demoPendingInvites, demoTickets, showcaseEvent, showcaseVenues } from '@/lib/venue-showcase-data';
+import { demoMembers, demoNotices, demoPendingInvites, demoTickets, showcaseEvent, showcaseVenues } from '@/lib/venue-showcase-data';
 import OverviewDashboard from './components/OverviewDashboard';
 import MapRoutingPanel from './components/MapRoutingPanel';
 import CatalogActivitiesPanel from './components/CatalogActivitiesPanel';
+import OperationsAnalyticsPanel from './components/OperationsAnalyticsPanel';
 import './operations.css';
 
 type OpsTab = 'overview' | 'map' | 'catalog' | 'tickets' | 'notices' | 'analytics' | 'accounts' | 'settings';
@@ -244,7 +245,7 @@ export default function OperationsPortal({ displayName }: { displayName: string 
           {tab === 'catalog' && <>{profileReviewStatus === 'review' && <div className="policy-banner"><ClipboardCheck size={20} /><div><strong>有展位内容等待审核</strong><p>审核通过后，新内容会替换观众端当前公开版本。</p></div><button type="button" onClick={() => void publishBoothProfile()}>审核并发布</button></div>}<CatalogActivitiesPanel /><CatalogManagement openPlaceIds={openPlaceIds} onToggle={togglePlaceAvailability} /></>}
           {tab === 'notices' && <NoticesView notices={notices} onCreate={() => setNoticeOpen(true)} />}
           {tab === 'tickets' && <TicketDispatch tickets={tickets} onCreate={() => setTicketOpen(true)} onAdvance={advanceTicket} />}
-          {tab === 'analytics' && <OperationsAnalyticsView />}
+          {tab === 'analytics' && <OperationsAnalyticsPanel />}
           {tab === 'accounts' && <AccountsView />}
           {tab === 'settings' && <SystemSettingsView mapStatus={mapReviewState} />}
           <footer className="ops-footer"><span>Expo Service AI 管理平台 v1.0.0</span><span>© 首都会展集团 · AITEX 2026 示范馆</span></footer>
@@ -314,49 +315,6 @@ function TicketDispatch({ tickets, onCreate, onAdvance }: { tickets: OpsTicket[]
     { status: '已完成', next: '' },
   ];
   return <section><PageHeading eyebrow="现场服务闭环" title="工单调度" description="按位置与紧急度处理，并记录每次状态变化。" action={<button className="primary heading-primary" type="button" onClick={onCreate}><Plus size={17} />创建工单</button>} />{tickets.length ? <div className="ticket-board">{columns.map((column) => { const items = tickets.filter((ticket) => ticket.status === column.status); return <div className={`board-column ${items.length ? '' : 'empty'}`} key={column.status}><header><span>{column.status}</span><b>{items.length}</b></header>{items.length ? items.map((ticket) => <article key={ticket.id}><div><small>{ticket.priority} · {ticket.source === 'exhibitor' ? '展商提交' : '运营创建'}</small><strong>{ticket.category}</strong><p><MapPin size={14} />{ticket.location}</p><small>{ticket.description}</small></div>{column.next && <button type="button" onClick={() => onAdvance(ticket.id)}>{column.next}</button>}</article>) : <div><ClipboardCheck size={25} /><p>当前没有{column.status}工单</p></div>}</div>; })}</div> : <div className="large-empty portal-empty"><span><Wrench size={31} /></span><h1>现场服务队列为空</h1><p>新工单将按紧急度和位置进入调度队列。</p><button type="button" onClick={onCreate}>创建工单</button></div>}</section>;
-}
-
-type AnalyticsMetric = { value: number | null; suppressed: boolean };
-type OperationsAnalytics = {
-  range: { label: string; since: string; until: string };
-  metrics: Record<'active_sessions' | 'searches' | 'no_result_searches' | 'booth_views' | 'routes_started' | 'arrivals' | 'reservations', AnalyticsMetric>;
-  keywords: Array<{ keyword: string; total: number }>;
-};
-
-function OperationsAnalyticsView() {
-  const [analytics, setAnalytics] = useState<OperationsAnalytics | null>(demoAnalytics);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const load = useCallback(async () => {
-    try {
-      const response = await fetch('/api/v1/ops/analytics', { cache: 'no-store' });
-      const payload = await response.json() as { analytics?: OperationsAnalytics; message?: string };
-      if (!response.ok || !payload.analytics) throw new Error(payload.message ?? '分析数据加载失败');
-      setAnalytics(payload.analytics);
-      setMessage('');
-    } catch {
-      setAnalytics(demoAnalytics);
-      setMessage('');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-  useEffect(() => {
-    const timer = window.setTimeout(() => void load(), 0);
-    return () => window.clearTimeout(timer);
-  }, [load]);
-  if (loading) return <section><PageHeading eyebrow="匿名聚合数据" title="分析" description="汇总最近 24 小时的观众操作。" /><div className="large-empty portal-empty"><span><BarChart3 size={31} /></span><h1>正在汇总数据</h1></div></section>;
-  if (!analytics) return <section><PageHeading eyebrow="匿名聚合数据" title="分析" description="汇总最近 24 小时的观众操作。" /><div className="large-empty portal-empty"><span><BarChart3 size={31} /></span><h1>暂时无法加载分析</h1><p>{message}</p><button type="button" onClick={() => { setLoading(true); void load(); }}>重新加载</button></div></section>;
-  const cards = [
-    ['active_sessions', '活跃会话', '去重匿名会话', Users],
-    ['searches', '搜索提交', '操作次数', Search],
-    ['no_result_searches', '无结果搜索', '操作次数', CircleAlert],
-    ['booth_views', '详情浏览', '操作次数', Building2],
-    ['routes_started', '启动导航', '操作次数', Waypoints],
-    ['arrivals', '确认到达', '操作次数', MapPin],
-    ['reservations', '活动预约', '成功创建', ClipboardCheck],
-  ] as const;
-  return <section><PageHeading eyebrow="匿名聚合数据" title="分析" description="汇总观众发现、规划、导航与预约行为，不展示个人轨迹。" /><div className="analytics-range"><BarChart3 size={17} /><span><strong>{analytics.range.label}</strong><small>{new Date(analytics.range.until).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })} 更新 · 除活跃会话外均为操作次数</small></span></div><div className="metric-grid analytics-metrics">{cards.map(([key, label, note, Icon]) => <article key={key}><div><span>{label}</span><small>{note}</small></div><strong>{analytics.metrics[key].value ?? '已保护'}</strong><Icon size={20} /></article>)}</div><div className="content-grid two-one analytics-lower"><section className="panel-card"><div className="card-head"><div><h2>观众操作漏斗</h2><p>同一会话可能产生多次操作</p></div></div><div className="ops-funnel">{cards.slice(3).map(([key, label], index) => <div key={key}><span>{index + 1}</span><strong>{label}</strong><b>{analytics.metrics[key].value ?? '已保护'}</b></div>)}</div></section><aside className="panel-card"><div className="card-head"><div><h2>热门搜索词</h2><p>至少出现 3 次才显示</p></div></div>{analytics.keywords.length ? <ol className="keyword-list">{analytics.keywords.map((item) => <li key={item.keyword}><span>{item.keyword}</span><strong>{item.total}</strong></li>)}</ol> : <div className="empty-inline analytics-empty"><Search size={25} /><div><strong>暂无可展示搜索词</strong><p>达到最小聚合数量后显示。</p></div></div>}</aside></div></section>;
 }
 
 type AuditEntry = { id: string; actor_label: string; action: string; changed_fields: string[]; created_at: string };
