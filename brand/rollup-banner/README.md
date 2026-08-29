@@ -28,3 +28,8 @@ The `rollup-pop-v2-qr` files are the print-ready campaign variant with a verifie
 - `Expo-Service-AI-rollup-pop-v2-qr.png`: 2400 × 6000 production raster;
 - `Expo-Service-AI-rollup-pop-v2-qr-print.png`: 3600 × 9000 high-resolution print raster;
 - `Expo-Service-AI-rollup-pop-v2-qr-preview.jpg`: lightweight review copy.
+
+Standalone QR exports are also available for reuse in other materials:
+
+- `Expo-Service-AI-website-qr.png`: 1200 × 1200 high-resolution raster;
+- `Expo-Service-AI-website-qr.svg`: scalable vector source.
