@@ -24,9 +24,6 @@ fi
 : "$PLATFORM_HOST_PORT"
 : "$VISITOR_HOST_PORT"
 : "$WEBHOOK_HOST_PORT"
-: "$VISITOR_HOSTNAME"
-: "$STAFF_HOSTNAME"
-: "$DEPLOY_HOSTNAME"
 
 export DOCKER_HOST="$APP_DOCKER_HOST"
 
@@ -93,7 +90,6 @@ done
 export APP_VERSION="$COMMIT"
 export DEPLOY_QUEUE_DIR SECRETS_DIR PLATFORM_DATA_DIR
 export GATEWAY_HOST_PORT PLATFORM_HOST_PORT VISITOR_HOST_PORT WEBHOOK_HOST_PORT
-export VISITOR_HOSTNAME STAFF_HOSTNAME DEPLOY_HOSTNAME
 COMPOSE_FILE="$RELEASE_DIR/compose.production.yaml"
 
 docker compose -f "$COMPOSE_FILE" config --quiet || fail "Compose configuration is invalid"
@@ -210,9 +206,9 @@ if ! wait_healthy chencheng-gateway \
   fail "New release failed health checks"
 fi
 
-if ! curl --fail --silent --show-error -H "Host: $STAFF_HOSTNAME" "http://127.0.0.1:$GATEWAY_HOST_PORT/operations" >/dev/null \
-  || ! curl --fail --silent --show-error -H "Host: $STAFF_HOSTNAME" "http://127.0.0.1:$GATEWAY_HOST_PORT/exhibitor" >/dev/null \
-  || ! curl --fail --silent --show-error -H "Host: $VISITOR_HOSTNAME" "http://127.0.0.1:$GATEWAY_HOST_PORT/booths" >/dev/null \
+if ! curl --fail --silent --show-error "http://127.0.0.1:$GATEWAY_HOST_PORT/operations" >/dev/null \
+  || ! curl --fail --silent --show-error "http://127.0.0.1:$GATEWAY_HOST_PORT/exhibitor" >/dev/null \
+  || ! curl --fail --silent --show-error "http://127.0.0.1:$GATEWAY_HOST_PORT/booths" >/dev/null \
   || ! curl --fail --silent --show-error "http://127.0.0.1:$WEBHOOK_HOST_PORT/healthz" >/dev/null; then
   restore_previous
   fail "Release origin checks failed"

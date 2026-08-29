@@ -73,7 +73,7 @@ AI 助手只处理简短的文本提问，并在服务端调用兼容 OpenAI 的
 首次场馆管理员由服务器上的一次性命令创建激活记录。应用必须已经运行，并已从 `.env` 读取 `AUTH_BOOTSTRAP_SECRET`：
 
 ```bash
-docker exec -it chencheng-web node scripts/bootstrap-admin.mjs \
+docker exec -it chencheng-platform node scripts/bootstrap-admin.mjs \
   --email admin@example.invalid \
   --name "初始管理员"
 ```
@@ -84,9 +84,9 @@ docker exec -it chencheng-web node scripts/bootstrap-admin.mjs \
 
 ## Docker 构建与运行
 
-`compose.production.yaml` 管理主平台、访客端和安全 webhook 接收器；`compose.tunnel.yaml` 由宿主机系统 Docker 单独管理 Cloudflare Named Tunnel。这样应用发布和回滚不会重启固定域名隧道。镜像只用经过验证的完整 Git commit SHA 标记，真实密钥、tunnel 凭据和数据目录全部保存在 Git 仓库外。
+`compose.production.yaml` 管理单端口网关、主平台、访客端和安全 webhook 接收器。Cloudflare Quick Tunnel 由宿主机系统 Docker 独立运行，应用发布和回滚不会重启它。镜像只用经过验证的完整 Git commit SHA 标记，真实密钥和数据目录全部保存在 Git 仓库外。
 
-目标 OpenWrt 主机使用 NVMe 上的独立 Docker daemon 保存应用镜像与容器；所有公网请求只进入网关端口 `3100`，网关再按固定 hostname 分流到仅监听回环地址的主平台、访客端和 webhook。首次配置、GitHub webhook 自动部署和人工回滚见 [三端生产部署、自动发布与回滚](deploy/ROLLBACK.md)。
+目标 OpenWrt 主机使用 NVMe 上的独立 Docker daemon 保存应用镜像与容器；所有公网请求只进入网关端口 `3100`。网关按路径分流到仅监听回环地址的主平台、访客端和 webhook，同一个 Quick Tunnel 地址即可访问全部页面。首次配置、GitHub webhook 自动部署和人工回滚见 [三端生产部署、自动发布与回滚](deploy/ROLLBACK.md)。
 
 ## 数据备份与回滚
 
@@ -96,7 +96,7 @@ docker exec -it chencheng-web node scripts/bootstrap-admin.mjs \
 
 ## 外部访问
 
-Quick Tunnel 仅适合临时验收，随机 `trycloudflare.com` 主机名不会用于生产。正式环境使用账户管理的 Named Tunnel 和固定 DNS 主机名：访客域名发布新观展端，工作台域名发布展商与运营端，部署域名只接受精确的 GitHub webhook 路径。
+当前部署保留目标机上已经验证的 `trycloudflare.com` Quick Tunnel，不创建自定义 DNS 记录，也不在应用发布时重启 tunnel。Quick Tunnel 主机名取自运行中容器的日志；如果该容器被重建，地址可能改变，因此应在变更 webhook URL 前重新做公网验收。
 
 ## 发布边界
 

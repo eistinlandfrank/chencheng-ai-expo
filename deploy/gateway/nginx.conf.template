@@ -33,32 +33,36 @@ http {
 
   server {
     listen ${GATEWAY_HOST_PORT} default_server;
-    server_name ${VISITOR_HOSTNAME} _;
+    server_name _;
+
+    location = /webhooks/github {
+      proxy_pass http://127.0.0.1:${WEBHOOK_HOST_PORT};
+    }
+
+    location ^~ /api/v1/ {
+      proxy_pass http://127.0.0.1:${PLATFORM_HOST_PORT};
+    }
+
+    location ~ ^/(access-denied|activate|exhibitor|login|operations)(/|$) {
+      proxy_pass http://127.0.0.1:${PLATFORM_HOST_PORT};
+    }
+
+    # Both applications emit immutable assets below /_next/. Try the staff
+    # platform first, then fall back to the visitor app when that asset hash
+    # does not exist there.
+    location ^~ /_next/ {
+      proxy_intercept_errors on;
+      error_page 404 = @visitor_next;
+      proxy_pass http://127.0.0.1:${PLATFORM_HOST_PORT};
+    }
+
+    location @visitor_next {
+      proxy_pass http://127.0.0.1:${VISITOR_HOST_PORT};
+    }
 
     location / {
       proxy_pass http://127.0.0.1:${VISITOR_HOST_PORT};
     }
   }
 
-  server {
-    listen ${GATEWAY_HOST_PORT};
-    server_name ${STAFF_HOSTNAME};
-
-    location / {
-      proxy_pass http://127.0.0.1:${PLATFORM_HOST_PORT};
-    }
-  }
-
-  server {
-    listen ${GATEWAY_HOST_PORT};
-    server_name ${DEPLOY_HOSTNAME};
-
-    location = /webhooks/github {
-      proxy_pass http://127.0.0.1:${WEBHOOK_HOST_PORT};
-    }
-
-    location / {
-      return 404;
-    }
-  }
 }

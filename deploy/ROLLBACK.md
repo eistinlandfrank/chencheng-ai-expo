@@ -1,18 +1,16 @@
-# 三端生产部署、自动发布与回滚
+# 单入口生产部署、自动发布与回滚
 
-生产目标是同一台 Docker/OpenWrt 主机上的三个固定入口：
+生产目标是同一台 Docker/OpenWrt 主机上的一个公网入口：
 
 | 入口 | Origin | 用途 |
 | --- | --- | --- |
-| 访客域名 | `127.0.0.1:3100` | 新观展页面；旧观展首页不再发布 |
-| 工作台域名 | `127.0.0.1:3100` | `/exhibitor` 展商端、`/operations` 运营端 |
-| 部署域名 | `127.0.0.1:3100` | 仅接收 `/webhooks/github` |
+| Quick Tunnel 地址 | `127.0.0.1:3100` | 新观展页面、`/exhibitor`、`/operations`、`/webhooks/github` |
 
 只有网关监听对外端口 `3100`。主平台 `3101`、访客端 `3102`、webhook `3103` 只监听
-`127.0.0.1`，由网关根据 hostname 分流，因此静态资源和鉴权 Cookie 不会互相冲突。
+`127.0.0.1`，由网关根据路径分流；两套 `/_next` 静态资源使用哈希文件名和 404 回退分配到正确应用。
 
-Cloudflare 使用 Named Tunnel 和账户内 DNS 记录。不要把 Quick Tunnel 的随机
-`trycloudflare.com` 地址当作生产域名。
+Cloudflare 使用目标机上已经运行并验证的 Quick Tunnel。不要在应用发布中停止、重建或
+替换该容器，也不要为此项目创建自定义 DNS 记录。实际公网地址从 tunnel 容器日志读取。
 
 ## 服务器目录
 
@@ -34,21 +32,13 @@ chown 10001:10001 /mnt/nvme0n1-4/apps/chencheng-ai-expo/data
 真实环境变量只能写到 `secrets/*.env`，全部设为 `0600`；字段说明见
 `deploy/secrets/README.md`。
 
-## 固定 Cloudflare Tunnel
+## 现有 Cloudflare Quick Tunnel
 
-在 Cloudflare 账户中创建 Named Tunnel，把该 tunnel 的 `credentials.json` 放到宿主机
-受限目录，并将 `deploy/cloudflared/config.example.yml` 复制为同目录的
-`config.yml`。替换 tunnel UUID 和三个真实主机名，然后在 Cloudflare
-DNS 中让这些主机名指向 `<TUNNEL_UUID>.cfargotunnel.com`。
-
-三个 hostname 和 tunnel UUID 是服务器配置，不提交 Git。`config.yml` 的最后一条
-ingress 必须保持 `http_status:404`，部署域名只允许精确 webhook 路径。
-
-Tunnel 使用系统 Docker 单独启动，不属于应用发布事务：
+只读确认运行状态和当前地址，不执行 restart：
 
 ```sh
-export CLOUDFLARED_CONFIG_DIR=/mnt/nvme0n1-4/apps/cloudflared
-docker compose -f source/compose.tunnel.yaml up -d tunnel
+docker ps --filter name=chencheng-tunnel
+docker logs chencheng-tunnel 2>&1 | grep -Eo 'https://[-a-z0-9]+\.trycloudflare\.com' | tail -n 1
 ```
 
 ## 首次启动
@@ -61,7 +51,6 @@ export DOCKER_HOST="$APP_DOCKER_HOST"
 export APP_VERSION="$(git rev-parse HEAD)"
 export DEPLOY_QUEUE_DIR SECRETS_DIR PLATFORM_DATA_DIR
 export GATEWAY_HOST_PORT PLATFORM_HOST_PORT VISITOR_HOST_PORT WEBHOOK_HOST_PORT
-export VISITOR_HOSTNAME STAFF_HOSTNAME DEPLOY_HOSTNAME
 
 docker compose -f compose.production.yaml config --quiet
 docker compose -f compose.production.yaml build gateway platform visitor webhook
@@ -76,7 +65,7 @@ docker compose -f compose.production.yaml up -d gateway platform visitor webhook
 
 在 GitHub 仓库添加 push webhook：
 
-- Payload URL：固定部署域名的 `https://<deploy-host>/webhooks/github`
+- Payload URL：当前已验证 Quick Tunnel 地址的 `https://<trycloudflare-host>/webhooks/github`
 - Content type：`application/json`
 - Secret：与服务器 `webhook.env` 的 `GITHUB_WEBHOOK_SECRET` 完全一致
 - Events：只选择 push
@@ -109,7 +98,6 @@ export DOCKER_HOST="$APP_DOCKER_HOST"
 export APP_VERSION="<previous-40-character-sha>"
 export DEPLOY_QUEUE_DIR SECRETS_DIR PLATFORM_DATA_DIR
 export GATEWAY_HOST_PORT PLATFORM_HOST_PORT VISITOR_HOST_PORT WEBHOOK_HOST_PORT
-export VISITOR_HOSTNAME STAFF_HOSTNAME DEPLOY_HOSTNAME
 docker compose -f "releases/$APP_VERSION/source/compose.production.yaml" up -d --no-build gateway platform visitor webhook
 ```
 

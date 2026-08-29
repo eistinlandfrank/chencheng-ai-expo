@@ -15,6 +15,6 @@ USER 101:101
 EXPOSE 3100
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -q -O /dev/null --header="Host: $VISITOR_HOSTNAME" "http://127.0.0.1:$GATEWAY_HOST_PORT/" || exit 1
+  CMD wget -q -O /dev/null "http://127.0.0.1:$GATEWAY_HOST_PORT/" || exit 1
 
 ENTRYPOINT ["/usr/local/bin/chencheng-gateway"]
