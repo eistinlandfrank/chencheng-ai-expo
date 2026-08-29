@@ -9,14 +9,7 @@ export type Membership = {
 };
 
 const tenantId = 'tenant-thousand-hackathon';
-const initialOwnerTokenHash = '64b771fd6bdbe70c9c30b21f36f2896d178f9d065baf22c7780b8f863e329c38';
 let initialized = false;
-
-async function sha256(value: string) {
-  const bytes = new TextEncoder().encode(value);
-  const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes);
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
-}
 
 async function ensureMembershipTable() {
   if (initialized) return;
@@ -104,26 +97,6 @@ export async function ensureExhibitorAccess(user: ChatGPTUser): Promise<Membersh
   await ensureMembershipTable();
   const row = await findMembership(user.userId, 'exhibitor_admin');
   return row ? { role: row.role, organizationId: row.organization_id, placeId: row.place_id } : null;
-}
-
-export async function claimInitialOwner(user: ChatGPTUser, token: string) {
-  await ensureMembershipTable();
-  if (!token || await sha256(token) !== initialOwnerTokenHash) return false;
-  const now = new Date().toISOString();
-  await env.DB.batch([
-    env.DB.prepare(`INSERT INTO app_memberships
-      (id, tenant_id, event_id, user_id, email_snapshot, display_name, role, organization_id, place_id, created_at)
-      SELECT ?, ?, ?, ?, ?, ?, 'venue_admin', NULL, NULL, ?
-      WHERE NOT EXISTS (SELECT 1 FROM app_memberships WHERE event_id = ? AND role = 'venue_admin')`)
-      .bind(crypto.randomUUID(), tenantId, venue.eventId, user.userId, user.email, user.displayName, now, venue.eventId),
-    env.DB.prepare(`INSERT INTO app_memberships
-      (id, tenant_id, event_id, user_id, email_snapshot, display_name, role, organization_id, place_id, created_at)
-      SELECT ?, ?, ?, ?, ?, ?, 'exhibitor_admin', 'org-hardware-robot', 'robot-dev', ?
-      WHERE EXISTS (SELECT 1 FROM app_memberships WHERE event_id = ? AND role = 'venue_admin' AND user_id = ?)
-        AND NOT EXISTS (SELECT 1 FROM app_memberships WHERE event_id = ? AND role = 'exhibitor_admin' AND place_id = 'robot-dev')`)
-      .bind(crypto.randomUUID(), tenantId, venue.eventId, user.userId, user.email, user.displayName, now, venue.eventId, user.userId, venue.eventId),
-  ]);
-  return Boolean(await findMembership(user.userId, 'venue_admin'));
 }
 
 export async function listOperationsMembers() {

@@ -2,35 +2,32 @@ import type { Metadata } from 'next';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 import './globals.css';
 
+const siteUrl = new URL('https://expo-service-ai-hackathon.silophyflo.chatgpt.site');
+const title = 'Expo Service AI｜智能逛展助手';
+const description = '扫码定位、搜索展位、规划行程并沿场馆通道导航。';
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://expo-service-ai-hackathon.silophyflo.chatgpt.site'),
-  title: 'Expo Service AI｜智能逛展助手',
-  description: '扫码定位、搜索展位、规划行程并沿场馆通道导航。',
-  alternates: {
-    canonical: '/',
-  },
+  metadataBase: siteUrl,
+  title,
+  description,
+  manifest: '/manifest.webmanifest',
+  applicationName: 'Expo Service AI',
+  alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
     locale: 'zh_CN',
     url: '/',
     siteName: 'Expo Service AI',
-    title: 'Expo Service AI｜智能逛展助手',
-    description: '扫码定位、搜索展位、规划行程并沿场馆通道导航。',
-    images: [{
-      url: '/og.png',
-      width: 1672,
-      height: 941,
-      alt: 'Expo Service AI 智能逛展助手',
-    }],
+    title,
+    description,
+    images: [{ url: '/og.png', alt: 'Expo Service AI 智能逛展助手' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Expo Service AI｜智能逛展助手',
-    description: '扫码定位、搜索展位、规划行程并沿场馆通道导航。',
+    title,
+    description,
     images: ['/og.png'],
   },
-  manifest: '/manifest.webmanifest',
-  applicationName: 'Expo Service AI',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

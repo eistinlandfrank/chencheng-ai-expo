@@ -1,4 +1,4 @@
-const CACHE_NAME = 'expo-service-ai-v2';
+const CACHE_NAME = 'expo-service-ai-v3';
 const APP_SHELL = ['/', '/manifest.webmanifest', '/og.png'];
 
 self.addEventListener('install', (event) => {
@@ -24,7 +24,6 @@ self.addEventListener('fetch', (event) => {
     url.pathname.startsWith('/exhibitor') ||
     url.pathname.startsWith('/operations') ||
     url.pathname.startsWith('/reservations') ||
-    url.pathname.startsWith('/initialize-owner') ||
     url.pathname.startsWith('/access-denied') ||
     url.pathname.startsWith('/signin-with-chatgpt') ||
     url.pathname.startsWith('/signout-with-chatgpt') ||

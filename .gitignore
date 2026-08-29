@@ -19,6 +19,19 @@
 # misc
 .DS_Store
 *.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.sqlite*
+*.db
+*.log
+.npmrc
+.netrc
+.pypirc
+*credentials*.json
+*service-account*.json
 
 # debug
 npm-debug.log*
@@ -28,6 +41,8 @@ yarn-error.log*
 
 # local environment
 .env*
+!.env.example
+.dev.vars*
 
 # deployment and generated files
 .vercel
