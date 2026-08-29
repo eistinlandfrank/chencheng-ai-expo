@@ -38,7 +38,7 @@
     <text x="160" y="875" fill="#BFFF00" font-family="Microsoft YaHei, sans-serif" font-size="238" font-weight="950" letter-spacing="-8">你真要</text>
   </g>
   <text x="105" y="1315" fill="#071E15" font-family="Microsoft YaHei, sans-serif" font-size="255" font-weight="950" letter-spacing="-13">一个个逛</text>
-  <text x="1925" y="1325" fill="#FF4D2E" font-family="Arial, sans-serif" font-size="350" font-weight="950">?</text>
+  <text x="1490" y="1400" fill="#FF4D2E" font-family="Arial, sans-serif" font-size="520" font-weight="950">?</text>
   <g transform="rotate(7 1915 770)" filter="url(#hardShadow)">
     <rect x="1610" y="630" width="650" height="240" rx="120" fill="#FF4D2E"/>
     <text x="1935" y="790" text-anchor="middle" fill="#FFFFFF" font-family="Microsoft YaHei, sans-serif" font-size="92" font-weight="950">先让 AI 挑！</text>
