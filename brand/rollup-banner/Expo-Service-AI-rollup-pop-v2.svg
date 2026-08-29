@@ -77,7 +77,6 @@
     <text x="0" y="615" fill="#FFFFFF" font-family="Microsoft YaHei, sans-serif" font-size="132" font-weight="950" letter-spacing="-6">哪几个？</text>
     <path d="M1060 515H1450" stroke="#BFFF00" stroke-width="34" stroke-linecap="round"/>
     <path d="M1400 440L1480 515L1400 590" fill="none" stroke="#BFFF00" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="0" y="755" fill="#A9C0B6" font-family="Microsoft YaHei, sans-serif" font-size="42" font-weight="650">无需注册｜观展记录仅存本机</text>
   </g>
 
   <!-- Replaceable verified QR area -->
@@ -92,6 +91,5 @@
     <text x="280" y="605" text-anchor="middle" fill="#51665D" font-family="Microsoft YaHei, sans-serif" font-size="38" font-weight="800">替换正式体验码</text>
   </g>
 
-  <text x="110" y="5855" fill="#708B7F" font-family="Microsoft YaHei, sans-serif" font-size="31" font-weight="500">当前为黑客松演示数据；地图与路线经场馆复核后开放。</text>
   <rect x="0" y="5920" width="2400" height="80" fill="#020D09"/>
 </svg>
