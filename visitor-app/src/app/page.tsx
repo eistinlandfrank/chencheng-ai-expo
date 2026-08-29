@@ -9,6 +9,7 @@ import { QUIZ_STEPS } from "@/lib/expo/quiz";
 import type { BoothCategory } from "@/lib/expo/booths";
 import { recommendBooths, totalMinutes, reasonFor } from "@/lib/expo/recommend";
 import { BoothThumb } from "@/components/expo/booth-thumb";
+import { PortalSwitcher } from "@/components/shell/portal-switcher";
 import { useExpoStore } from "@/stores/expo-store";
 import { toast } from "sonner";
 
@@ -62,7 +63,9 @@ export default function HomePage() {
         </p>
       </div>
 
-      <div className="relative z-10 -mt-4 flex-1 rounded-t-3xl bg-secondary px-4 pt-5 lg:mx-auto lg:-mt-8 lg:w-[calc(100%-8rem)] lg:max-w-6xl lg:flex-none lg:rounded-3xl lg:border lg:border-border lg:bg-card lg:p-8 lg:shadow-xl">
+      <PortalSwitcher />
+
+      <div className="relative z-10 mt-4 flex-1 rounded-t-3xl bg-secondary px-4 pt-1 lg:mx-auto lg:w-[calc(100%-8rem)] lg:max-w-6xl lg:flex-none lg:rounded-3xl lg:border lg:border-border lg:bg-card lg:p-8 lg:shadow-xl">
         {!done ? (
           <QuizCard key={step} index={step} onAnswer={answer} />
         ) : (

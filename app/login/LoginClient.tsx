@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { startAuthentication } from '@simplewebauthn/browser';
 import { KeyRound, ShieldCheck } from 'lucide-react';
 import Brand from '@/components/Brand';
+import PortalSwitcher, { type PortalId } from '@/components/PortalSwitcher';
 
-export default function LoginClient({ returnTo }: { returnTo: string }) {
+export default function LoginClient({ returnTo, activePortal }: { returnTo: string; activePortal: PortalId }) {
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -40,18 +41,24 @@ export default function LoginClient({ returnTo }: { returnTo: string }) {
     }
   }
 
+  const portalName = activePortal === 'operations' ? '场馆运营端' : '展商端';
+  const portalDescription = activePortal === 'operations'
+    ? '场馆工作人员请使用受邀账号登录。'
+    : '参展商请使用受邀账号登录。';
+
   return (
     <main className="access-page auth-page">
       <section>
         <Brand />
         <span className="auth-icon"><KeyRound size={24} /></span>
-        <h1>登录 Expo Service AI</h1>
-        <p>参展商与场馆工作人员请使用受邀账号登录。</p>
+        <h1>登录{portalName}</h1>
+        <p>{portalDescription}</p>
+        <PortalSwitcher activePortal={activePortal} />
         <button className="primary-wide" type="button" disabled={working} onClick={login}>
           {working ? '正在验证…' : '使用通行密钥登录'}
         </button>
         {message && <p className="auth-message" role="alert" aria-live="assertive">{message}</p>}
-        <div className="auth-secondary"><Link href="/activate">激活受邀账号</Link><Link href="/">返回观众端</Link></div>
+        <div className="auth-secondary"><Link href="/activate">激活受邀账号</Link></div>
         <small className="auth-assurance"><ShieldCheck size={15} />通行密钥由您的设备安全保存</small>
       </section>
     </main>
