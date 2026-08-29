@@ -12,6 +12,7 @@
   },
   "scripts": {
     "admin:bootstrap": "node scripts/bootstrap-admin.mjs",
+    "admin:set-password": "node scripts/set-password.mjs",
     "dev": "vinext dev",
     "build": "vinext build",
     "start": "node scripts/migrate.mjs && node dist/standalone/server.js",

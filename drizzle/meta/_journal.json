@@ -43,6 +43,13 @@
       "when": 1787989789371,
       "tag": "0005_confused_vapor",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1788012362807,
+      "tag": "0006_password_login",
+      "breakpoints": true
     }
   ]
 }

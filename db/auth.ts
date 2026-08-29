@@ -4,7 +4,7 @@ import {
   verifyAuthenticationResponse,
   verifyRegistrationResponse,
 } from '@simplewebauthn/server';
-import { timingSafeEqual } from 'node:crypto';
+import { scrypt, timingSafeEqual } from 'node:crypto';
 import { env } from '@/db/runtime';
 import { venue } from '@/lib/venue';
 
@@ -65,6 +65,18 @@ type StoredPasskey = {
   transports_json: string;
 };
 
+type StoredPasswordCredential = {
+  user_id: string;
+  status: string;
+  algorithm: string;
+  cost_n: number;
+  block_size: number;
+  parallelization: number;
+  key_length: number;
+  salt_base64: string;
+  hash_base64: string;
+};
+
 type RegistrationResponse = Parameters<typeof verifyRegistrationResponse>[0]['response'];
 type AuthenticationResponse = Parameters<typeof verifyAuthenticationResponse>[0]['response'];
 
@@ -74,6 +86,16 @@ const sessionIdleLifetimeMs = 30 * 60 * 1000;
 const challengeLifetimeMs = 5 * 60 * 1000;
 const activationLifetimeMs = 15 * 60 * 1000;
 const activationAttemptLimit = 5;
+const passwordMinimumLength = 12;
+const passwordMaximumLength = 128;
+const passwordDefaults = {
+  costN: 32_768,
+  blockSize: 8,
+  parallelization: 1,
+  keyLength: 64,
+};
+const dummyPasswordSalt = Buffer.from('expo-service-ai-password-dummy-salt', 'utf8');
+const dummyPasswordHash = Buffer.alloc(passwordDefaults.keyLength);
 let schemaProbe: Promise<void> | null = null;
 
 function runtimeValue(name: string) {
@@ -134,10 +156,38 @@ function changeCount(result: { meta?: unknown } | undefined) {
   return Number(((result?.meta ?? {}) as { changes?: number }).changes ?? 0);
 }
 
+function passwordParameters(record: StoredPasswordCredential | null) {
+  if (!record || record.algorithm !== 'scrypt') return null;
+  const costN = Number(record.cost_n);
+  const blockSize = Number(record.block_size);
+  const parallelization = Number(record.parallelization);
+  const keyLength = Number(record.key_length);
+  const costIsValid = costN >= 16_384 && costN <= 65_536 && (costN & (costN - 1)) === 0;
+  if (!costIsValid || blockSize < 8 || blockSize > 16 || parallelization < 1 || parallelization > 2
+    || keyLength < 32 || keyLength > 64) return null;
+  return { costN, blockSize, parallelization, keyLength };
+}
+
+function derivePassword(password: string, salt: Buffer, parameters: typeof passwordDefaults) {
+  const maxmem = Math.max(64 * 1024 * 1024, 256 * parameters.costN * parameters.blockSize);
+  return new Promise<Buffer>((resolve, reject) => {
+    scrypt(password, salt, parameters.keyLength, {
+      N: parameters.costN,
+      r: parameters.blockSize,
+      p: parameters.parallelization,
+      maxmem,
+    }, (error, derivedKey) => {
+      if (error) reject(error);
+      else resolve(derivedKey);
+    });
+  });
+}
+
 export async function ensureAuthTables() {
   schemaProbe ??= (async () => {
     const probes = [
       'SELECT id, email_normalized, display_name, status, email_verified_at, last_login_at, created_at, updated_at FROM auth_users LIMIT 0',
+      'SELECT user_id, algorithm, cost_n, block_size, parallelization, key_length, salt_base64, hash_base64, created_at, updated_at FROM auth_password_credentials LIMIT 0',
       'SELECT id, user_id, credential_id, public_key_base64, counter, transports_json, device_type, backed_up, created_at, last_used_at FROM auth_passkeys LIMIT 0',
       'SELECT id, user_id, token_hash, csrf_token_hash, auth_level, created_at, last_seen_at, expires_at, revoked_at FROM auth_sessions LIMIT 0',
       'SELECT id, user_id, tenant_id, event_id, email_normalized, display_name, role, organization_id, place_id, code_hash, attempts, expires_at, consumed_at, consume_nonce, created_by, created_at FROM auth_activations LIMIT 0',
@@ -425,6 +475,50 @@ export async function completeLogin(browserToken: string, response: Authenticati
         `user:${passkey.user_id}`, JSON.stringify({ changed_fields: ['last_login_at'] }), now),
   ]);
   return createSession(passkey.user_id, 2);
+}
+
+export async function completePasswordLogin(emailValue: string, passwordValue: string) {
+  await ensureAuthTables();
+  const email = normalizeEmail(emailValue).slice(0, 254);
+  const password = String(passwordValue);
+  const record = validEmail(email)
+    ? await env.DB.prepare(`SELECT p.user_id, u.status, p.algorithm, p.cost_n, p.block_size,
+        p.parallelization, p.key_length, p.salt_base64, p.hash_base64
+      FROM auth_password_credentials p JOIN auth_users u ON u.id = p.user_id
+      WHERE u.email_normalized = ? LIMIT 1`)
+      .bind(email).first<StoredPasswordCredential>()
+    : null;
+  const storedParameters = passwordParameters(record);
+  const parameters = storedParameters ?? passwordDefaults;
+  let salt = dummyPasswordSalt;
+  let expected = dummyPasswordHash;
+  if (record && storedParameters) {
+    try {
+      salt = Buffer.from(record.salt_base64, 'base64');
+      expected = Buffer.from(record.hash_base64, 'base64');
+    } catch {
+      salt = dummyPasswordSalt;
+      expected = dummyPasswordHash;
+    }
+  }
+  const derived = await derivePassword(password.slice(0, passwordMaximumLength), salt, parameters);
+  const passwordMatches = derived.length === expected.length && timingSafeEqual(derived, expected);
+  if (!record || !storedParameters || record.status !== 'active'
+    || password.length < passwordMinimumLength || password.length > passwordMaximumLength || !passwordMatches) {
+    return null;
+  }
+
+  const now = new Date().toISOString();
+  await env.DB.batch([
+    env.DB.prepare('UPDATE auth_users SET last_login_at = ?, updated_at = ? WHERE id = ? AND status = \'active\'')
+      .bind(now, now, record.user_id),
+    env.DB.prepare(`INSERT INTO app_audit
+      (id, tenant_id, event_id, actor_id, action, resource_key, after_json, created_at)
+      VALUES (?, ?, ?, ?, 'auth_password_login_succeeded', ?, ?, ?)`)
+      .bind(crypto.randomUUID(), tenantId, venue.eventId, record.user_id,
+        `user:${record.user_id}`, JSON.stringify({ changed_fields: ['last_login_at'] }), now),
+  ]);
+  return createSession(record.user_id, 1);
 }
 
 async function createSession(userId: string, authLevel: number) {

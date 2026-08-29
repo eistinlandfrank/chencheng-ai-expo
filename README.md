@@ -1,6 +1,6 @@
 # Expo Service AI
 
-Expo Service AI 是面向观众、参展商与场馆运营人员的三端展会服务。`visitor-app/` 是唯一对观众发布的新观展页面；主平台的旧观展首页已退役，只保留 `/exhibitor` 展商端和 `/operations` 场馆运营端。受邀的工作人员使用通行密钥进入各自工作台。
+Expo Service AI 是面向观众、参展商与场馆运营人员的三端展会服务。`visitor-app/` 是唯一对观众发布的新观展页面；主平台的旧观展首页已退役，只保留 `/exhibitor` 展商端和 `/operations` 场馆运营端。受邀的工作人员使用账号密码进入各自工作台，也可使用已登记的通行密钥。
 
 当前场馆地图处于复核状态。路线、距离、时间和无障碍导航只有在权威数据、现场检查及双人审核全部通过后才会开放；仓库中的场馆数据不得直接视为已发布的现场事实。
 
@@ -10,7 +10,7 @@ Expo Service AI 是面向观众、参展商与场馆运营人员的三端展会�
 - 新访客端位于 `visitor-app/`，使用 Bun 和 Next.js；无需第三方平台账号，观展记录只保存在当前浏览器。
 - 主平台 SQLite 数据库位于容器内 `/data/expo-service.sqlite`，通过宿主机 SSD 目录持久挂载。
 - SQLite 使用 WAL、外键检查和版本化迁移；容器启动时先执行 `scripts/migrate.mjs`，迁移成功后才启动网页服务。
-- 参展商与运营人员使用 WebAuthn 通行密钥、服务端会话、HttpOnly Cookie 和 CSRF 校验。
+- 参展商与运营人员使用 scrypt 加盐哈希密码或 WebAuthn 通行密钥登录，并通过服务端会话、HttpOnly Cookie 和 CSRF 校验保护工作台。
 - Docker 容器以非 root 用户运行，应用根文件系统只读，只有 `/data` 可持久写入。
 
 ## 本地开发
@@ -78,7 +78,15 @@ docker exec -it chencheng-platform node scripts/bootstrap-admin.mjs \
   --name "初始管理员"
 ```
 
-命令只显示一次激活码。管理员打开 `/activate`，输入同一邮箱和激活码，在当前设备创建通行密钥；此后从 `/login` 使用通行密钥登录。首位 `venue_admin` 创建后，首次初始化会自动关闭，后续账号应由运营台邀请。
+命令只显示一次激活码。管理员打开 `/activate`，输入同一邮箱和激活码，在当前设备创建通行密钥。首位 `venue_admin` 创建后，首次初始化会自动关闭，后续账号应由运营台邀请。
+
+已激活账号可由服务器管理员生成强随机密码。命令只输出一次明文密码，数据库仅保存 scrypt 加盐哈希：
+
+```bash
+DATABASE_PATH=/path/to/expo-service.sqlite npm run admin:set-password -- --email admin@example.com --generate
+```
+
+此后可从 `/login` 使用邮箱和密码登录，已登记的通行密钥仍可作为备用方式。
 
 激活码应通过可信渠道单独发送，不得写入仓库、工单、镜像层或浏览器存储。生产域名变更后，必须同步更新 `APP_ORIGIN` 与 `WEBAUTHN_RP_ID`，已有通行密钥可能需要重新注册。
 

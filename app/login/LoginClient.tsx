@@ -1,18 +1,41 @@
 'use client';
 
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { startAuthentication } from '@simplewebauthn/browser';
-import { KeyRound, ShieldCheck } from 'lucide-react';
+import { Fingerprint, KeyRound, ShieldCheck } from 'lucide-react';
 import Brand from '@/components/Brand';
 import PortalSwitcher, { type PortalId } from '@/components/PortalSwitcher';
 
 export default function LoginClient({ returnTo, activePortal }: { returnTo: string; activePortal: PortalId }) {
-  const [working, setWorking] = useState(false);
+  const [working, setWorking] = useState<'password' | 'passkey' | null>(null);
   const [message, setMessage] = useState('');
 
-  async function login() {
-    setWorking(true);
+  async function passwordLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setWorking('password');
+    setMessage('');
+    const form = new FormData(event.currentTarget);
+    try {
+      const response = await fetch('/api/v1/auth/password/verify', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          email: String(form.get('email') ?? ''),
+          password: String(form.get('password') ?? ''),
+        }),
+      });
+      const payload = await response.json() as { message?: string };
+      if (!response.ok) throw new Error(payload.message ?? '账号或密码不正确');
+      window.location.assign(returnTo);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '暂时无法登录，请稍后重试');
+      setWorking(null);
+    }
+  }
+
+  async function passkeyLogin() {
+    setWorking('passkey');
     setMessage('');
     try {
       const optionsResponse = await fetch('/api/v1/auth/login/options', {
@@ -37,7 +60,7 @@ export default function LoginClient({ returnTo, activePortal }: { returnTo: stri
       setMessage(error instanceof Error && error.name !== 'NotAllowedError'
         ? error.message
         : '登录已取消，您可以重新尝试');
-      setWorking(false);
+      setWorking(null);
     }
   }
 
@@ -54,12 +77,28 @@ export default function LoginClient({ returnTo, activePortal }: { returnTo: stri
         <h1>登录{portalName}</h1>
         <p>{portalDescription}</p>
         <PortalSwitcher activePortal={activePortal} />
-        <button className="primary-wide" type="button" disabled={working} onClick={login}>
-          {working ? '正在验证…' : '使用通行密钥登录'}
-        </button>
+        <form className="auth-form auth-login-form" onSubmit={passwordLogin}>
+          <label>
+            <span>账号邮箱</span>
+            <input name="email" type="email" autoComplete="username" maxLength={254} required />
+          </label>
+          <label>
+            <span>密码</span>
+            <input name="password" type="password" autoComplete="current-password" minLength={12} maxLength={128} required />
+          </label>
+          <button className="primary-wide" type="submit" disabled={working !== null}>
+            <KeyRound size={17} aria-hidden="true" />
+            {working === 'password' ? '正在登录…' : '账号密码登录'}
+          </button>
+        </form>
         {message && <p className="auth-message" role="alert" aria-live="assertive">{message}</p>}
+        <div className="auth-divider"><span>其他登录方式</span></div>
+        <button className="auth-passkey-button" type="button" disabled={working !== null} onClick={passkeyLogin}>
+          <Fingerprint size={17} aria-hidden="true" />
+          {working === 'passkey' ? '正在验证…' : '使用通行密钥登录'}
+        </button>
         <div className="auth-secondary"><Link href="/activate">激活受邀账号</Link></div>
-        <small className="auth-assurance"><ShieldCheck size={15} />通行密钥由您的设备安全保存</small>
+        <small className="auth-assurance"><ShieldCheck size={15} />登录信息经加密连接传输，密码不会明文保存</small>
       </section>
     </main>
   );

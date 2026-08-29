@@ -329,6 +329,19 @@ export const authUsers = sqliteTable('auth_users', {
   updatedAt: text('updated_at').notNull(),
 });
 
+export const authPasswordCredentials = sqliteTable('auth_password_credentials', {
+  userId: text('user_id').primaryKey().references(() => authUsers.id),
+  algorithm: text('algorithm').notNull().default('scrypt'),
+  costN: integer('cost_n').notNull(),
+  blockSize: integer('block_size').notNull(),
+  parallelization: integer('parallelization').notNull(),
+  keyLength: integer('key_length').notNull(),
+  saltBase64: text('salt_base64').notNull(),
+  hashBase64: text('hash_base64').notNull(),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
 export const authPasskeys = sqliteTable('auth_passkeys', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull().references(() => authUsers.id),
