@@ -52,7 +52,7 @@ npm start
 | `EXPO_INTERNAL_ORIGIN` | 可选；首次管理员命令访问容器内服务的地址，默认使用本机服务端口。 |
 | `VECTRUST_API_KEY` | 可选；仅在服务端调用 AI 助手的密钥，绝不能放入浏览器、Git 或客户端日志。 |
 | `AI_BASE_URL` | 可选；OpenAI 兼容网关地址，默认 `https://api.openai-next.com/v1`。 |
-| `AI_MODEL` | 可选；默认 `deepseek/deepseek-v4-flash`，用于低成本中文问答。 |
+| `AI_MODEL` | 可选；默认 `deepseek-v4-flash`，用于低成本中文问答。 |
 
 生产环境中的 `APP_ORIGIN` 必须使用 HTTPS。`WEBAUTHN_RP_ID` 必须等于该主机名或其可接受的父域，否则通行密钥验证会拒绝启动。
 

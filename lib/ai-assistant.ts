@@ -30,7 +30,7 @@ export function assistantRequestAllowed(clientId: string) {
 export function aiAssistantConfiguration() {
   const apiKey = process.env.VECTRUST_API_KEY?.trim();
   const baseUrl = (process.env.AI_BASE_URL?.trim() || 'https://api.openai-next.com/v1').replace(/\/$/, '');
-  const model = process.env.AI_MODEL?.trim() || 'deepseek/deepseek-v4-flash';
+  const model = process.env.AI_MODEL?.trim() || 'deepseek-v4-flash';
   return { apiKey, baseUrl, model };
 }
 
