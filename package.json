@@ -8,19 +8,23 @@
     "url": "git+https://github.com/eistinlandfrank/chencheng-ai-expo.git"
   },
   "engines": {
-    "node": ">=22.13.0"
+    "node": "22.23.x"
   },
   "scripts": {
+    "admin:bootstrap": "node scripts/bootstrap-admin.mjs",
     "dev": "vinext dev",
     "build": "vinext build",
-    "start": "vinext start",
+    "start": "node scripts/migrate.mjs && node dist/standalone/server.js",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "typecheck": "tsc --noEmit",
     "db:check": "drizzle-kit check --config drizzle.config.ts",
+    "db:migrate": "node scripts/migrate.mjs",
     "check": "npm run lint && npm run typecheck && npm run db:check",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
+    "@simplewebauthn/browser": "^13.2.2",
+    "@simplewebauthn/server": "^13.2.2",
     "drizzle-orm": "0.45.2",
     "lucide-react": "^1.35.0",
     "next": "16.3.3",
@@ -28,9 +32,6 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "1.54.2",
-    "@cloudflare/workers-types": "5.20260829.1",
-    "@openai/sites-vite-plugin": "^0.1.0 || ^0.2.0",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",
@@ -44,8 +45,7 @@
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
     "vinext": "1.0.0-beta.8",
-    "vite": "8.2.2",
-    "wrangler": "4.127.1"
+    "vite": "8.2.2"
   },
   "type": "module"
 }

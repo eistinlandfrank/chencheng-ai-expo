@@ -32,11 +32,13 @@ import {
   Wrench,
 } from 'lucide-react';
 import Brand from '@/components/Brand';
+import LogoutButton from '@/components/LogoutButton';
 import Modal from '@/components/Modal';
 import Toast, { type ToastState } from '@/components/Toast';
 import VenueMap from '@/components/VenueMap';
 import { edges, nodes, places, venue } from '@/lib/venue';
 import { emptyMapFieldChecks, type ClosedGroup, type MapFieldChecks, type OpsNotice as Notice, type OpsState, type OpsTicket } from '@/lib/state-types';
+import { protectedJsonHeaders } from '@/lib/csrf';
 
 type OpsTab = 'overview' | 'map' | 'catalog' | 'live' | 'notices' | 'tickets' | 'analytics' | 'accounts' | 'settings';
 
@@ -108,7 +110,7 @@ export default function OperationsPortal({ displayName }: { displayName: string 
 
   async function saveState(next: OpsState, action: string, verification?: MapFieldChecks) {
     try {
-        const response = await fetch('/api/v1/ops/state', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ state: next, action, verification }) });
+        const response = await fetch('/api/v1/ops/state', { method: 'PUT', headers: protectedJsonHeaders(), body: JSON.stringify({ state: next, action, verification }) });
       if (!response.ok) {
         const error = await response.json().catch(() => null) as { message?: string } | null;
         throw new Error(error?.message ?? '保存失败');
@@ -230,7 +232,7 @@ export default function OperationsPortal({ displayName }: { displayName: string 
       </aside>
 
       <section className="portal-main">
-          <header className="portal-topbar ops-topbar"><div className="ops-title"><button className="menu-toggle" type="button" onClick={() => setSidebarOpen((value) => !value)} aria-label="切换侧栏"><Menu size={20} /></button><div><small>Expo Service AI</small><strong>{opsNav.find((item) => item.id === tab)?.label}</strong></div></div><div className="event-switcher"><small>当前展会</small><strong>千人黑客松 · 主会场</strong></div><div className="topbar-actions"><div className="account-button"><span>运</span><div><strong>{displayName}</strong><small>场馆管理员</small></div></div></div></header>
+          <header className="portal-topbar ops-topbar"><div className="ops-title"><button className="menu-toggle" type="button" onClick={() => setSidebarOpen((value) => !value)} aria-label="切换侧栏"><Menu size={20} /></button><div><small>Expo Service AI</small><strong>{opsNav.find((item) => item.id === tab)?.label}</strong></div></div><div className="event-switcher"><small>当前展会</small><strong>千人黑客松 · 主会场</strong></div><div className="topbar-actions"><div className="account-button"><span>运</span><div><strong>{displayName}</strong><small>场馆管理员</small></div></div><LogoutButton compact /></div></header>
 
         <div className="portal-content ops-content">
           {tab === 'overview' && <Overview configuredAreaCount={configuredAreaCount} closedGroups={closedGroups} mapStatus={mapReviewState} notices={notices} tickets={tickets} onTab={setTab} onCorridor={() => setCorridorOpen(true)} onNotice={() => setNoticeOpen(true)} onTicket={() => setTicketOpen(true)} />}
@@ -414,9 +416,10 @@ function SystemSettingsView({ mapStatus }: { mapStatus: OpsState['mapStatus'] })
 }
 
 function AccountsView() {
-  const [members, setMembers] = useState<Array<{ user_id: string; email_snapshot: string; display_name: string }>>([]);
-  const [pending, setPending] = useState<Array<{ id: string; email_normalized: string }>>([]);
+  const [members, setMembers] = useState<Array<{ user_id: string; email_snapshot: string; display_name: string; role: string }>>([]);
+  const [pending, setPending] = useState<Array<{ id: string; email_normalized: string; role: string }>>([]);
   const [message, setMessage] = useState('');
+  const [activationCode, setActivationCode] = useState('');
   useEffect(() => {
     let active = true;
     void fetch('/api/v1/ops/members', { cache: 'no-store' }).then((response) => response.ok ? response.json() as Promise<{ members: typeof members; pending: typeof pending }> : Promise.reject()).then((payload) => { if (active) { setMembers(payload.members); setPending(payload.pending); } }).catch(() => { if (active) setMessage('成员列表加载失败，请刷新重试'); });
@@ -424,14 +427,18 @@ function AccountsView() {
   }, []);
   async function invite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const email = String(new FormData(event.currentTarget).get('email') ?? '');
-    const response = await fetch('/api/v1/ops/members', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email }) });
-    const payload = await response.json() as { members?: typeof members; pending?: typeof pending; message?: string };
+    const form = new FormData(event.currentTarget);
+    const email = String(form.get('email') ?? '');
+    const role = String(form.get('role') ?? 'venue_admin');
+    const response = await fetch('/api/v1/ops/members', { method: 'POST', headers: protectedJsonHeaders(), body: JSON.stringify({ email, role }) });
+    const payload = await response.json() as { members?: typeof members; pending?: typeof pending; activation_code?: string; message?: string };
     if (!response.ok) return setMessage(payload.message ?? '邀请失败，请重试');
     setMembers(payload.members ?? []);
     setPending(payload.pending ?? []);
-    setMessage('邀请已创建，对方登录后将绑定场馆管理员角色');
+    setActivationCode(payload.activation_code ?? '');
+    setMessage('邀请已创建，请通过可信渠道发送激活码');
     event.currentTarget.reset();
   }
-  return <section><PageHeading eyebrow="最小权限与审计" title="账号权限" description="场馆管理员可独立复核地图；同一账号不能替代第二位复核人。" /><div className="content-grid two-one"><section className="panel-card"><div className="card-head"><div><h2>运营成员</h2><p>{members.length} 名已绑定 · {pending.length} 个待接受邀请</p></div></div>{members.map((member) => <div className="member-row" key={member.user_id}><span className="member-avatar">运</span><div><strong>{member.display_name}</strong><p>{member.email_snapshot} · 场馆管理员</p></div><span className="status-pill published">已启用</span></div>)}{pending.map((invite) => <div className="member-row" key={invite.id}><span className="member-avatar">待</span><div><strong>{invite.email_normalized}</strong><p>等待该账号登录接受绑定</p></div><span className="status-pill review">待接受</span></div>)}</section><aside className="panel-card permission-card"><ShieldCheck size={25} /><h2>邀请场馆管理员</h2><form className="invite-form" onSubmit={invite}><label><span>账号邮箱</span><input name="email" type="email" required placeholder="name@example.com" /></label><button className="primary-wide" type="submit"><Plus size={17} />发送邀请</button></form>{message && <p className="form-message">{message}</p>}</aside></div></section>;
+  const roleLabels: Record<string, string> = { venue_admin: '场馆管理员', organizer_admin: '主办方管理员', map_editor: '地图编辑', map_reviewer: '地图复核', dispatcher: '工单调度', notice_publisher: '通知发布', audit_viewer: '审计查看' };
+  return <section><PageHeading eyebrow="最小权限与审计" title="账号权限" description="场馆管理员可独立复核地图；同一账号不能替代第二位复核人。" /><div className="content-grid two-one"><section className="panel-card"><div className="card-head"><div><h2>运营成员</h2><p>{members.length} 名已绑定 · {pending.length} 个待接受邀请</p></div></div>{members.map((member) => <div className="member-row" key={`${member.user_id}-${member.role}`}><span className="member-avatar">运</span><div><strong>{member.display_name}</strong><p>{member.email_snapshot} · {roleLabels[member.role] ?? '运营成员'}</p></div><span className="status-pill published">已启用</span></div>)}{pending.map((invite) => <div className="member-row" key={invite.id}><span className="member-avatar">待</span><div><strong>{invite.email_normalized}</strong><p>{roleLabels[invite.role] ?? '运营成员'} · 等待激活</p></div><span className="status-pill review">待激活</span></div>)}</section><aside className="panel-card permission-card"><ShieldCheck size={25} /><h2>邀请运营成员</h2><form className="invite-form" onSubmit={invite}><label><span>账号邮箱</span><input name="email" type="email" required placeholder="name@example.com" /></label><label><span>成员角色</span><select name="role" defaultValue="map_reviewer"><option value="venue_admin">场馆管理员</option><option value="organizer_admin">主办方管理员</option><option value="map_editor">地图编辑</option><option value="map_reviewer">地图复核</option><option value="dispatcher">工单调度</option><option value="notice_publisher">通知发布</option><option value="audit_viewer">审计查看</option></select></label><button className="primary-wide" type="submit"><Plus size={17} />创建邀请</button></form>{message && <p className="form-message">{message}</p>}{activationCode && <div className="approval-note"><ShieldCheck size={18} /><span><strong>一次性激活码</strong><br />{activationCode}</span></div>}</aside></div></section>;
 }

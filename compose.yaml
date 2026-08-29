@@ -1,0 +1,36 @@
+name: chencheng-ai-expo
+
+services:
+  web:
+    image: chencheng-ai-expo:${APP_VERSION:?APP_VERSION must be an immutable Git commit SHA}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:?APP_VERSION must be an immutable Git commit SHA}
+    container_name: chencheng-web
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      DATA_DIR: /data
+      DATABASE_PATH: /data/expo-service.sqlite
+    ports:
+      - "127.0.0.1:3100:3000"
+    volumes:
+      - type: bind
+        source: ${HOST_DATA_DIR:-/mnt/nvme0n1-4/apps/chencheng-ai-expo/data}
+        target: /data
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s

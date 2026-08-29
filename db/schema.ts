@@ -297,6 +297,10 @@ export const appMemberships = sqliteTable('app_memberships', {
   role: text('role').notNull(),
   organizationId: text('organization_id'),
   placeId: text('place_id'),
+  status: text('status').notNull().default('active'),
+  createdBy: text('created_by'),
+  disabledAt: text('disabled_at'),
+  updatedAt: text('updated_at').notNull().default(''),
   createdAt: text('created_at').notNull(),
 }, (table) => [
   index('idx_app_memberships_user_event').on(table.userId, table.eventId),
@@ -313,6 +317,78 @@ export const appPendingMemberships = sqliteTable('app_pending_memberships', {
   createdAt: text('created_at').notNull(),
   consumedBy: text('consumed_by'),
 }, (table) => [uniqueIndex('uidx_app_pending_event_email_role').on(table.eventId, table.emailNormalized, table.role)]);
+
+export const authUsers = sqliteTable('auth_users', {
+  id: text('id').primaryKey(),
+  emailNormalized: text('email_normalized').notNull().unique(),
+  displayName: text('display_name').notNull(),
+  status: text('status').notNull().default('active'),
+  emailVerifiedAt: text('email_verified_at').notNull(),
+  lastLoginAt: text('last_login_at'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
+export const authPasskeys = sqliteTable('auth_passkeys', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => authUsers.id),
+  credentialId: text('credential_id').notNull().unique(),
+  publicKeyBase64: text('public_key_base64').notNull(),
+  counter: integer('counter').notNull().default(0),
+  transportsJson: text('transports_json').notNull().default('[]'),
+  deviceType: text('device_type').notNull().default('singleDevice'),
+  backedUp: integer('backed_up', { mode: 'boolean' }).notNull().default(false),
+  createdAt: text('created_at').notNull(),
+  lastUsedAt: text('last_used_at'),
+}, (table) => [index('idx_auth_passkeys_user').on(table.userId)]);
+
+export const authSessions = sqliteTable('auth_sessions', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => authUsers.id),
+  tokenHash: text('token_hash').notNull().unique(),
+  csrfTokenHash: text('csrf_token_hash').notNull(),
+  authLevel: integer('auth_level').notNull().default(1),
+  createdAt: text('created_at').notNull(),
+  lastSeenAt: text('last_seen_at').notNull(),
+  expiresAt: text('expires_at').notNull(),
+  revokedAt: text('revoked_at'),
+}, (table) => [index('idx_auth_sessions_user_expiry').on(table.userId, table.expiresAt)]);
+
+export const authActivations = sqliteTable('auth_activations', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  tenantId: text('tenant_id').notNull(),
+  eventId: text('event_id').notNull(),
+  emailNormalized: text('email_normalized').notNull(),
+  displayName: text('display_name').notNull(),
+  role: text('role').notNull(),
+  organizationId: text('organization_id'),
+  placeId: text('place_id'),
+  codeHash: text('code_hash').notNull(),
+  attempts: integer('attempts').notNull().default(0),
+  expiresAt: text('expires_at').notNull(),
+  consumedAt: text('consumed_at'),
+  consumeNonce: text('consume_nonce'),
+  createdBy: text('created_by').notNull(),
+  createdAt: text('created_at').notNull(),
+}, (table) => [index('idx_auth_activations_email_expiry').on(table.emailNormalized, table.expiresAt)]);
+
+export const authChallenges = sqliteTable('auth_challenges', {
+  id: text('id').primaryKey(),
+  browserTokenHash: text('browser_token_hash').notNull().unique(),
+  purpose: text('purpose').notNull(),
+  challenge: text('challenge').notNull(),
+  activationId: text('activation_id'),
+  expiresAt: text('expires_at').notNull(),
+  consumedAt: text('consumed_at'),
+  createdAt: text('created_at').notNull(),
+}, (table) => [index('idx_auth_challenges_expiry').on(table.expiresAt)]);
+
+export const authRateLimits = sqliteTable('auth_rate_limits', {
+  keyHash: text('key_hash').primaryKey(),
+  requestCount: integer('request_count').notNull().default(0),
+  expiresAt: text('expires_at').notNull(),
+}, (table) => [index('idx_auth_rate_limits_expiry').on(table.expiresAt)]);
 
 export const appReservations = sqliteTable('app_reservations', {
   id: text('id').primaryKey(),

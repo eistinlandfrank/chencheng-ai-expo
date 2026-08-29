@@ -26,8 +26,10 @@ import {
   Wrench,
 } from 'lucide-react';
 import Brand from '@/components/Brand';
+import LogoutButton from '@/components/LogoutButton';
 import Modal from '@/components/Modal';
 import Toast, { type ToastState } from '@/components/Toast';
+import { protectedJsonHeaders } from '@/lib/csrf';
 import { defaultExhibitorState, type ExhibitorState, type ExhibitorTicket as Ticket } from '@/lib/state-types';
 
 type Tab = 'dashboard' | 'booth' | 'visitors' | 'activities' | 'tickets' | 'analytics' | 'team';
@@ -100,7 +102,7 @@ export default function ExhibitorPortal({ displayName }: { displayName: string }
 
   async function saveState(next: ExhibitorState, action: string) {
     try {
-      const response = await fetch('/api/v1/exhibitor/state', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ state: next, action }) });
+      const response = await fetch('/api/v1/exhibitor/state', { method: 'PUT', headers: protectedJsonHeaders(), body: JSON.stringify({ state: next, action }) });
       if (!response.ok) {
         const responseBody = await response.text();
         let errorMessage = responseBody.trim();
@@ -190,7 +192,7 @@ export default function ExhibitorPortal({ displayName }: { displayName: string }
       </aside>
 
       <section className="portal-main">
-        <header className="portal-topbar"><div className="event-switcher"><small>当前展会</small><strong>千人黑客松 · 8月30日</strong></div><div className="topbar-actions"><div className="account-button"><span>展</span><div><strong>{displayName}</strong><small>展位管理员</small></div></div></div></header>
+        <header className="portal-topbar"><div className="event-switcher"><small>当前展会</small><strong>千人黑客松 · 8月30日</strong></div><div className="topbar-actions"><div className="account-button"><span>展</span><div><strong>{displayName}</strong><small>展位管理员</small></div></div><LogoutButton compact /></div></header>
         <div className="portal-content">
           {tab === 'dashboard' && <ExhibitorDashboard onTab={setTab} onTicket={() => setTicketOpen(true)} profileStatus={profileStatus} receptionStatus={receptionStatus} activityStatus={activityStatus} activityTitle={activityTitle} activityStart={activityStart} activityDuration={activityDuration} ticketCount={tickets.length} />}
           {tab === 'booth' && (
@@ -324,7 +326,7 @@ function ReservationsView({ enabled, activityConfigured, onGoActivity, onToggle 
     setUpdatingId(id);
     setMessage('');
     try {
-      const response = await fetch('/api/v1/exhibitor/reservations', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ reservation_id: id, status }) });
+      const response = await fetch('/api/v1/exhibitor/reservations', { method: 'PATCH', headers: protectedJsonHeaders(), body: JSON.stringify({ reservation_id: id, status }) });
       const payload = await response.json() as { reservations?: BoothReservation[]; message?: string };
       if (!response.ok) throw new Error(payload.message ?? '预约状态更新失败');
       setReservations(payload.reservations ?? []);

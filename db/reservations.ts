@@ -1,5 +1,5 @@
-import { env } from 'cloudflare:workers';
-import type { ChatGPTUser } from '@/app/chatgpt-auth';
+import { env, type SqlPreparedStatement } from '@/db/runtime';
+import type { AuthUser } from '@/db/auth';
 import { venue } from '@/lib/venue';
 
 type ReservationStatus = 'pending' | 'confirmed' | 'arrived' | 'completed' | 'no_show' | 'cancelled';
@@ -193,7 +193,7 @@ export async function listExhibitorReservations(organizationId: string, placeId:
   return rows.results;
 }
 
-export async function createReservation(user: ChatGPTUser, offering: {
+export async function createReservation(user: AuthUser, offering: {
   organizationId: string;
   placeId: string;
   title: string;
@@ -293,7 +293,7 @@ export async function cancelMyReservation(userId: string, reservationId: string)
   return changeCount(results[0]) === 1;
 }
 
-export async function modifyMyReservation(user: ChatGPTUser, reservationId: string, input: { arrivalTime: string; attendeeNote: string }) {
+export async function modifyMyReservation(user: AuthUser, reservationId: string, input: { arrivalTime: string; attendeeNote: string }) {
   await ensureReservationTable();
   const current = await env.DB.prepare(`SELECT status, slot_start_at, slot_end_at, arrival_time, attendee_note FROM app_reservations
     WHERE id = ? AND event_id = ? AND user_id = ? AND status IN ('pending','confirmed') AND slot_end_at > ?`)
@@ -381,7 +381,7 @@ export async function syncReservationsForActivity(input: ReservationActivitySync
       ? input.start === input.previousStart ? '活动已延迟，最新开始时间待确认' : '活动时间已调整，请查看最新安排'
       : '活动安排已更新，请查看最新时间';
   const rootTransitionId = crypto.randomUUID();
-  const statements: D1PreparedStatement[] = [];
+  const statements: SqlPreparedStatement[] = [];
 
   for (const reservationStatus of ['pending', 'confirmed', 'arrived'] as const) {
     const transitionId = `${rootTransitionId}:${reservationStatus}`;

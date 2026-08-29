@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getChatGPTUser } from '@/app/chatgpt-auth';
-import { ensureOperationsAccess } from '@/db/access';
+import { authenticatedWriteAllowed, getRequestAuthSession } from '@/app/auth';
+import { ensureOperationsAccess, type Permission } from '@/db/access';
 import { readState, StateConflictError, writeState } from '@/db/state';
 import {
   defaultOpsState,
@@ -72,11 +72,12 @@ function currentReview(state: OpsState, userId: string) {
   return state.mapReviews.find((review) => review.actorId === userId)?.checks ?? emptyMapFieldChecks;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const requestId = crypto.randomUUID();
-  const user = await getChatGPTUser();
-  if (!user) return error(requestId, 'UNAUTHENTICATED', '请登录后继续', 401);
-  if (!await ensureOperationsAccess(user)) return error(requestId, 'FORBIDDEN_SCOPE', '当前账号没有场馆运营权限', 403);
+  const session = await getRequestAuthSession(request);
+  if (!session) return error(requestId, 'UNAUTHENTICATED', '请登录后继续', 401);
+  const user = session.user;
+  if (!await ensureOperationsAccess(user, 'ops.read')) return error(requestId, 'FORBIDDEN_SCOPE', '当前账号没有场馆运营权限', 403);
   const state = await readState(stateKey, defaultOpsState);
   const exhibitor = await readState(`exhibitor:${venue.eventId}:org-hardware-robot:robot-dev`, defaultExhibitorState);
   const value = state.value.reviewedMapVersion === venue.mapVersion ? state.value : { ...state.value, mapStatus: 'draft' as const, reviewedMapVersion: venue.mapVersion, submittedBy: '', mapReviews: [] };
@@ -85,9 +86,9 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   const requestId = crypto.randomUUID();
-  const user = await getChatGPTUser();
-  if (!user) return error(requestId, 'UNAUTHENTICATED', '请登录后继续', 401);
-  if (!await ensureOperationsAccess(user)) return error(requestId, 'FORBIDDEN_SCOPE', '当前账号没有场馆运营权限', 403);
+  const session = await getRequestAuthSession(request);
+  if (!session) return error(requestId, 'UNAUTHENTICATED', '请登录后继续', 401);
+  if (!await authenticatedWriteAllowed(request, session)) return error(requestId, 'CSRF_FAILED', '页面验证已过期，请刷新后重试', 403);
 
   let payload: { state?: unknown; action?: string; verification?: unknown };
   try {
@@ -96,11 +97,29 @@ export async function PUT(request: NextRequest) {
     return error(requestId, 'INVALID_JSON', '请求内容格式不正确', 400);
   }
 
+  const action = String(payload.action ?? 'ops_state_updated').slice(0, 80);
+  const permissionByAction: Record<string, Permission> = {
+    route_group_closed: 'live_state.manage',
+    route_group_reopened: 'live_state.manage',
+    notice_published: 'notice.publish',
+    service_ticket_created: 'ticket.dispatch',
+    service_ticket_status_updated: 'ticket.dispatch',
+    map_review_submitted: 'map.edit',
+    map_verification_updated: 'map.review',
+    map_version_published: 'map.publish',
+    place_availability_updated: 'catalog.manage',
+    booth_profile_published: 'catalog.manage',
+  };
+  const requiredPermission = permissionByAction[action];
+  if (!requiredPermission || !await ensureOperationsAccess(session.user, requiredPermission)) {
+    return error(requestId, 'FORBIDDEN_SCOPE', '当前账号没有执行此操作的权限', 403);
+  }
+  const user = session.user;
+
   const existing = await readState(stateKey, defaultOpsState);
   const current = existing.value.reviewedMapVersion === venue.mapVersion ? existing.value : { ...existing.value, mapStatus: 'draft' as const, reviewedMapVersion: venue.mapVersion, submittedBy: '', mapReviews: [] };
   const normalized = normalizeState(payload.state, current);
   if (!normalized) return error(requestId, 'VALIDATION_FAILED', '提交内容不完整', 422);
-  const action = String(payload.action ?? 'ops_state_updated').slice(0, 80);
   let next: OpsState = current;
 
   if (action === 'route_group_closed' || action === 'route_group_reopened') {

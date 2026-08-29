@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 import './globals.css';
 
-const siteUrl = new URL('https://expo-service-ai-hackathon.silophyflo.chatgpt.site');
+const siteUrl = new URL(process.env.PUBLIC_SITE_URL ?? 'http://localhost:3000');
 const title = 'Expo Service AI｜智能逛展助手';
 const description = '扫码定位、搜索展位、规划行程并沿场馆通道导航。';
 

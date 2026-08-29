@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { env } from 'cloudflare:workers';
 import { analyticsRateAllowed, clientAnalyticsEventNames, recordAnalyticsEvent, type ClientAnalyticsEventName } from '@/db/analytics';
+import { requestOriginAllowed } from '@/app/auth';
 import { places, venue } from '@/lib/venue';
 
 const allowedEvents = new Set<ClientAnalyticsEventName>(clientAnalyticsEventNames);
@@ -19,8 +19,10 @@ function fromBase64Url(value: string) {
 }
 
 async function analyticsKey() {
-  const secret = String((env as unknown as { ANALYTICS_SESSION_SECRET?: string }).ANALYTICS_SESSION_SECRET ?? '');
-  if (secret.length < 32) throw new Error('ANALYTICS_SESSION_SECRET_MISSING');
+  const secret = process.env.ANALYTICS_SESSION_SECRET ?? '';
+  if (secret.length < 32 || secret.startsWith('replace-with-')) {
+    throw new Error('ANALYTICS_SESSION_SECRET_MISSING');
+  }
   return crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
 }
 
@@ -43,6 +45,7 @@ async function verifiedSession(value: string | undefined) {
 
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
+  if (!requestOriginAllowed(request)) return NextResponse.json({ code: 'INVALID_ORIGIN', request_id: requestId }, { status: 403 });
   let payload: { event_name?: string; client_event_id?: string; place_id?: string; map_version?: string; properties?: Record<string, unknown> };
   try { payload = await request.json(); } catch { return NextResponse.json({ code: 'INVALID_JSON', request_id: requestId }, { status: 400 }); }
   if (!allowedEvents.has(payload.event_name as ClientAnalyticsEventName)) return NextResponse.json({ code: 'EVENT_NOT_ALLOWED', request_id: requestId }, { status: 422 });

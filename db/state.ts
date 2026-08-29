@@ -1,4 +1,4 @@
-import { env } from 'cloudflare:workers';
+import { env } from '@/db/runtime';
 
 type StateRecord<T> = {
   value: T;

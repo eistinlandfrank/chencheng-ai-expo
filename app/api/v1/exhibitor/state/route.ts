@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getChatGPTUser } from '@/app/chatgpt-auth';
-import { ensureExhibitorAccess } from '@/db/access';
+import { authenticatedWriteAllowed, getRequestAuthSession } from '@/app/auth';
+import { ensureExhibitorAccess, type Permission } from '@/db/access';
 import { syncReservationsForActivity } from '@/db/reservations';
 import { readState, StateConflictError, writeState } from '@/db/state';
 import { defaultExhibitorState, defaultOpsState, type ExhibitorState, type ExhibitorTicket, type OpsTicket } from '@/lib/state-types';
@@ -45,11 +45,11 @@ function normalizeState(input: unknown, current: ExhibitorState): ExhibitorState
   };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const requestId = crypto.randomUUID();
-  const user = await getChatGPTUser();
-  if (!user) return NextResponse.json({ code: 'UNAUTHENTICATED', message: '请登录后继续', request_id: requestId, details: null }, { status: 401 });
-  const membership = await ensureExhibitorAccess(user);
+  const session = await getRequestAuthSession(request);
+  if (!session) return NextResponse.json({ code: 'UNAUTHENTICATED', message: '请登录后继续', request_id: requestId, details: null }, { status: 401 });
+  const membership = await ensureExhibitorAccess(session.user);
   if (!membership?.organizationId || !membership.placeId) return NextResponse.json({ code: 'FORBIDDEN', message: '当前账号尚未绑定展位', request_id: requestId, details: null }, { status: 403 });
   const state = await readState(`exhibitor:${venue.eventId}:${membership.organizationId}:${membership.placeId}`, defaultExhibitorState);
   const ops = await readState(`ops:${venue.eventId}`, defaultOpsState);
@@ -58,21 +58,28 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   const requestId = crypto.randomUUID();
-  const user = await getChatGPTUser();
-  if (!user) return NextResponse.json({ code: 'UNAUTHENTICATED', message: '请登录后继续', request_id: requestId, details: null }, { status: 401 });
-  const membership = await ensureExhibitorAccess(user);
-  if (!membership?.organizationId || !membership.placeId) return NextResponse.json({ code: 'FORBIDDEN', message: '当前账号尚未绑定展位', request_id: requestId, details: null }, { status: 403 });
+  const session = await getRequestAuthSession(request);
+  if (!session) return NextResponse.json({ code: 'UNAUTHENTICATED', message: '请登录后继续', request_id: requestId, details: null }, { status: 401 });
+  if (!await authenticatedWriteAllowed(request, session)) return NextResponse.json({ code: 'CSRF_FAILED', message: '页面验证已过期，请刷新后重试', request_id: requestId, details: null }, { status: 403 });
   let payload: { state?: unknown; action?: string };
   try {
     payload = await request.json();
   } catch {
     return NextResponse.json({ code: 'INVALID_JSON', message: '请求内容格式不正确', request_id: requestId, details: null }, { status: 400 });
   }
+  const action = String(payload.action ?? 'exhibitor_state_updated').slice(0, 80);
+  const permission: Permission = action === 'service_ticket_created'
+    ? 'ticket.create'
+    : ['program_session_saved', 'program_session_status_updated'].includes(action)
+      ? 'activity.manage'
+      : 'booth.content.write';
+  const membership = await ensureExhibitorAccess(session.user, permission);
+  if (!membership?.organizationId || !membership.placeId) return NextResponse.json({ code: 'FORBIDDEN', message: '当前账号没有执行此操作的权限', request_id: requestId, details: null }, { status: 403 });
+  const user = session.user;
   const stateKey = `exhibitor:${venue.eventId}:${membership.organizationId}:${membership.placeId}`;
   const existing = await readState(stateKey, defaultExhibitorState);
   const state = normalizeState(payload.state, existing.value);
   if (!state || !state.boothTitle || !state.intro) return NextResponse.json({ code: 'VALIDATION_FAILED', message: '请补全展位标题与简介', request_id: requestId, details: null }, { status: 422 });
-  const action = String(payload.action ?? 'exhibitor_state_updated').slice(0, 80);
   if (action === 'service_ticket_created') {
     const opsRecord = await readState(`ops:${venue.eventId}`, defaultOpsState);
     const candidate = (payload.state as Partial<ExhibitorState>).tickets?.find((ticket) => !opsRecord.value.tickets.some((current) => current.id === ticket.id));

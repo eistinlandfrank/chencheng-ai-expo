@@ -4,8 +4,10 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CalendarDays, CheckCircle2, ChevronLeft, Clock3, ShieldCheck, Users } from 'lucide-react';
 import Brand from '@/components/Brand';
+import LogoutButton from '@/components/LogoutButton';
 import Modal from '@/components/Modal';
 import { venue } from '@/lib/venue';
+import { protectedJsonHeaders } from '@/lib/csrf';
 
 type Reservation = {
   id: string;
@@ -76,7 +78,7 @@ function overlapsSavedItinerary(start: string, duration: number) {
   }
 }
 
-export default function ReservationsClient({ displayName, placeId }: { displayName: string; placeId: string }) {
+export default function ReservationsClient({ placeId }: { placeId: string }) {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [offering, setOffering] = useState<Offering | null>(null);
   const [consent, setConsent] = useState(false);
@@ -114,7 +116,7 @@ export default function ReservationsClient({ displayName, placeId }: { displayNa
       return;
     }
     try {
-      const response = await fetch('/api/v1/reservations', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ place_id: offering.placeId, consent }) });
+      const response = await fetch('/api/v1/reservations', { method: 'POST', headers: protectedJsonHeaders(), body: JSON.stringify({ place_id: offering.placeId, consent }) });
       const payload = await response.json() as { reservation?: Reservation; message?: string };
       if (!response.ok) return setMessage(payload.message ?? '预约失败，请重试');
       window.localStorage.setItem('expo-reservation-fixed', JSON.stringify({ placeId: offering.placeId, start: offering.start, duration: offering.duration, status: payload.reservation?.status ?? 'pending', mapVersion: venue.mapVersion }));
@@ -129,7 +131,7 @@ export default function ReservationsClient({ displayName, placeId }: { displayNa
   async function cancel(reservationId: string) {
     const cancelledReservation = reservations.find((item) => item.id === reservationId);
     try {
-      const response = await fetch('/api/v1/reservations', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ reservation_id: reservationId, action: 'cancel' }) });
+      const response = await fetch('/api/v1/reservations', { method: 'PATCH', headers: protectedJsonHeaders(), body: JSON.stringify({ reservation_id: reservationId, action: 'cancel' }) });
       const payload = await response.json() as { reservations?: Reservation[]; message?: string };
       if (!response.ok) return setMessage(payload.message ?? '取消失败，请重试');
       if (cancelledReservation) {
@@ -158,7 +160,7 @@ export default function ReservationsClient({ displayName, placeId }: { displayNa
     if (!editingId) return;
     setEditError('');
     try {
-      const response = await fetch('/api/v1/reservations', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ reservation_id: editingId, action: 'modify', arrival_time: arrivalTime, attendee_note: attendeeNote }) });
+      const response = await fetch('/api/v1/reservations', { method: 'PATCH', headers: protectedJsonHeaders(), body: JSON.stringify({ reservation_id: editingId, action: 'modify', arrival_time: arrivalTime, attendee_note: attendeeNote }) });
       const payload = await response.json() as { reservations?: Reservation[]; message?: string };
       if (!response.ok) return setEditError(payload.message ?? '修改失败，请重试');
       setReservations(payload.reservations ?? []);
@@ -183,7 +185,7 @@ export default function ReservationsClient({ displayName, placeId }: { displayNa
   return (
     <main className="reservation-page">
       <section className="reservation-shell">
-        <header><Link href="/" aria-label="返回观众端"><ChevronLeft size={22} /></Link><Brand compact /><span>{displayName.slice(0, 1)}</span></header>
+        <header><Link href="/" aria-label="返回观众端"><ChevronLeft size={22} /></Link><Brand compact /><LogoutButton compact /></header>
         <div className="reservation-content">
           <div className="reservation-heading"><span>我的预约</span><h1>活动预约</h1><p>查看状态、更新预约信息或取消尚未完成的预约。</p></div>
           {offering && (

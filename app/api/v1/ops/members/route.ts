@@ -1,30 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getChatGPTUser } from '@/app/chatgpt-auth';
+import { authenticatedWriteAllowed, getRequestAuthSession } from '@/app/auth';
 import { ensureOperationsAccess, inviteOperationsMember, listOperationsMembers } from '@/db/access';
+import type { MembershipRole } from '@/db/auth';
 
 function error(requestId: string, code: string, message: string, status: number) {
   return NextResponse.json({ code, message, request_id: requestId, details: null }, { status });
 }
 
-async function authorize(requestId: string) {
-  const user = await getChatGPTUser();
-  if (!user) return { response: error(requestId, 'UNAUTHENTICATED', '请登录后继续', 401) };
-  if (!await ensureOperationsAccess(user)) return { response: error(requestId, 'FORBIDDEN_SCOPE', '当前账号没有场馆运营权限', 403) };
-  return { user };
+async function authorize(request: NextRequest, requestId: string) {
+  const session = await getRequestAuthSession(request);
+  if (!session) return { response: error(requestId, 'UNAUTHENTICATED', '请登录后继续', 401) };
+  if (!await ensureOperationsAccess(session.user, 'member.ops.manage')) return { response: error(requestId, 'FORBIDDEN_SCOPE', '当前账号没有成员管理权限', 403) };
+  return { session };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const requestId = crypto.randomUUID();
-  const authorized = await authorize(requestId);
+  const authorized = await authorize(request, requestId);
   if ('response' in authorized) return authorized.response;
   return NextResponse.json({ request_id: requestId, ...await listOperationsMembers() });
 }
 
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
-  const authorized = await authorize(requestId);
+  const authorized = await authorize(request, requestId);
   if ('response' in authorized) return authorized.response;
-  let payload: { email?: string };
+  if (!await authenticatedWriteAllowed(request, authorized.session)) return error(requestId, 'CSRF_FAILED', '页面验证已过期，请刷新后重试', 403);
+  let payload: { email?: string; role?: MembershipRole };
   try {
     payload = await request.json();
   } catch {
@@ -32,6 +34,6 @@ export async function POST(request: NextRequest) {
   }
   const email = String(payload.email ?? '').trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return error(requestId, 'VALIDATION_FAILED', '请输入有效邮箱', 422);
-  await inviteOperationsMember(email, authorized.user.userId);
-  return NextResponse.json({ request_id: requestId, ...await listOperationsMembers() });
+  const activation = await inviteOperationsMember(email, authorized.session.user.userId, payload.role ?? 'venue_admin');
+  return NextResponse.json({ request_id: requestId, activation_code: activation.code, activation_expires_at: activation.expiresAt, ...await listOperationsMembers() });
 }

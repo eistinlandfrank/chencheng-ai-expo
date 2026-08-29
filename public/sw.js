@@ -25,9 +25,9 @@ self.addEventListener('fetch', (event) => {
     url.pathname.startsWith('/operations') ||
     url.pathname.startsWith('/reservations') ||
     url.pathname.startsWith('/access-denied') ||
-    url.pathname.startsWith('/signin-with-chatgpt') ||
-    url.pathname.startsWith('/signout-with-chatgpt') ||
-    url.pathname.startsWith('/callback') ||
+    url.pathname.startsWith('/login') ||
+    url.pathname.startsWith('/activate') ||
+    url.pathname.startsWith('/api/v1/auth') ||
     url.pathname.startsWith('/_codex')
   ) return;
 

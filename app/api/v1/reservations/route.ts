@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getChatGPTUser } from '@/app/chatgpt-auth';
+import { authenticatedWriteAllowed, getRequestAuthSession } from '@/app/auth';
 import { recordAnalyticsEvent } from '@/db/analytics';
 import { cancelMyReservation, createReservation, listMyReservations, modifyMyReservation } from '@/db/reservations';
 import { readState } from '@/db/state';
@@ -33,8 +33,9 @@ async function getOffering(placeId: string) {
 
 export async function GET(request: NextRequest) {
   const requestId = crypto.randomUUID();
-  const user = await getChatGPTUser();
-  if (!user) return NextResponse.json({ code: 'UNAUTHENTICATED', message: '请登录后继续', request_id: requestId }, { status: 401 });
+  const session = await getRequestAuthSession(request);
+  if (!session) return NextResponse.json({ code: 'UNAUTHENTICATED', message: '请登录后继续', request_id: requestId }, { status: 401 });
+  const user = session.user;
   const placeId = request.nextUrl.searchParams.get('place_id') ?? '';
   const [reservations, offering] = await Promise.all([listMyReservations(user.userId), placeId ? getOffering(placeId) : Promise.resolve(null)]);
   return NextResponse.json({ request_id: requestId, offering, reservations });
@@ -42,8 +43,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
-  const user = await getChatGPTUser();
-  if (!user) return NextResponse.json({ code: 'UNAUTHENTICATED', message: '请登录后继续', request_id: requestId }, { status: 401 });
+  const session = await getRequestAuthSession(request);
+  if (!session) return NextResponse.json({ code: 'UNAUTHENTICATED', message: '请登录后继续', request_id: requestId }, { status: 401 });
+  if (!await authenticatedWriteAllowed(request, session)) return NextResponse.json({ code: 'CSRF_FAILED', message: '页面验证已过期，请刷新后重试', request_id: requestId }, { status: 403 });
+  const user = session.user;
   let payload: { place_id?: string; consent?: boolean };
   try { payload = await request.json(); } catch { return NextResponse.json({ code: 'INVALID_JSON', message: '请求内容格式不正确', request_id: requestId }, { status: 400 }); }
   if (!payload.consent) return NextResponse.json({ code: 'CONSENT_REQUIRED', message: '请确认预约授权范围', request_id: requestId }, { status: 422 });
@@ -72,8 +75,10 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   const requestId = crypto.randomUUID();
-  const user = await getChatGPTUser();
-  if (!user) return NextResponse.json({ code: 'UNAUTHENTICATED', message: '请登录后继续', request_id: requestId }, { status: 401 });
+  const session = await getRequestAuthSession(request);
+  if (!session) return NextResponse.json({ code: 'UNAUTHENTICATED', message: '请登录后继续', request_id: requestId }, { status: 401 });
+  if (!await authenticatedWriteAllowed(request, session)) return NextResponse.json({ code: 'CSRF_FAILED', message: '页面验证已过期，请刷新后重试', request_id: requestId }, { status: 403 });
+  const user = session.user;
   let payload: { reservation_id?: string; action?: string; arrival_time?: string; attendee_note?: string };
   try { payload = await request.json(); } catch { return NextResponse.json({ code: 'INVALID_JSON', message: '请求内容格式不正确', request_id: requestId }, { status: 400 }); }
   if (!payload.reservation_id || !['cancel', 'modify'].includes(String(payload.action))) return NextResponse.json({ code: 'VALIDATION_FAILED', message: '操作内容不完整', request_id: requestId }, { status: 422 });
