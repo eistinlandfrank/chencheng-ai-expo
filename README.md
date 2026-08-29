@@ -50,8 +50,13 @@ npm start
 | `ANALYTICS_SESSION_SECRET` | 至少 32 个随机字符，用于匿名分析会话签名。 |
 | `AUTH_BOOTSTRAP_SECRET` | 至少 32 个随机字符，仅用于首次场馆管理员激活。 |
 | `EXPO_INTERNAL_ORIGIN` | 可选；首次管理员命令访问容器内服务的地址，默认使用本机服务端口。 |
+| `VECTRUST_API_KEY` | 可选；仅在服务端调用 AI 助手的密钥，绝不能放入浏览器、Git 或客户端日志。 |
+| `AI_BASE_URL` | 可选；OpenAI 兼容网关地址，默认 `https://api.openai-next.com/v1`。 |
+| `AI_MODEL` | 可选；默认 `deepseek/deepseek-v4-flash`，用于低成本中文问答。 |
 
 生产环境中的 `APP_ORIGIN` 必须使用 HTTPS。`WEBAUTHN_RP_ID` 必须等于该主机名或其可接受的父域，否则通行密钥验证会拒绝启动。
+
+AI 助手只处理简短的文本提问，并在服务端调用兼容 OpenAI 的接口。它不会接收用户的位置或行程，也不会生成未完成复核的路线、距离、开放状态或现场公告；这些事实继续由运营发布流程控制。
 
 ## 账号激活与登录
 

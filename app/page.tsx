@@ -194,6 +194,10 @@ export default function VisitorApp() {
   const [planOpen, setPlanOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [assistantQuestion, setAssistantQuestion] = useState('');
+  const [assistantAnswer, setAssistantAnswer] = useState('');
+  const [assistantLoading, setAssistantLoading] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [duration, setDuration] = useState(90);
   const [startTime, setStartTime] = useState('09:30');
@@ -647,6 +651,29 @@ export default function VisitorApp() {
     setSearchOpen(true);
   }
 
+  async function askAssistant(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const question = assistantQuestion.trim();
+    if (!question || assistantLoading) return;
+    setAssistantLoading(true);
+    setAssistantAnswer('');
+    try {
+      const response = await fetch('/api/v1/assistant', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ question }),
+      });
+      const result = await response.json() as { answer?: string; message?: string };
+      if (!response.ok || !result.answer) throw new Error(result.message ?? 'unavailable');
+      setAssistantAnswer(result.answer);
+      trackVisitorEvent('assistant_answered');
+    } catch {
+      setAssistantAnswer('展会助手暂不可用，请稍后再试；现场信息请以公告和服务台为准。');
+    } finally {
+      setAssistantLoading(false);
+    }
+  }
+
   return (
     <main className="visitor-stage">
       <div className="stage-brand"><Brand /><p>扫码定位 · 智能规划 · 室内导航</p></div>
@@ -674,6 +701,10 @@ export default function VisitorApp() {
               </section>
 
               {mapStatus !== 'published' && <section className="map-review-note"><ShieldCheck size={18} /><span><strong>地图等待现场复核</strong><small>完成朝向、楼层与临时障碍确认后开放导航。</small></span></section>}
+
+              <button className="assistant-entry" type="button" onClick={() => setAssistantOpen(true)}>
+                <span><Sparkles size={20} /></span><div><strong>AI 展会助手</strong><small>咨询网站功能与展会服务；未复核现场信息会提示你查看公告。</small></div><ChevronRight size={18} />
+              </button>
 
               <section className="home-search-card">
                 <h2>你想去哪里？</h2>
@@ -813,6 +844,17 @@ export default function VisitorApp() {
 
       <Modal open={messagesOpen} title="消息中心" onClose={() => setMessagesOpen(false)}>
         <div className="message-center">{notices.length ? notices.map((notice) => <article key={notice.id}><small>{notice.createdAt} · {notice.audience}</small><strong>{notice.title}</strong><p>{notice.content}</p></article>) : <div className="search-empty"><Bell size={30} /><h3>暂无消息</h3><p>通道变化、活动调整与闭馆提醒会显示在这里。</p></div>}</div>
+      </Modal>
+
+      <Modal open={assistantOpen} title="AI 展会助手" onClose={() => setAssistantOpen(false)}>
+        <div className="assistant-panel">
+          <p className="assistant-disclaimer"><ShieldCheck size={16} />仅发送你的问题，不会读取位置或行程。路线、距离与现场状态须以已发布公告为准。</p>
+          {assistantAnswer && <article className="assistant-answer" aria-live="polite"><Sparkles size={17} /><p>{assistantAnswer}</p></article>}
+          <form className="assistant-form" onSubmit={askAssistant}>
+            <label><span>想咨询什么？</span><textarea value={assistantQuestion} maxLength={500} rows={4} onChange={(event) => setAssistantQuestion(event.target.value)} placeholder="例如：如何使用搜索、预约或消息中心？" /></label>
+            <button className="primary-wide" type="submit" disabled={!assistantQuestion.trim() || assistantLoading}>{assistantLoading ? '正在回答…' : '发送问题'}</button>
+          </form>
+        </div>
       </Modal>
 
       <Modal open={privacyOpen} title="隐私与本机数据" onClose={() => setPrivacyOpen(false)}>
