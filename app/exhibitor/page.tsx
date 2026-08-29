@@ -6,6 +6,9 @@ import { redirect } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 
 export default async function ExhibitorPage() {
+  if (process.env.NODE_ENV === 'development') {
+    return <ExhibitorClient displayName="本地展商账号" />;
+  }
   const user = await requireUser('/exhibitor');
   const membership = await ensureExhibitorAccess(user);
   if (!membership) redirect('/access-denied');

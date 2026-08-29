@@ -6,6 +6,9 @@ import { redirect } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 
 export default async function OperationsPage() {
+  if (process.env.NODE_ENV === 'development') {
+    return <OperationsClient displayName="本地运营账号" />;
+  }
   const user = await requireUser('/operations');
   const membership = await ensureOperationsAccess(user);
   if (!membership) redirect('/access-denied');

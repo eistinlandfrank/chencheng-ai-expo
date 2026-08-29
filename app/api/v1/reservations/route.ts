@@ -34,7 +34,14 @@ async function getOffering(placeId: string) {
 export async function GET(request: NextRequest) {
   const requestId = crypto.randomUUID();
   const session = await getRequestAuthSession(request);
-  if (!session) return NextResponse.json({ code: 'UNAUTHENTICATED', message: '请登录后继续', request_id: requestId }, { status: 401 });
+  if (!session) {
+    if (process.env.NODE_ENV === 'development') {
+      const placeId = request.nextUrl.searchParams.get('place_id') ?? '';
+      const [reservations, offering] = await Promise.all([listMyReservations('dev-user'), placeId ? getOffering(placeId) : Promise.resolve(null)]);
+      return NextResponse.json({ request_id: requestId, offering, reservations });
+    }
+    return NextResponse.json({ code: 'UNAUTHENTICATED', message: '请登录后继续', request_id: requestId }, { status: 401 });
+  }
   const user = session.user;
   const placeId = request.nextUrl.searchParams.get('place_id') ?? '';
   const [reservations, offering] = await Promise.all([listMyReservations(user.userId), placeId ? getOffering(placeId) : Promise.resolve(null)]);
