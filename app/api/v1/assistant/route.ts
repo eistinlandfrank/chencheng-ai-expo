@@ -5,6 +5,7 @@ import {
   assistantRequestAllowed,
   assistantSystemPrompt,
   assistantTextFromCompletion,
+  deterministicAssistantAnswer,
 } from '@/lib/ai-assistant';
 
 const MAX_QUESTION_LENGTH = 500;
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
 
   const { apiKey, baseUrl, model } = aiAssistantConfiguration();
   if (!apiKey) {
-    return NextResponse.json({ code: 'ASSISTANT_UNAVAILABLE', message: '展会助手暂不可用，请稍后再试', request_id: requestId, details: null }, { status: 503 });
+    return NextResponse.json({ request_id: requestId, answer: deterministicAssistantAnswer(question) });
   }
 
   let endpoint: URL;
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
     if (endpoint.protocol !== 'https:') throw new Error('insecure_protocol');
   } catch {
     console.error('AI assistant configuration has an invalid base URL');
-    return NextResponse.json({ code: 'ASSISTANT_UNAVAILABLE', message: '展会助手暂不可用，请稍后再试', request_id: requestId, details: null }, { status: 503 });
+    return NextResponse.json({ request_id: requestId, answer: deterministicAssistantAnswer(question) });
   }
 
   try {
@@ -78,19 +79,19 @@ export async function POST(request: NextRequest) {
 
     if (!upstream.ok) {
       console.warn(`AI assistant upstream request failed with status ${upstream.status}`);
-      return NextResponse.json({ code: 'ASSISTANT_UNAVAILABLE', message: '展会助手暂不可用，请稍后再试', request_id: requestId, details: null }, { status: 503 });
+      return NextResponse.json({ request_id: requestId, answer: deterministicAssistantAnswer(question) });
     }
 
     const answer = assistantTextFromCompletion(await upstream.json());
     if (!answer) {
       console.warn('AI assistant upstream returned no text');
-      return NextResponse.json({ code: 'ASSISTANT_UNAVAILABLE', message: '展会助手暂不可用，请稍后再试', request_id: requestId, details: null }, { status: 503 });
+      return NextResponse.json({ request_id: requestId, answer: deterministicAssistantAnswer(question) });
     }
 
     return NextResponse.json({ request_id: requestId, answer: answer.slice(0, 1_200) });
   } catch (error) {
     const label = error instanceof Error ? error.name : 'unknown';
     console.warn(`AI assistant upstream request failed: ${label}`);
-    return NextResponse.json({ code: 'ASSISTANT_UNAVAILABLE', message: '展会助手暂不可用，请稍后再试', request_id: requestId, details: null }, { status: 503 });
+    return NextResponse.json({ request_id: requestId, answer: deterministicAssistantAnswer(question) });
   }
 }
