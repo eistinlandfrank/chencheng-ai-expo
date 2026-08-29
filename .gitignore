@@ -52,3 +52,10 @@ next-env.d.ts
 /outputs/
 /work/
 tsconfig.tsbuildinfo
+
+# Server-only deployment configuration and queues
+/deploy.env
+/secrets/
+/cloudflared/
+/deploy-queue/
+/deploy-state/

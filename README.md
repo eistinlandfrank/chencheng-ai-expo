@@ -1,15 +1,16 @@
 # Expo Service AI
 
-Expo Service AI 是面向观众、参展商与场馆运营人员的响应式展会服务 MVP，支持桌面端与移动端。观众可匿名浏览展位、服务点、活动和行程；受邀的参展商与场馆人员使用通行密钥进入各自工作台。
+Expo Service AI 是面向观众、参展商与场馆运营人员的三端展会服务。`visitor-app/` 是唯一对观众发布的新观展页面；主平台的旧观展首页已退役，只保留 `/exhibitor` 展商端和 `/operations` 场馆运营端。受邀的工作人员使用通行密钥进入各自工作台。
 
 当前场馆地图处于复核状态。路线、距离、时间和无障碍导航只有在权威数据、现场检查及双人审核全部通过后才会开放；仓库中的场馆数据不得直接视为已发布的现场事实。
 
 ## 运行架构
 
-- Node.js `22.23.x`，生产构建输出为 `dist/standalone/server.js`。
-- SQLite 数据库位于容器内 `/data/expo-service.sqlite`，通过宿主机 SSD 目录持久挂载。
+- 主平台使用 Node.js `22.23.x`，生产构建输出为 `dist/standalone/server.js`。
+- 新访客端位于 `visitor-app/`，使用 Bun 和 Next.js；无需第三方平台账号，观展记录只保存在当前浏览器。
+- 主平台 SQLite 数据库位于容器内 `/data/expo-service.sqlite`，通过宿主机 SSD 目录持久挂载。
 - SQLite 使用 WAL、外键检查和版本化迁移；容器启动时先执行 `scripts/migrate.mjs`，迁移成功后才启动网页服务。
-- 参展商与运营人员使用 WebAuthn 通行密钥、服务端会话、HttpOnly Cookie 和 CSRF 校验；观众浏览不要求登录。
+- 参展商与运营人员使用 WebAuthn 通行密钥、服务端会话、HttpOnly Cookie 和 CSRF 校验。
 - Docker 容器以非 root 用户运行，应用根文件系统只读，只有 `/data` 可持久写入。
 
 ## 本地开发
@@ -28,6 +29,15 @@ npm run dev
 ```bash
 npm run check
 npm run build
+```
+
+访客端单独检查：
+
+```bash
+cd visitor-app
+bun install --frozen-lockfile
+bun run lint
+bun run build
 ```
 
 构建完成后，在运行环境已经注入全部变量时，可用与容器相同的启动顺序运行生产产物：
@@ -74,17 +84,9 @@ docker exec -it chencheng-web node scripts/bootstrap-admin.mjs \
 
 ## Docker 构建与运行
 
-镜像必须使用经过验证的完整 Git commit SHA 标记。`HOST_DATA_DIR` 指向宿主机 SSD 上由容器用户 `10001:10001` 可写的目录。
+`compose.production.yaml` 同时管理主平台、访客端、安全 webhook 接收器和 Cloudflare Named Tunnel。镜像只用经过验证的完整 Git commit SHA 标记，真实密钥、tunnel 凭据和数据目录全部保存在 Git 仓库外。
 
-```bash
-export APP_VERSION="<40-character-git-commit-sha>"
-export HOST_DATA_DIR="/path/on/ssd/expo-service-data"
-
-docker compose config --quiet
-docker compose build --pull web
-```
-
-Compose 只管理网页服务，将宿主机回环端口 `3100` 转发到容器端口 `3000`，不会创建、停止或重建外部隧道。不要直接覆盖正在运行的生产容器；首次切换和后续版本升级应先运行版本化候选容器，并按迁移前数据备份、健康检查、切换和回滚顺序操作。完整启动命令见 [自托管发布与回滚](deploy/ROLLBACK.md)。
+生产默认只监听宿主机回环地址：主平台 `3101`、访客端 `3102`、webhook `3103`。Cloudflare tunnel 容器使用 host network 转发这三个 origin。首次配置、GitHub webhook 自动部署和人工回滚见 [三端生产部署、自动发布与回滚](deploy/ROLLBACK.md)。
 
 ## 数据备份与回滚
 
@@ -94,7 +96,7 @@ Compose 只管理网页服务，将宿主机回环端口 `3100` 转发到容器�
 
 ## 外部访问
 
-现有 Quick Tunnel 仅适合临时验收：公开主机名可能在重启或重建后变化，也没有长期可用性保证。发布网页镜像时应保持当前 tunnel 容器运行。长期使用应改为受账户管理的命名隧道、稳定主机名和明确的访问策略。
+Quick Tunnel 仅适合临时验收，随机 `trycloudflare.com` 主机名不会用于生产。正式环境使用账户管理的 Named Tunnel 和固定 DNS 主机名：访客域名发布新观展端，工作台域名发布展商与运营端，部署域名只接受精确的 GitHub webhook 路径。
 
 ## 发布边界
 

@@ -1,8 +1,0 @@
-{
-  "route": "appointments",
-  "name": "预约接待",
-  "nav_type": "tab",
-  "order_index": 2,
-  "icon": "calendar-check",
-  "summary": "预约管理与接待跟进"
-}

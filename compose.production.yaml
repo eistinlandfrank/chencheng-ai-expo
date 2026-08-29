@@ -1,0 +1,113 @@
+name: chencheng-ai-expo-three-portals
+
+services:
+  platform:
+    image: chencheng-ai-expo-platform:${APP_VERSION:?APP_VERSION must be a full Git commit SHA}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:?APP_VERSION must be a full Git commit SHA}
+    container_name: chencheng-platform
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ${SECRETS_DIR:?SECRETS_DIR is required}/platform.env
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      DATA_DIR: /data
+      DATABASE_PATH: /data/expo-service.sqlite
+    ports:
+      - "127.0.0.1:${PLATFORM_HOST_PORT:-3101}:3000"
+    volumes:
+      - type: bind
+        source: ${PLATFORM_DATA_DIR:?PLATFORM_DATA_DIR is required}
+        target: /data
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
+
+  visitor:
+    image: chencheng-ai-expo-visitor:${APP_VERSION:?APP_VERSION must be a full Git commit SHA}
+    build:
+      context: ./visitor-app
+      dockerfile: Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:?APP_VERSION must be a full Git commit SHA}
+    container_name: chencheng-visitor
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ${SECRETS_DIR:?SECRETS_DIR is required}/visitor.env
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      NEXT_TELEMETRY_DISABLED: 1
+    ports:
+      - "127.0.0.1:${VISITOR_HOST_PORT:-3102}:3000"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
+
+  webhook:
+    image: chencheng-ai-expo-webhook:${APP_VERSION:?APP_VERSION must be a full Git commit SHA}
+    build:
+      context: ./deploy/webhook
+      dockerfile: Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:?APP_VERSION must be a full Git commit SHA}
+    container_name: chencheng-deploy-webhook
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ${SECRETS_DIR:?SECRETS_DIR is required}/webhook.env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      QUEUE_DIR: /queue
+    ports:
+      - "127.0.0.1:${WEBHOOK_HOST_PORT:-3103}:3000"
+    volumes:
+      - type: bind
+        source: ${DEPLOY_QUEUE_DIR:?DEPLOY_QUEUE_DIR is required}
+        target: /queue
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  tunnel:
+    image: cloudflare/cloudflared:2026.5.0
+    container_name: chencheng-cloudflared
+    restart: unless-stopped
+    network_mode: host
+    command: ["tunnel", "--no-autoupdate", "--config", "/etc/cloudflared/config.yml", "run"]
+    volumes:
+      - type: bind
+        source: ${CLOUDFLARED_CONFIG_DIR:?CLOUDFLARED_CONFIG_DIR is required}
+        target: /etc/cloudflared
+        read_only: true
+    depends_on:
+      platform:
+        condition: service_healthy
+      visitor:
+        condition: service_healthy
+      webhook:
+        condition: service_healthy
