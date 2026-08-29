@@ -1,9 +1,10 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   BarChart3,
+  Bell,
   Building2,
   CheckCircle2,
   ChevronRight,
@@ -19,7 +20,6 @@ import {
   PanelLeftClose,
   Plus,
   RefreshCw,
-  RotateCcw,
   Search,
   Send,
   Settings,
@@ -36,20 +36,25 @@ import LogoutButton from '@/components/LogoutButton';
 import Modal from '@/components/Modal';
 import Toast, { type ToastState } from '@/components/Toast';
 import VenueMap from '@/components/VenueMap';
-import { edges, nodes, places, venue } from '@/lib/venue';
+import { places, venue } from '@/lib/venue';
 import { emptyMapFieldChecks, type ClosedGroup, type MapFieldChecks, type OpsNotice as Notice, type OpsState, type OpsTicket } from '@/lib/state-types';
 import { protectedJsonHeaders } from '@/lib/csrf';
+import { showcaseEvent, showcaseVenues } from '@/lib/venue-showcase-data';
+import OverviewDashboard from './components/OverviewDashboard';
+import MapRoutingPanel from './components/MapRoutingPanel';
+import CatalogActivitiesPanel from './components/CatalogActivitiesPanel';
+import './operations.css';
 
 type OpsTab = 'overview' | 'map' | 'catalog' | 'live' | 'notices' | 'tickets' | 'analytics' | 'accounts' | 'settings';
 
 const opsNav: Array<{ id: OpsTab; label: string; icon: typeof LayoutDashboard }> = [
-  { id: 'overview', label: '运营总览', icon: LayoutDashboard },
-  { id: 'map', label: '地图与路线', icon: Map },
+  { id: 'overview', label: '展会总览', icon: LayoutDashboard },
+  { id: 'map', label: '展位地图', icon: Map },
   { id: 'catalog', label: '展位与活动', icon: Building2 },
-  { id: 'live', label: '实时现场', icon: SquareActivity },
-  { id: 'notices', label: '通知', icon: Megaphone },
+  { id: 'live', label: '实施现场', icon: SquareActivity },
+  { id: 'notices', label: '消息管理', icon: Megaphone },
   { id: 'tickets', label: '工单调度', icon: Wrench },
-  { id: 'analytics', label: '分析', icon: BarChart3 },
+  { id: 'analytics', label: '搜索分析', icon: BarChart3 },
   { id: 'accounts', label: '账号权限', icon: Users },
   { id: 'settings', label: '系统设置', icon: Settings },
 ];
@@ -72,8 +77,8 @@ export default function OperationsPortal({ displayName }: { displayName: string 
   const [tickets, setTickets] = useState<OpsTicket[]>([]);
   const [profileReviewStatus, setProfileReviewStatus] = useState<'draft' | 'review' | 'published'>('draft');
   const [toast, setToast] = useState<ToastState>(null);
-
-  const configuredAreaCount = useMemo(() => places.filter((place) => place.kind !== 'gate').length, []);
+  const [venueId, setVenueId] = useState(showcaseVenues[0].id);
+  const activeVenue = showcaseVenues.find((item) => item.id === venueId) ?? showcaseVenues[0];
 
   useEffect(() => {
     let active = true;
@@ -224,26 +229,28 @@ export default function OperationsPortal({ displayName }: { displayName: string 
   return (
     <main className={`portal-shell ops-shell ${sidebarOpen ? '' : 'sidebar-collapsed'}`}>
       <aside className="portal-sidebar ops-sidebar">
-        <div className="sidebar-logo-row"><Brand href="/operations" /><button type="button" onClick={() => setSidebarOpen(false)} aria-label="收起侧栏"><PanelLeftClose size={18} /></button></div>
-        <div className="portal-role"><span><ShieldCheck size={18} /></span><div><small>场馆运营中心</small><strong>主会场</strong></div></div>
+        <div className="sidebar-logo-row"><Brand href="/operations" subtitle="展会智能服务管理平台" /><button type="button" onClick={() => setSidebarOpen(false)} aria-label="收起侧栏"><PanelLeftClose size={18} /></button></div>
+        <div className="portal-role"><span><ShieldCheck size={18} /></span><div><small>首都会展集团</small><strong>{activeVenue.name} · {activeVenue.hall}</strong></div></div>
         <nav aria-label="运营端导航">{opsNav.map(({ id, label, icon: Icon }) => <button className={tab === id ? 'active' : ''} key={id} type="button" onClick={() => setTab(id)}><Icon size={19} />{label}</button>)}</nav>
-        <div className="system-health"><span className={mapReviewState === 'published' ? 'live-dot' : 'state-dot pending'} /><div><strong>{mapReviewState === 'published' ? '地图导航已开放' : '地图等待复核'}</strong><small>版本 {venue.mapVersion}</small></div><ChevronRight size={16} /></div>
+        <div className="system-health"><span className="live-dot" /><div><strong>系统运行正常</strong><small>所有服务运行良好</small></div><ChevronRight size={16} /></div>
         <Link className="back-to-visitor" href="/">返回观众端</Link>
       </aside>
 
       <section className="portal-main">
-          <header className="portal-topbar ops-topbar"><div className="ops-title"><button className="menu-toggle" type="button" onClick={() => setSidebarOpen((value) => !value)} aria-label="切换侧栏"><Menu size={20} /></button><div><small>Expo Service AI</small><strong>{opsNav.find((item) => item.id === tab)?.label}</strong></div></div><div className="event-switcher"><small>当前展会</small><strong>千人黑客松 · 主会场</strong></div><div className="topbar-actions"><div className="account-button"><span>运</span><div><strong>{displayName}</strong><small>场馆管理员</small></div></div><LogoutButton compact /></div></header>
+          <header className="portal-topbar ops-topbar"><div className="ops-title"><button className="menu-toggle" type="button" onClick={() => setSidebarOpen((value) => !value)} aria-label="切换侧栏"><Menu size={20} /></button><div><small>首都会展集团</small><strong>{opsNav.find((item) => item.id === tab)?.label}</strong></div></div><label className="event-switcher"><small>当前展会</small><select value={venueId} onChange={(event) => setVenueId(event.target.value)} aria-label="切换场馆与展会"><option value={showcaseVenues[0].id}>{showcaseEvent.shortName} · {showcaseVenues[0].hall}</option>{showcaseVenues.slice(1).map((item) => <option key={item.id} value={item.id}>{item.name} · {item.hall}</option>)}</select></label><div className="topbar-actions"><button className="notify-bell" type="button" onClick={() => setTab('notices')} aria-label="通知"><Bell size={18} /><em>12</em></button><div className="account-button"><span>张</span><div><strong>{displayName}</strong><small>主办方管理员</small></div></div><LogoutButton compact /></div></header>
 
         <div className="portal-content ops-content">
-          {tab === 'overview' && <Overview configuredAreaCount={configuredAreaCount} closedGroups={closedGroups} mapStatus={mapReviewState} notices={notices} tickets={tickets} onTab={setTab} onCorridor={() => setCorridorOpen(true)} onNotice={() => setNoticeOpen(true)} onTicket={() => setTicketOpen(true)} />}
-          {tab === 'map' && <MapManagement closedGroups={closedGroups} reviewState={mapReviewState} verifications={verifications} canReview={canReview} reviewCount={new Set(mapReviews.filter((review) => review.actorId !== submittedBy && Object.values(review.checks).every(Boolean)).map((review) => review.actorId)).size} graphValidation={graphValidation} onReview={submitMapReview} onToggleVerification={toggleVerification} onPublish={publishMap} notify={notify} />}
-          {tab === 'catalog' && <>{profileReviewStatus === 'review' && <div className="policy-banner"><ClipboardCheck size={20} /><div><strong>有展位内容等待审核</strong><p>审核通过后，新内容会替换观众端当前公开版本。</p></div><button type="button" onClick={() => void publishBoothProfile()}>审核并发布</button></div>}<CatalogManagement openPlaceIds={openPlaceIds} onToggle={togglePlaceAvailability} /></>}
+          {!activeVenue.active && <div className="policy-banner"><Building2 size={20} /><div><strong>{activeVenue.name} · {activeVenue.hall}</strong><p>该场馆为集团多馆切换示意，详细态势数据仍以国会二期 4 号展厅示范馆为准。</p></div></div>}
+          {tab === 'overview' && <OverviewDashboard closedGroups={closedGroups} notices={notices} tickets={tickets} onTab={(next) => setTab(next)} onSelectBooth={() => setTab('catalog')} />}
+          {tab === 'map' && <><MapRoutingPanel closedGroups={closedGroups} /><MapManagement closedGroups={closedGroups} reviewState={mapReviewState} verifications={verifications} canReview={canReview} reviewCount={new Set(mapReviews.filter((review) => review.actorId !== submittedBy && Object.values(review.checks).every(Boolean)).map((review) => review.actorId)).size} graphValidation={graphValidation} onReview={submitMapReview} onToggleVerification={toggleVerification} onPublish={publishMap} notify={notify} /></>}
+          {tab === 'catalog' && <>{profileReviewStatus === 'review' && <div className="policy-banner"><ClipboardCheck size={20} /><div><strong>有展位内容等待审核</strong><p>审核通过后，新内容会替换观众端当前公开版本。</p></div><button type="button" onClick={() => void publishBoothProfile()}>审核并发布</button></div>}<CatalogActivitiesPanel /><CatalogManagement openPlaceIds={openPlaceIds} onToggle={togglePlaceAvailability} /></>}
           {tab === 'live' && <LiveOperations closedGroups={closedGroups} mapStatus={mapReviewState} onCorridor={() => setCorridorOpen(true)} />}
           {tab === 'notices' && <NoticesView notices={notices} onCreate={() => setNoticeOpen(true)} />}
           {tab === 'tickets' && <TicketDispatch tickets={tickets} onCreate={() => setTicketOpen(true)} onAdvance={advanceTicket} />}
           {tab === 'analytics' && <OperationsAnalyticsView />}
           {tab === 'accounts' && <AccountsView />}
           {tab === 'settings' && <SystemSettingsView mapStatus={mapReviewState} />}
+          <footer className="ops-footer"><span>Expo Service AI 管理平台 v1.0.0</span><span>© 首都会展集团 · AITEX 2026 示范馆</span></footer>
         </div>
       </section>
 
@@ -266,17 +273,6 @@ export default function OperationsPortal({ displayName }: { displayName: string 
 
 function PageHeading({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: React.ReactNode }) {
   return <header className="page-heading"><div><span>{eyebrow}</span><h1>{title}</h1><p>{description}</p></div>{action}</header>;
-}
-
-function Overview({ configuredAreaCount, closedGroups, mapStatus, notices, tickets, onTab, onCorridor, onNotice, onTicket }: { configuredAreaCount: number; closedGroups: ClosedGroup[]; mapStatus: OpsState['mapStatus']; notices: Notice[]; tickets: OpsTicket[]; onTab: (tab: OpsTab) => void; onCorridor: () => void; onNotice: () => void; onTicket: () => void }) {
-  const activeTickets = tickets.filter((ticket) => ticket.status !== '已完成');
-  const metrics = [
-    { label: '已配置地点', value: String(configuredAreaCount), note: '区域与现场服务', icon: MapPin },
-    { label: '关闭通道', value: String(closedGroups.length), note: '当前现场状态', icon: Waypoints },
-    { label: '处理中工单', value: String(activeTickets.length), note: '未完成队列', icon: Wrench },
-    { label: '已发布通知', value: String(notices.filter((notice) => notice.status === '已发布').length), note: '当前记录', icon: Megaphone },
-  ];
-  return <section><PageHeading eyebrow="千人黑客松 · 主会场" title="运营总览" description="地图、现场状态、通知与工单的统一工作台。" action={<div className="heading-actions"><button type="button" onClick={onCorridor}><Waypoints size={17} />通道状态</button><button className="primary" type="button" onClick={onNotice}><Megaphone size={17} />发布通知</button></div>} /><div className="metric-grid ops-metrics">{metrics.map(({ label, value, note, icon: Icon }) => <article key={label}><div><span>{label}</span><small>{note}</small></div><strong>{value}</strong><Icon size={20} /></article>)}</div><div className="ops-overview-grid"><section className="map-operations-card"><div className="card-head"><div><h2>场馆地图</h2><p>{venue.mapVersion} · 主厅 {venue.widthMeters} × {venue.heightMeters} 米</p></div><div className="map-status-row"><span className={`status-pill ${mapStatus === 'published' ? 'published' : 'review'}`}>{mapStatus === 'published' ? '已发布' : mapStatus === 'review' ? '审核中' : '草稿'}</span><button type="button" onClick={() => onTab('map')}>地图管理 <ChevronRight size={15} /></button></div></div><VenueMap closedGroups={closedGroups} showEditorGrid /><div className="map-summary"><span><Waypoints size={16} />2 条主疏散通道</span><span><GitBranch size={16} />{edges.length} 条通行边</span><span><MapPin size={16} />{nodes.length} 个导航节点</span><span><CircleAlert size={16} />{closedGroups.length} 条关闭</span></div></section><aside className="ops-side-stack"><section className="action-panel"><div className="card-head"><div><h2>快捷操作</h2><p>常用现场工作</p></div></div><div className="ops-quick-grid"><button type="button" onClick={onCorridor}><span><Waypoints size={20} /></span>关闭通道</button><button type="button" onClick={onNotice}><span><Megaphone size={20} /></span>发布通知</button><button type="button" onClick={onTicket}><span><Wrench size={20} /></span>创建工单</button><button type="button" onClick={() => onTab('map')}><span><RotateCcw size={20} /></span>地图版本</button></div></section><section className="attention-panel"><div className="card-head"><div><h2>现场核验</h2><p>地图发布前逐项完成</p></div><span className="count-badge">5</span></div><button type="button" onClick={() => onTab('map')}><TriangleAlert size={17} /><span><strong>双人现场复核</strong><small>朝向、楼层、连接、无障碍与障碍物</small></span><ChevronRight size={16} /></button><button type="button" onClick={() => onTab('map')}><Layers3 size={17} /><span><strong>版本发布状态</strong><small>{mapStatus === 'published' ? '当前版本已发布' : mapStatus === 'review' ? '等待完整复核' : '尚未提交复核'}</small></span><ChevronRight size={16} /></button><button type="button" onClick={() => onTab('map')}><ClipboardCheck size={17} /><span><strong>现场变化复查</strong><small>桌椅、围栏与排队线</small></span><ChevronRight size={16} /></button></section></aside></div><div className="ops-lower-grid"><section className="panel-card"><div className="card-head"><div><h2>工单调度</h2><p>{activeTickets.length ? `${activeTickets.length} 张待处理` : '暂无待处理工单'}</p></div><button type="button" onClick={() => onTab('tickets')}>查看队列</button></div>{activeTickets.length ? <div className="ticket-list compact">{activeTickets.slice(0, 3).map((ticket) => <article key={ticket.id}><span className="ticket-icon"><Wrench size={20} /></span><div><small>{ticket.priority} · {ticket.location}</small><strong>{ticket.category}</strong><p>{ticket.description}</p></div><span className="status-pill draft">{ticket.status}</span></article>)}</div> : <div className="empty-inline"><Wrench size={27} /><div><strong>现场服务队列为空</strong><p>新工单会按紧急度和位置进入调度队列。</p></div></div>}</section><section className="panel-card"><div className="card-head"><div><h2>服务状态</h2><p>以当前保存状态为准</p></div><span className={`status-pill ${mapStatus === 'published' ? 'published' : 'review'}`}>{mapStatus === 'published' ? '导航开放' : '待复核'}</span></div><div className="service-status-grid"><div><span className={mapStatus === 'published' ? 'live-dot' : 'state-dot pending'} /><strong>地图数据</strong><small>{mapStatus === 'published' ? '已发布' : '待复核'}</small></div><div><span className={mapStatus === 'published' ? 'live-dot' : 'state-dot pending'} /><strong>路线服务</strong><small>{mapStatus === 'published' ? '已开放' : '未开放'}</small></div><div><span className={notices.length ? 'live-dot' : 'state-dot pending'} /><strong>通知记录</strong><small>{notices.length ? `${notices.length} 条` : '暂无'}</small></div></div></section></div></section>;
 }
 
 function MapManagement({ closedGroups, reviewState, verifications, canReview, reviewCount, graphValidation, onReview, onToggleVerification, onPublish, notify }: { closedGroups: ClosedGroup[]; reviewState: OpsState['mapStatus']; verifications: MapFieldChecks; canReview: boolean; reviewCount: number; graphValidation: { valid: boolean; issues: string[] }; onReview: () => void; onToggleVerification: (key: keyof MapFieldChecks) => void; onPublish: () => void; notify: (message: string, type?: NonNullable<ToastState>['type']) => void }) {
@@ -310,7 +306,7 @@ function CatalogManagement({ openPlaceIds, onToggle }: { openPlaceIds: string[];
 }
 
 function LiveOperations({ closedGroups, mapStatus, onCorridor }: { closedGroups: ClosedGroup[]; mapStatus: OpsState['mapStatus']; onCorridor: () => void }) {
-  return <section><PageHeading eyebrow="通道与设施状态" title="实时现场" description="状态变化会写入现场状态，并作用于观众端后续路线。" action={<button className="primary heading-primary" type="button" onClick={onCorridor}><Waypoints size={17} />更新通道</button>} /><div className="live-layout"><section className="map-operations-card"><div className="card-head"><div><h2>现场通行状态</h2><p>{mapStatus === 'published' ? '地图已发布' : '地图尚未发布'}</p></div><span className={closedGroups.length ? 'status-pill review' : mapStatus === 'published' ? 'status-pill published' : 'status-pill draft'}>{closedGroups.length ? `${closedGroups.length} 条关闭` : mapStatus === 'published' ? '暂无关闭' : '等待复核'}</span></div><VenueMap closedGroups={closedGroups} /><div className="map-legend"><span><i className="open" />未关闭</span><span><i className="closed" />临时关闭</span><span><i className="restricted" />动态区域</span></div></section><aside className="live-side"><section className="panel-card"><div className="card-head"><div><h2>导航发布状态</h2><p>当前地图版本</p></div></div><div className="impact-zero"><ShieldCheck size={28} /><strong>{mapStatus === 'published' ? '导航已开放' : '导航尚未开放'}</strong><p>{mapStatus === 'published' ? '观众端仅使用当前已发布版本。' : '完成双人现场复核并发布后，观众端才显示路线。'}</p></div></section><section className="panel-card corridor-list"><div className="card-head"><div><h2>主疏散通道</h2><p>2 条</p></div></div>{([['north-main', '上侧主疏散通道'], ['south-main', '下侧主疏散通道']] as const).map(([id, label]) => <div key={id}><span className={closedGroups.includes(id) ? 'state-dot closed' : 'state-dot pending'} /><span><strong>{label}</strong><small>{closedGroups.includes(id) ? '临时关闭' : mapStatus === 'published' ? '未关闭' : '待现场复核'}</small></span><button type="button" onClick={onCorridor}>管理</button></div>)}</section></aside></div></section>;
+  return <section><PageHeading eyebrow="实时调度与应急管控" title="实施现场" description="南北主疏散干道可临时分流；关闭后地图路线会立即重算避障。" action={<button className="primary heading-primary" type="button" onClick={onCorridor}><Waypoints size={17} />更新通道</button>} /><div className="live-layout"><section className="map-operations-card"><div className="card-head"><div><h2>现场通行状态</h2><p>{mapStatus === 'published' ? '地图已发布' : '地图尚未发布'}</p></div><span className={closedGroups.length ? 'status-pill review' : mapStatus === 'published' ? 'status-pill published' : 'status-pill draft'}>{closedGroups.length ? `${closedGroups.length} 条关闭` : mapStatus === 'published' ? '暂无关闭' : '等待复核'}</span></div><VenueMap closedGroups={closedGroups} /><div className="map-legend"><span><i className="open" />未关闭</span><span><i className="closed" />临时关闭</span><span><i className="restricted" />动态区域</span></div></section><aside className="live-side"><section className="panel-card"><div className="card-head"><div><h2>导航发布状态</h2><p>当前地图版本</p></div></div><div className="impact-zero"><ShieldCheck size={28} /><strong>{mapStatus === 'published' ? '导航已开放' : '导航尚未开放'}</strong><p>{mapStatus === 'published' ? '观众端仅使用当前已发布版本。' : '完成双人现场复核并发布后，观众端才显示路线。'}</p></div></section><section className="panel-card corridor-list"><div className="card-head"><div><h2>主疏散通道</h2><p>2 条</p></div></div>{([['north-main', '上侧主疏散通道'], ['south-main', '下侧主疏散通道']] as const).map(([id, label]) => <div key={id}><span className={closedGroups.includes(id) ? 'state-dot closed' : 'state-dot pending'} /><span><strong>{label}</strong><small>{closedGroups.includes(id) ? '临时关闭' : mapStatus === 'published' ? '未关闭' : '待现场复核'}</small></span><button type="button" onClick={onCorridor}>管理</button></div>)}</section></aside></div></section>;
 }
 
 function NoticesView({ notices, onCreate }: { notices: Notice[]; onCreate: () => void }) {
