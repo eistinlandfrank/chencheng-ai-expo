@@ -19,3 +19,12 @@ The QR area is deliberately left replaceable. Add a verified production URL only
 ## Pop campaign variant
 
 The `rollup-pop-v2` files are the high-attention event-floor variant. They replace the formal three-column presentation with an oversized robot, a provocative question, three action stickers, and a high-contrast CTA. The copy stays within the current product boundary: booth filtering, visit ordering, and text-based AI help. Its QR area remains deliberately replaceable until a production visitor URL is verified.
+
+## Verified QR variant
+
+The `rollup-pop-v2-qr` files are the print-ready campaign variant with a verified, high-error-correction QR code. The code resolves to `https://chencheng-speedtest.pages.dev/` and was decoded again from the final rendered banner after export.
+
+- `Expo-Service-AI-rollup-pop-v2-qr.svg`: editable vector source;
+- `Expo-Service-AI-rollup-pop-v2-qr.png`: 2400 × 6000 production raster;
+- `Expo-Service-AI-rollup-pop-v2-qr-print.png`: 3600 × 9000 high-resolution print raster;
+- `Expo-Service-AI-rollup-pop-v2-qr-preview.jpg`: lightweight review copy.
