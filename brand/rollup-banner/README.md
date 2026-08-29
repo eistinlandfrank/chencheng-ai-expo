@@ -22,7 +22,7 @@ The `rollup-pop-v2` files are the high-attention event-floor variant. They repla
 
 ## Verified QR variant
 
-The `rollup-pop-v2-qr` files are the print-ready campaign variant with a verified, high-error-correction QR code. The code resolves to `https://chencheng-speedtest.pages.dev/` and was decoded again from the final rendered banner after export.
+The `rollup-pop-v2-qr` files are the print-ready campaign variant with a verified, high-error-correction QR code. The code resolves to `https://chencheng-expo.pages.dev/` and was decoded again from the final rendered banner after export.
 
 - `Expo-Service-AI-rollup-pop-v2-qr.svg`: editable vector source;
 - `Expo-Service-AI-rollup-pop-v2-qr.png`: 2400 × 6000 production raster;
