@@ -259,3 +259,47 @@ export const statusLabels: Record<BoothStatus, string> = {
 export const categoryOptions = ['全部赛道', ...showcaseEvent.tracks];
 export const maxKeywordCount = searchKeywords[0]?.count ?? 1;
 export const hotBooth = getBooth('T-E05');
+
+export const demoNotices = [
+  { id: 9001, title: 'E区主通道拥堵，请引导分流', content: 'E区主通道通行速率下降，请引导访客从 4 号门 / 南侧辅道进入，避开 T-E05 门口排队。', audience: '全体观众', status: '已发布', createdAt: '10:48' },
+  { id: 9002, title: '主论坛延迟 15 分钟', content: '主舞台「具身智能产业化」论坛预计 13:45 开始。已预约观众无需重新签到。', audience: '全体观众', status: '已发布', createdAt: '10:45' },
+  { id: 9003, title: '导航屏 A区-03 离线', content: 'A 区 03 导览屏黑屏，已派发设备维修工单，现场以人工导视为准。', audience: '场馆运营', status: '已发布', createdAt: '10:40' },
+  { id: 9004, title: 'T-E05 互动教学 Demo 14:00 开始', content: '智育灵犀多模态互动教学演示 14:00–14:40，展位前请控制围观密度。', audience: '全体观众', status: '已发布', createdAt: '10:22' },
+  { id: 9005, title: '南侧餐饮 12:00–13:30 高峰', content: '南侧商务餐饮将迎来午高峰，建议错峰就餐，开发区及睡眠区内禁止用餐。', audience: '全体观众', status: '已发布', createdAt: '09:50' },
+];
+
+export const demoTickets = [
+  { id: 'tk-net-e05', category: '网络', location: 'T-E05 智育灵犀', priority: '紧急', status: '处理中', assignee: '王调度', description: '展商专线抖动，互动教学 Demo 卡顿，需保障专线与备用链路。', source: 'exhibitor' as const, createdAt: '2026-08-29T10:12:00+08:00' },
+  { id: 'tk-power-a04', category: '电力', location: 'T-A04 步云人形', priority: '紧急', status: '待分派', assignee: '未分派', description: '人形演练区申请临时增容 8kW，现有回路接近上限。', source: 'exhibitor' as const, createdAt: '2026-08-29T10:28:00+08:00' },
+  { id: 'tk-device-a03', category: '设备', location: '导航屏 A区-03', priority: '普通', status: '处理中', assignee: '陈图审', description: '导览屏离线黑屏，需现场重启或更换主机。', source: 'operations' as const, createdAt: '2026-08-29T10:36:00+08:00' },
+  { id: 'tk-meal-south', category: '物料', location: '南侧餐饮区', priority: '普通', status: '待确认', assignee: '李复核', description: '午高峰饮水补给不足，已补货等待现场确认。', source: 'operations' as const, createdAt: '2026-08-29T09:40:00+08:00' },
+  { id: 'tk-crowd-e', category: '安保', location: 'E区主通道', priority: '紧急', status: '待分派', assignee: '未分派', description: 'T-E05 门口排队外溢，需增设分流栏并增派引导。', source: 'operations' as const, createdAt: '2026-08-29T10:46:00+08:00' },
+  { id: 'tk-net-b05', category: '网络', location: 'T-B05 驭界芯片', priority: '普通', status: '已完成', assignee: '王调度', description: '演示工位交换机端口故障，已更换模块恢复。', source: 'exhibitor' as const, createdAt: '2026-08-29T09:18:00+08:00' },
+  { id: 'tk-clean-stage', category: '清洁', location: '主舞台', priority: '普通', status: '已完成', assignee: '李复核', description: '上午彩排后清场，座椅复位完成。', source: 'operations' as const, createdAt: '2026-08-29T08:55:00+08:00' },
+];
+
+export const demoAnalytics = {
+  range: { label: '最近 24 小时', since: '2026-08-28T18:00:00+08:00', until: '2026-08-29T18:00:00+08:00' },
+  metrics: {
+    active_sessions: { value: 1864, suppressed: false },
+    searches: { value: 4126, suppressed: false },
+    no_result_searches: { value: 186, suppressed: false },
+    booth_views: { value: 5620, suppressed: false },
+    routes_started: { value: 2318, suppressed: false },
+    arrivals: { value: 1488, suppressed: false },
+    reservations: { value: 412, suppressed: false },
+  },
+  keywords: searchKeywords.map((item) => ({ keyword: item.keyword, total: item.count })),
+};
+
+export const demoMembers = [
+  { user_id: 'u-zhang', email_snapshot: 'zhang.admin@shouhui.demo', display_name: '张管理员', role: 'organizer_admin' },
+  { user_id: 'u-li', email_snapshot: 'li.review@ncc.demo', display_name: '李复核', role: 'venue_admin' },
+  { user_id: 'u-wang', email_snapshot: 'wang.dispatch@ncc.demo', display_name: '王调度', role: 'dispatcher' },
+  { user_id: 'u-chen', email_snapshot: 'chen.map@ncc.demo', display_name: '陈图审', role: 'map_reviewer' },
+];
+
+export const demoPendingInvites = [
+  { id: 'inv-editor', email_normalized: 'zhao.editor@ncc.demo', role: 'map_editor' },
+];
+

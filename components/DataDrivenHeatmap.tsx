@@ -47,7 +47,7 @@ export default function DataDrivenHeatmap({ booths, onSelect }: DataDrivenHeatma
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const offscreenRef = useRef<HTMLCanvasElement | null>(null);
-  const [now, setNow] = useState(() => new Date());
+  const [stamp, setStamp] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
   const [showLegend, setShowLegend] = useState(true);
   const [hover, setHover] = useState<{ booth: ShowcaseBooth; x: number; y: number } | null>(null);
@@ -63,7 +63,9 @@ export default function DataDrivenHeatmap({ booths, onSelect }: DataDrivenHeatma
   }, []);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    const tick = () => setStamp(new Date().toLocaleTimeString('zh-CN', { hour12: false }));
+    tick();
+    const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
   }, []);
 
@@ -164,14 +166,12 @@ export default function DataDrivenHeatmap({ booths, onSelect }: DataDrivenHeatma
     setHover({ booth, x: event.clientX - box.left, y: event.clientY - box.top });
   }
 
-  const stamp = now.toLocaleTimeString('zh-CN', { hour12: false });
-
   return (
     <section className="heat-card">
       <header className="heat-head">
         <div>
           <h2>展馆实时热力图</h2>
-          <p>HeatScore 驱动 · 高斯辐射 · {booths.length} 个点位</p>
+          <p><span className="heat-live"><i />实时</span> HeatScore 驱动 · {booths.length} 个点位</p>
         </div>
         {showLegend && (
           <div className="heat-legend" aria-hidden="true">
@@ -221,7 +221,7 @@ export default function DataDrivenHeatmap({ booths, onSelect }: DataDrivenHeatma
             <button type="button" className={showLegend ? 'active' : ''} onClick={() => setShowLegend((value) => !value)} title="图例">
               <Info size={15} /><span>图例</span>
             </button>
-            <button type="button" onClick={() => setNow(new Date())} title="刷新">
+            <button type="button" onClick={() => setStamp(new Date().toLocaleTimeString('zh-CN', { hour12: false }))} title="刷新">
               <RefreshCw size={15} /><span>刷新</span>
             </button>
           </nav>
@@ -248,7 +248,7 @@ export default function DataDrivenHeatmap({ booths, onSelect }: DataDrivenHeatma
           )}
         </div>
       </div>
-      <div className="heat-stamp">最后更新：{stamp}</div>
+      <div className="heat-stamp">最后更新：{stamp ?? '--:--:--'}</div>
     </section>
   );
 }

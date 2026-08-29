@@ -1,13 +1,13 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Navigation, Route, ShieldCheck } from 'lucide-react';
+import { Navigation, Route, ShieldCheck, Waypoints } from 'lucide-react';
 import VenueMap from '@/components/VenueMap';
 import { findRoute, venue, type RouteResult } from '@/lib/venue';
 import { cadDoors, featuredBooths, getBooth, schematicGates } from '@/lib/venue-showcase-data';
 import type { ClosedGroup } from '@/lib/state-types';
 
-export default function MapRoutingPanel({ closedGroups }: { closedGroups: ClosedGroup[] }) {
+export default function MapRoutingPanel({ closedGroups, onCorridor }: { closedGroups: ClosedGroup[]; onCorridor?: () => void }) {
   const [fromId, setFromId] = useState('gate-south');
   const [toBooth, setToBooth] = useState('T-E05');
   const [wheelchair, setWheelchair] = useState(false);
@@ -47,6 +47,11 @@ export default function MapRoutingPanel({ closedGroups }: { closedGroups: Closed
             <input type="checkbox" checked={wheelchair} onChange={(event) => setWheelchair(event.target.checked)} />
             无障碍优先
           </label>
+          {onCorridor && (
+            <button className="route-corridor-btn" type="button" onClick={onCorridor}>
+              <Waypoints size={16} />通道状态{closedGroups.length ? ` · ${closedGroups.length} 关闭` : ''}
+            </button>
+          )}
         </div>
       </header>
       <div className="route-sim-grid">

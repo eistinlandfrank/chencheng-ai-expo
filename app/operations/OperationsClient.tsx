@@ -25,7 +25,6 @@ import {
   Settings,
   ShieldCheck,
   SlidersHorizontal,
-  SquareActivity,
   TriangleAlert,
   Users,
   Waypoints,
@@ -39,22 +38,21 @@ import VenueMap from '@/components/VenueMap';
 import { places, venue } from '@/lib/venue';
 import { emptyMapFieldChecks, type ClosedGroup, type MapFieldChecks, type OpsNotice as Notice, type OpsState, type OpsTicket } from '@/lib/state-types';
 import { protectedJsonHeaders } from '@/lib/csrf';
-import { showcaseEvent, showcaseVenues } from '@/lib/venue-showcase-data';
+import { demoAnalytics, demoMembers, demoNotices, demoPendingInvites, demoTickets, showcaseEvent, showcaseVenues } from '@/lib/venue-showcase-data';
 import OverviewDashboard from './components/OverviewDashboard';
 import MapRoutingPanel from './components/MapRoutingPanel';
 import CatalogActivitiesPanel from './components/CatalogActivitiesPanel';
 import './operations.css';
 
-type OpsTab = 'overview' | 'map' | 'catalog' | 'live' | 'notices' | 'tickets' | 'analytics' | 'accounts' | 'settings';
+type OpsTab = 'overview' | 'map' | 'catalog' | 'tickets' | 'notices' | 'analytics' | 'accounts' | 'settings';
 
 const opsNav: Array<{ id: OpsTab; label: string; icon: typeof LayoutDashboard }> = [
   { id: 'overview', label: '展会总览', icon: LayoutDashboard },
   { id: 'map', label: '展位地图', icon: Map },
   { id: 'catalog', label: '展位与活动', icon: Building2 },
-  { id: 'live', label: '实施现场', icon: SquareActivity },
-  { id: 'notices', label: '消息管理', icon: Megaphone },
   { id: 'tickets', label: '工单调度', icon: Wrench },
-  { id: 'analytics', label: '搜索分析', icon: BarChart3 },
+  { id: 'notices', label: '消息管理', icon: Megaphone },
+  { id: 'analytics', label: '运营分析', icon: BarChart3 },
   { id: 'accounts', label: '账号权限', icon: Users },
   { id: 'settings', label: '系统设置', icon: Settings },
 ];
@@ -73,8 +71,8 @@ export default function OperationsPortal({ displayName }: { displayName: string 
   const [canReview, setCanReview] = useState(true);
   const [graphValidation, setGraphValidation] = useState<{ valid: boolean; issues: string[] }>({ valid: false, issues: [] });
   const [openPlaceIds, setOpenPlaceIds] = useState<string[]>([]);
-  const [notices, setNotices] = useState<Notice[]>([]);
-  const [tickets, setTickets] = useState<OpsTicket[]>([]);
+  const [notices, setNotices] = useState<Notice[]>(demoNotices);
+  const [tickets, setTickets] = useState<OpsTicket[]>(demoTickets);
   const [profileReviewStatus, setProfileReviewStatus] = useState<'draft' | 'review' | 'published'>('draft');
   const [toast, setToast] = useState<ToastState>(null);
   const [venueId, setVenueId] = useState(showcaseVenues[0].id);
@@ -89,8 +87,8 @@ export default function OperationsPortal({ displayName }: { displayName: string 
           const payload = await response.json() as { value: OpsState; current_review: MapFieldChecks; can_review: boolean; graph_validation: { valid: boolean; issues: string[] }; content_review?: { profile_status: 'draft' | 'review' | 'published' } };
         if (!active) return;
         setClosedGroups(payload.value.closedGroups);
-        setNotices(payload.value.notices);
-        setTickets(payload.value.tickets);
+        setNotices(payload.value.notices.length ? payload.value.notices : demoNotices);
+        setTickets(payload.value.tickets.length ? payload.value.tickets : demoTickets);
           setMapReviewState(payload.value.mapStatus);
           setVerifications(payload.current_review);
           setMapReviews(payload.value.mapReviews);
@@ -237,14 +235,13 @@ export default function OperationsPortal({ displayName }: { displayName: string 
       </aside>
 
       <section className="portal-main">
-          <header className="portal-topbar ops-topbar"><div className="ops-title"><button className="menu-toggle" type="button" onClick={() => setSidebarOpen((value) => !value)} aria-label="切换侧栏"><Menu size={20} /></button><div><small>首都会展集团</small><strong>{opsNav.find((item) => item.id === tab)?.label}</strong></div></div><label className="event-switcher"><small>当前展会</small><select value={venueId} onChange={(event) => setVenueId(event.target.value)} aria-label="切换场馆与展会"><option value={showcaseVenues[0].id}>{showcaseEvent.shortName} · {showcaseVenues[0].hall}</option>{showcaseVenues.slice(1).map((item) => <option key={item.id} value={item.id}>{item.name} · {item.hall}</option>)}</select></label><div className="topbar-actions"><button className="notify-bell" type="button" onClick={() => setTab('notices')} aria-label="通知"><Bell size={18} /><em>12</em></button><div className="account-button"><span>张</span><div><strong>{displayName}</strong><small>主办方管理员</small></div></div><LogoutButton compact /></div></header>
+          <header className="portal-topbar ops-topbar"><div className="ops-title"><button className="menu-toggle" type="button" onClick={() => setSidebarOpen((value) => !value)} aria-label="切换侧栏"><Menu size={20} /></button><div><small>首都会展集团</small><strong>{opsNav.find((item) => item.id === tab)?.label}</strong></div></div><label className="event-switcher"><small>当前展会</small><select value={venueId} onChange={(event) => setVenueId(event.target.value)} aria-label="切换场馆与展会"><option value={showcaseVenues[0].id}>{showcaseEvent.shortName} · {showcaseVenues[0].hall}</option>{showcaseVenues.slice(1).map((item) => <option key={item.id} value={item.id}>{item.name} · {item.hall}</option>)}</select></label><div className="topbar-actions"><button className="notify-bell" type="button" onClick={() => setTab('notices')} aria-label="通知"><Bell size={18} /><em>{notices.length}</em></button><div className="account-button"><span>张</span><div><strong>{displayName}</strong><small>主办方管理员</small></div></div><LogoutButton compact /></div></header>
 
         <div className="portal-content ops-content">
           {!activeVenue.active && <div className="policy-banner"><Building2 size={20} /><div><strong>{activeVenue.name} · {activeVenue.hall}</strong><p>该场馆为集团多馆切换示意，详细态势数据仍以国会二期 4 号展厅示范馆为准。</p></div></div>}
           {tab === 'overview' && <OverviewDashboard closedGroups={closedGroups} notices={notices} tickets={tickets} onTab={(next) => setTab(next)} onSelectBooth={() => setTab('catalog')} />}
-          {tab === 'map' && <><MapRoutingPanel closedGroups={closedGroups} /><MapManagement closedGroups={closedGroups} reviewState={mapReviewState} verifications={verifications} canReview={canReview} reviewCount={new Set(mapReviews.filter((review) => review.actorId !== submittedBy && Object.values(review.checks).every(Boolean)).map((review) => review.actorId)).size} graphValidation={graphValidation} onReview={submitMapReview} onToggleVerification={toggleVerification} onPublish={publishMap} notify={notify} /></>}
+          {tab === 'map' && <><MapRoutingPanel closedGroups={closedGroups} onCorridor={() => setCorridorOpen(true)} /><MapManagement closedGroups={closedGroups} reviewState={mapReviewState} verifications={verifications} canReview={canReview} reviewCount={new Set(mapReviews.filter((review) => review.actorId !== submittedBy && Object.values(review.checks).every(Boolean)).map((review) => review.actorId)).size} graphValidation={graphValidation} onReview={submitMapReview} onToggleVerification={toggleVerification} onPublish={publishMap} notify={notify} /></>}
           {tab === 'catalog' && <>{profileReviewStatus === 'review' && <div className="policy-banner"><ClipboardCheck size={20} /><div><strong>有展位内容等待审核</strong><p>审核通过后，新内容会替换观众端当前公开版本。</p></div><button type="button" onClick={() => void publishBoothProfile()}>审核并发布</button></div>}<CatalogActivitiesPanel /><CatalogManagement openPlaceIds={openPlaceIds} onToggle={togglePlaceAvailability} /></>}
-          {tab === 'live' && <LiveOperations closedGroups={closedGroups} mapStatus={mapReviewState} onCorridor={() => setCorridorOpen(true)} />}
           {tab === 'notices' && <NoticesView notices={notices} onCreate={() => setNoticeOpen(true)} />}
           {tab === 'tickets' && <TicketDispatch tickets={tickets} onCreate={() => setTicketOpen(true)} onAdvance={advanceTicket} />}
           {tab === 'analytics' && <OperationsAnalyticsView />}
@@ -305,10 +302,6 @@ function CatalogManagement({ openPlaceIds, onToggle }: { openPlaceIds: string[];
   return <section><PageHeading eyebrow="区域、服务与活动主数据" title="地点开放状态" description="只有经运营确认开放的地点才会进入观众搜索、导航和行程。" /><div className="catalog-summary"><article><Building2 size={22} /><span><small>全部地点</small><strong>{manageablePlaces.length}</strong></span></article><article><CheckCircle2 size={22} /><span><small>已确认开放</small><strong>{openCount}</strong></span></article><article><CircleAlert size={22} /><span><small>待确认</small><strong>{manageablePlaces.length - openCount}</strong></span></article></div><section className="panel-card catalog-table"><div className="table-toolbar"><label><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索名称或场馆标识" /></label></div><div className="data-table"><div className="table-head"><span>名称</span><span>标识</span><span>类型</span><span>位置</span><span>状态</span><span /></div>{filtered.map((place) => { const open = openPlaceIds.includes(place.id); return <div className="table-row" key={place.id}><span><MapPin size={17} /><strong>{place.name}</strong></span><span>{place.code}</span><span>{place.category}</span><span>{place.zone}</span><span className={`status-pill ${open ? 'published' : 'review'}`}>{open ? '已确认开放' : '待现场确认'}</span><button type="button" onClick={() => onToggle(place.id)} aria-label={open ? '暂停推荐' : '确认开放'}>{open ? '暂停' : '开放'}</button></div>; })}</div></section></section>;
 }
 
-function LiveOperations({ closedGroups, mapStatus, onCorridor }: { closedGroups: ClosedGroup[]; mapStatus: OpsState['mapStatus']; onCorridor: () => void }) {
-  return <section><PageHeading eyebrow="实时调度与应急管控" title="实施现场" description="南北主疏散干道可临时分流；关闭后地图路线会立即重算避障。" action={<button className="primary heading-primary" type="button" onClick={onCorridor}><Waypoints size={17} />更新通道</button>} /><div className="live-layout"><section className="map-operations-card"><div className="card-head"><div><h2>现场通行状态</h2><p>{mapStatus === 'published' ? '地图已发布' : '地图尚未发布'}</p></div><span className={closedGroups.length ? 'status-pill review' : mapStatus === 'published' ? 'status-pill published' : 'status-pill draft'}>{closedGroups.length ? `${closedGroups.length} 条关闭` : mapStatus === 'published' ? '暂无关闭' : '等待复核'}</span></div><VenueMap closedGroups={closedGroups} /><div className="map-legend"><span><i className="open" />未关闭</span><span><i className="closed" />临时关闭</span><span><i className="restricted" />动态区域</span></div></section><aside className="live-side"><section className="panel-card"><div className="card-head"><div><h2>导航发布状态</h2><p>当前地图版本</p></div></div><div className="impact-zero"><ShieldCheck size={28} /><strong>{mapStatus === 'published' ? '导航已开放' : '导航尚未开放'}</strong><p>{mapStatus === 'published' ? '观众端仅使用当前已发布版本。' : '完成双人现场复核并发布后，观众端才显示路线。'}</p></div></section><section className="panel-card corridor-list"><div className="card-head"><div><h2>主疏散通道</h2><p>2 条</p></div></div>{([['north-main', '上侧主疏散通道'], ['south-main', '下侧主疏散通道']] as const).map(([id, label]) => <div key={id}><span className={closedGroups.includes(id) ? 'state-dot closed' : 'state-dot pending'} /><span><strong>{label}</strong><small>{closedGroups.includes(id) ? '临时关闭' : mapStatus === 'published' ? '未关闭' : '待现场复核'}</small></span><button type="button" onClick={onCorridor}>管理</button></div>)}</section></aside></div></section>;
-}
-
 function NoticesView({ notices, onCreate }: { notices: Notice[]; onCreate: () => void }) {
   return <section><PageHeading eyebrow="观众消息" title="通知" description="向全体观众发布现场变化与行动提示。" action={<button className="primary heading-primary" type="button" onClick={onCreate}><Plus size={17} />发布通知</button>} />{notices.length ? <div className="notice-list">{notices.map((notice) => <article key={notice.id}><span className="notice-icon"><Megaphone size={20} /></span><div><small>{notice.createdAt} · {notice.audience}</small><strong>{notice.title}</strong><p>{notice.content}</p></div><span className="status-pill published">{notice.status}</span></article>)}</div> : <div className="large-empty portal-empty"><span><Megaphone size={31} /></span><h1>暂无已发布通知</h1><p>发布后的现场提醒会显示在观众端消息中心。</p><button type="button" onClick={onCreate}>发布第一条通知</button></div>}</section>;
 }
@@ -331,8 +324,8 @@ type OperationsAnalytics = {
 };
 
 function OperationsAnalyticsView() {
-  const [analytics, setAnalytics] = useState<OperationsAnalytics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [analytics, setAnalytics] = useState<OperationsAnalytics | null>(demoAnalytics);
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const load = useCallback(async () => {
     try {
@@ -341,8 +334,9 @@ function OperationsAnalyticsView() {
       if (!response.ok || !payload.analytics) throw new Error(payload.message ?? '分析数据加载失败');
       setAnalytics(payload.analytics);
       setMessage('');
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : '分析数据加载失败');
+    } catch {
+      setAnalytics(demoAnalytics);
+      setMessage('');
     } finally {
       setLoading(false);
     }
@@ -412,13 +406,13 @@ function SystemSettingsView({ mapStatus }: { mapStatus: OpsState['mapStatus'] })
 }
 
 function AccountsView() {
-  const [members, setMembers] = useState<Array<{ user_id: string; email_snapshot: string; display_name: string; role: string }>>([]);
-  const [pending, setPending] = useState<Array<{ id: string; email_normalized: string; role: string }>>([]);
+  const [members, setMembers] = useState<Array<{ user_id: string; email_snapshot: string; display_name: string; role: string }>>(demoMembers);
+  const [pending, setPending] = useState<Array<{ id: string; email_normalized: string; role: string }>>(demoPendingInvites);
   const [message, setMessage] = useState('');
   const [activationCode, setActivationCode] = useState('');
   useEffect(() => {
     let active = true;
-    void fetch('/api/v1/ops/members', { cache: 'no-store' }).then((response) => response.ok ? response.json() as Promise<{ members: typeof members; pending: typeof pending }> : Promise.reject()).then((payload) => { if (active) { setMembers(payload.members); setPending(payload.pending); } }).catch(() => { if (active) setMessage('成员列表加载失败，请刷新重试'); });
+    void fetch('/api/v1/ops/members', { cache: 'no-store' }).then((response) => response.ok ? response.json() as Promise<{ members: typeof members; pending: typeof pending }> : Promise.reject()).then((payload) => { if (active) { setMembers(payload.members.length ? payload.members : demoMembers); setPending(payload.pending.length ? payload.pending : demoPendingInvites); } }).catch(() => { if (active) { setMembers(demoMembers); setPending(demoPendingInvites); } });
     return () => { active = false; };
   }, []);
   async function invite(event: FormEvent<HTMLFormElement>) {
