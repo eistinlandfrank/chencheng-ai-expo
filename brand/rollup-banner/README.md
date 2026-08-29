@@ -15,3 +15,7 @@ Files:
 - `render-rollup-latest.mjs`: deterministic text/layout renderer.
 
 The QR area is deliberately left replaceable. Add a verified production URL only after the current visitor portal is deployed. The small footer preserves the product's current data boundary: booth and map content are demonstration data, and routes open only after venue review.
+
+## Pop campaign variant
+
+The `rollup-pop-v2` files are the high-attention event-floor variant. They replace the formal three-column presentation with an oversized robot, a provocative question, three action stickers, and a high-contrast CTA. The copy stays within the current product boundary: booth filtering, visit ordering, and text-based AI help. Its QR area remains deliberately replaceable until a production visitor URL is verified.
