@@ -62,10 +62,13 @@ export default function OperationsPortal({ displayName }: { displayName: string 
   const [mapReviewState, setMapReviewState] = useState<OpsState['mapStatus']>('draft');
   const [verifications, setVerifications] = useState<MapFieldChecks>(emptyMapFieldChecks);
   const [mapReviews, setMapReviews] = useState<OpsState['mapReviews']>([]);
+  const [submittedBy, setSubmittedBy] = useState('');
+  const [canReview, setCanReview] = useState(true);
   const [graphValidation, setGraphValidation] = useState<{ valid: boolean; issues: string[] }>({ valid: false, issues: [] });
   const [openPlaceIds, setOpenPlaceIds] = useState<string[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [tickets, setTickets] = useState<OpsTicket[]>([]);
+  const [profileReviewStatus, setProfileReviewStatus] = useState<'draft' | 'review' | 'published'>('draft');
   const [toast, setToast] = useState<ToastState>(null);
 
   const configuredAreaCount = useMemo(() => places.filter((place) => place.kind !== 'gate').length, []);
@@ -76,7 +79,7 @@ export default function OperationsPortal({ displayName }: { displayName: string 
       try {
         const response = await fetch('/api/v1/ops/state', { cache: 'no-store' });
         if (!response.ok) throw new Error('load_failed');
-          const payload = await response.json() as { value: OpsState; current_review: MapFieldChecks; graph_validation: { valid: boolean; issues: string[] } };
+          const payload = await response.json() as { value: OpsState; current_review: MapFieldChecks; can_review: boolean; graph_validation: { valid: boolean; issues: string[] }; content_review?: { profile_status: 'draft' | 'review' | 'published' } };
         if (!active) return;
         setClosedGroups(payload.value.closedGroups);
         setNotices(payload.value.notices);
@@ -84,8 +87,11 @@ export default function OperationsPortal({ displayName }: { displayName: string 
           setMapReviewState(payload.value.mapStatus);
           setVerifications(payload.current_review);
           setMapReviews(payload.value.mapReviews);
+          setSubmittedBy(payload.value.submittedBy);
+          setCanReview(payload.can_review);
           setOpenPlaceIds(payload.value.openPlaceIds);
           setGraphValidation(payload.graph_validation);
+          setProfileReviewStatus(payload.content_review?.profile_status ?? 'draft');
       } catch {
         if (active && process.env.NODE_ENV !== 'development') setToast({ message: '无法加载最新运营数据，请刷新重试', type: 'warning' });
       }
@@ -107,10 +113,13 @@ export default function OperationsPortal({ displayName }: { displayName: string 
         const error = await response.json().catch(() => null) as { message?: string } | null;
         throw new Error(error?.message ?? '保存失败');
       }
-        const payload = await response.json() as { value: OpsState; current_review: MapFieldChecks; graph_validation: { valid: boolean; issues: string[] } };
+        const payload = await response.json() as { value: OpsState; current_review: MapFieldChecks; can_review: boolean; graph_validation: { valid: boolean; issues: string[] }; content_review?: { profile_status: 'draft' | 'review' | 'published' } };
         setMapReviews(payload.value.mapReviews);
+        setSubmittedBy(payload.value.submittedBy);
+        setCanReview(payload.can_review);
         setVerifications(payload.current_review);
         setGraphValidation(payload.graph_validation);
+        if (payload.content_review) setProfileReviewStatus(payload.content_review.profile_status);
         return payload.value;
     } catch (error) {
       notify(error instanceof Error ? error.message : '保存失败，请重试', 'warning');
@@ -119,7 +128,7 @@ export default function OperationsPortal({ displayName }: { displayName: string 
   }
 
   function snapshot(overrides: Partial<OpsState> = {}): OpsState {
-    return { closedGroups, notices, tickets, openPlaceIds, mapStatus: mapReviewState, reviewedMapVersion: venue.mapVersion, mapReviews, ...overrides };
+    return { closedGroups, notices, tickets, openPlaceIds, mapStatus: mapReviewState, reviewedMapVersion: venue.mapVersion, submittedBy, mapReviews, ...overrides };
   }
 
   async function updateCorridor(group: ClosedGroup, closed: boolean) {
@@ -190,6 +199,13 @@ export default function OperationsPortal({ displayName }: { displayName: string 
     notify(openPlaceIds.includes(placeId) ? '该地点已暂停推荐' : '该地点已开放搜索与行程');
   }
 
+  async function publishBoothProfile() {
+    const saved = await saveState(snapshot(), 'booth_profile_published');
+    if (!saved) return;
+    setProfileReviewStatus('published');
+    notify('展位内容已审核并发布');
+  }
+
   async function advanceTicket(ticketId: string) {
     const nextTickets = tickets.map((ticket) => {
       if (ticket.id !== ticketId) return ticket;
@@ -218,8 +234,8 @@ export default function OperationsPortal({ displayName }: { displayName: string 
 
         <div className="portal-content ops-content">
           {tab === 'overview' && <Overview configuredAreaCount={configuredAreaCount} closedGroups={closedGroups} mapStatus={mapReviewState} notices={notices} tickets={tickets} onTab={setTab} onCorridor={() => setCorridorOpen(true)} onNotice={() => setNoticeOpen(true)} onTicket={() => setTicketOpen(true)} />}
-          {tab === 'map' && <MapManagement closedGroups={closedGroups} reviewState={mapReviewState} verifications={verifications} reviewCount={new Set(mapReviews.filter((review) => Object.values(review.checks).every(Boolean)).map((review) => review.actorId)).size} graphValidation={graphValidation} onReview={submitMapReview} onToggleVerification={toggleVerification} onPublish={publishMap} notify={notify} />}
-          {tab === 'catalog' && <CatalogManagement openPlaceIds={openPlaceIds} onToggle={togglePlaceAvailability} />}
+          {tab === 'map' && <MapManagement closedGroups={closedGroups} reviewState={mapReviewState} verifications={verifications} canReview={canReview} reviewCount={new Set(mapReviews.filter((review) => review.actorId !== submittedBy && Object.values(review.checks).every(Boolean)).map((review) => review.actorId)).size} graphValidation={graphValidation} onReview={submitMapReview} onToggleVerification={toggleVerification} onPublish={publishMap} notify={notify} />}
+          {tab === 'catalog' && <>{profileReviewStatus === 'review' && <div className="policy-banner"><ClipboardCheck size={20} /><div><strong>有展位内容等待审核</strong><p>审核通过后，新内容会替换观众端当前公开版本。</p></div><button type="button" onClick={() => void publishBoothProfile()}>审核并发布</button></div>}<CatalogManagement openPlaceIds={openPlaceIds} onToggle={togglePlaceAvailability} /></>}
           {tab === 'live' && <LiveOperations closedGroups={closedGroups} mapStatus={mapReviewState} onCorridor={() => setCorridorOpen(true)} />}
           {tab === 'notices' && <NoticesView notices={notices} onCreate={() => setNoticeOpen(true)} />}
           {tab === 'tickets' && <TicketDispatch tickets={tickets} onCreate={() => setTicketOpen(true)} onAdvance={advanceTicket} />}
@@ -261,7 +277,7 @@ function Overview({ configuredAreaCount, closedGroups, mapStatus, notices, ticke
   return <section><PageHeading eyebrow="千人黑客松 · 主会场" title="运营总览" description="地图、现场状态、通知与工单的统一工作台。" action={<div className="heading-actions"><button type="button" onClick={onCorridor}><Waypoints size={17} />通道状态</button><button className="primary" type="button" onClick={onNotice}><Megaphone size={17} />发布通知</button></div>} /><div className="metric-grid ops-metrics">{metrics.map(({ label, value, note, icon: Icon }) => <article key={label}><div><span>{label}</span><small>{note}</small></div><strong>{value}</strong><Icon size={20} /></article>)}</div><div className="ops-overview-grid"><section className="map-operations-card"><div className="card-head"><div><h2>场馆地图</h2><p>{venue.mapVersion} · 主厅 {venue.widthMeters} × {venue.heightMeters} 米</p></div><div className="map-status-row"><span className={`status-pill ${mapStatus === 'published' ? 'published' : 'review'}`}>{mapStatus === 'published' ? '已发布' : mapStatus === 'review' ? '审核中' : '草稿'}</span><button type="button" onClick={() => onTab('map')}>地图管理 <ChevronRight size={15} /></button></div></div><VenueMap closedGroups={closedGroups} showEditorGrid /><div className="map-summary"><span><Waypoints size={16} />2 条主疏散通道</span><span><GitBranch size={16} />{edges.length} 条通行边</span><span><MapPin size={16} />{nodes.length} 个导航节点</span><span><CircleAlert size={16} />{closedGroups.length} 条关闭</span></div></section><aside className="ops-side-stack"><section className="action-panel"><div className="card-head"><div><h2>快捷操作</h2><p>常用现场工作</p></div></div><div className="ops-quick-grid"><button type="button" onClick={onCorridor}><span><Waypoints size={20} /></span>关闭通道</button><button type="button" onClick={onNotice}><span><Megaphone size={20} /></span>发布通知</button><button type="button" onClick={onTicket}><span><Wrench size={20} /></span>创建工单</button><button type="button" onClick={() => onTab('map')}><span><RotateCcw size={20} /></span>地图版本</button></div></section><section className="attention-panel"><div className="card-head"><div><h2>现场核验</h2><p>地图发布前逐项完成</p></div><span className="count-badge">5</span></div><button type="button" onClick={() => onTab('map')}><TriangleAlert size={17} /><span><strong>双人现场复核</strong><small>朝向、楼层、连接、无障碍与障碍物</small></span><ChevronRight size={16} /></button><button type="button" onClick={() => onTab('map')}><Layers3 size={17} /><span><strong>版本发布状态</strong><small>{mapStatus === 'published' ? '当前版本已发布' : mapStatus === 'review' ? '等待完整复核' : '尚未提交复核'}</small></span><ChevronRight size={16} /></button><button type="button" onClick={() => onTab('map')}><ClipboardCheck size={17} /><span><strong>现场变化复查</strong><small>桌椅、围栏与排队线</small></span><ChevronRight size={16} /></button></section></aside></div><div className="ops-lower-grid"><section className="panel-card"><div className="card-head"><div><h2>工单调度</h2><p>{activeTickets.length ? `${activeTickets.length} 张待处理` : '暂无待处理工单'}</p></div><button type="button" onClick={() => onTab('tickets')}>查看队列</button></div>{activeTickets.length ? <div className="ticket-list compact">{activeTickets.slice(0, 3).map((ticket) => <article key={ticket.id}><span className="ticket-icon"><Wrench size={20} /></span><div><small>{ticket.priority} · {ticket.location}</small><strong>{ticket.category}</strong><p>{ticket.description}</p></div><span className="status-pill draft">{ticket.status}</span></article>)}</div> : <div className="empty-inline"><Wrench size={27} /><div><strong>现场服务队列为空</strong><p>新工单会按紧急度和位置进入调度队列。</p></div></div>}</section><section className="panel-card"><div className="card-head"><div><h2>服务状态</h2><p>以当前保存状态为准</p></div><span className={`status-pill ${mapStatus === 'published' ? 'published' : 'review'}`}>{mapStatus === 'published' ? '导航开放' : '待复核'}</span></div><div className="service-status-grid"><div><span className={mapStatus === 'published' ? 'live-dot' : 'state-dot pending'} /><strong>地图数据</strong><small>{mapStatus === 'published' ? '已发布' : '待复核'}</small></div><div><span className={mapStatus === 'published' ? 'live-dot' : 'state-dot pending'} /><strong>路线服务</strong><small>{mapStatus === 'published' ? '已开放' : '未开放'}</small></div><div><span className={notices.length ? 'live-dot' : 'state-dot pending'} /><strong>通知记录</strong><small>{notices.length ? `${notices.length} 条` : '暂无'}</small></div></div></section></div></section>;
 }
 
-function MapManagement({ closedGroups, reviewState, verifications, reviewCount, graphValidation, onReview, onToggleVerification, onPublish, notify }: { closedGroups: ClosedGroup[]; reviewState: OpsState['mapStatus']; verifications: MapFieldChecks; reviewCount: number; graphValidation: { valid: boolean; issues: string[] }; onReview: () => void; onToggleVerification: (key: keyof MapFieldChecks) => void; onPublish: () => void; notify: (message: string, type?: NonNullable<ToastState>['type']) => void }) {
+function MapManagement({ closedGroups, reviewState, verifications, canReview, reviewCount, graphValidation, onReview, onToggleVerification, onPublish, notify }: { closedGroups: ClosedGroup[]; reviewState: OpsState['mapStatus']; verifications: MapFieldChecks; canReview: boolean; reviewCount: number; graphValidation: { valid: boolean; issues: string[] }; onReview: () => void; onToggleVerification: (key: keyof MapFieldChecks) => void; onPublish: () => void; notify: (message: string, type?: NonNullable<ToastState>['type']) => void }) {
   const [layer, setLayer] = useState<'all' | 'base' | 'zones' | 'routes' | 'anchors'>('all');
   const checks: Array<{ key: keyof MapFieldChecks; title: string; note: string }> = [
     { key: 'orientation', title: '朝向与通口命名', note: '逐一核对现场标识' },
@@ -278,7 +294,7 @@ function MapManagement({ closedGroups, reviewState, verifications, reviewCount, 
     <div className="map-editor-layout">
       <aside className="layer-panel"><div className="card-head"><div><h2>图层</h2><p>主会场 · {venue.mapVersion}</p></div><SlidersHorizontal size={18} /></div>{([['all', '全部图层', Layers3], ['base', '场馆边界与柱', Map], ['zones', '区域与设施', Building2], ['routes', '待核验通行图', GitBranch], ['anchors', '入口、出口与锚点', MapPin]] as const).map(([id, label, Icon]) => { const LayerIcon = Icon as typeof Map; return <button className={layer === id ? 'active' : ''} key={id} type="button" onClick={() => setLayer(id)}><LayerIcon size={18} />{label}<span className="visibility-dot" /></button>; })}<div className="layer-footer"><span className={`status-pill ${reviewState === 'published' ? 'published' : reviewState === 'review' ? 'review' : 'draft'}`}>{statusLabel}</span></div></aside>
       <section className="editor-surface"><div className="editor-toolbar"><div><span className={`status-pill ${graphValidation.valid ? 'published' : 'review'}`}>{graphValidation.valid ? '图形校验通过' : '图形校验未通过'}</span></div><div><button type="button" onClick={() => notify(graphValidation.valid ? '边界、节点引用与静态连通性校验通过' : graphValidation.issues[0] ?? '图形校验未通过', graphValidation.valid ? 'success' : 'warning')}><RefreshCw size={17} />查看校验结果</button></div></div><VenueMap closedGroups={closedGroups} showEditorGrid visibleLayer={layer} /><div className="editor-footer"><span>宽 226.8 m</span><span>高 33.2 m</span><span>单位：米</span><span>通行线仅在现场双人复核后发布</span></div></section>
-      <aside className="validation-panel"><div className="card-head"><div><h2>现场复核</h2><p>{verifiedCount}/5 本人完成 · {reviewCount}/2 人完整复核</p></div>{verifiedCount === 5 ? <CheckCircle2 size={19} /> : <TriangleAlert size={19} />}</div><div className="validation-score"><strong>{readiness}</strong><span>发布准备度</span><i><b style={{ width: `${readiness}%` }} /></i></div><ul><li className={graphValidation.valid ? 'pass' : ''}>{graphValidation.valid ? <CheckCircle2 size={17} /> : <TriangleAlert size={17} />}<span><strong>自动图形校验</strong><small>{graphValidation.valid ? '边界、引用与静态连通性通过' : graphValidation.issues[0] ?? '等待校验'}</small></span></li>{checks.map((check) => <li className={verifications[check.key] ? 'pass' : ''} key={check.key}><button type="button" onClick={() => onToggleVerification(check.key)}>{verifications[check.key] ? <CheckCircle2 size={17} /> : <TriangleAlert size={17} />}<span><strong>{check.title}</strong><small>{verifications[check.key] ? '本人已现场确认' : check.note}</small></span></button></li>)}</ul><div className="approval-note"><ShieldCheck size={17} />两名不同管理员均完成五项现场复核后，服务端才允许发布。</div><button className="primary-wide" type="button" onClick={onPublish} disabled={!graphValidation.valid || verifiedCount !== 5 || reviewCount < 2 || reviewState === 'published'}><ShieldCheck size={17} />{reviewState === 'published' ? '当前版本已发布' : reviewCount < 2 ? '等待第二人复核' : '发布地图'}</button></aside>
+      <aside className="validation-panel"><div className="card-head"><div><h2>现场复核</h2><p>{verifiedCount}/5 本人完成 · {reviewCount}/2 人完整复核</p></div>{verifiedCount === 5 ? <CheckCircle2 size={19} /> : <TriangleAlert size={19} />}</div><div className="validation-score"><strong>{readiness}</strong><span>发布准备度</span><i><b style={{ width: `${readiness}%` }} /></i></div><ul><li className={graphValidation.valid ? 'pass' : ''}>{graphValidation.valid ? <CheckCircle2 size={17} /> : <TriangleAlert size={17} />}<span><strong>自动图形校验</strong><small>{graphValidation.valid ? '边界、引用与静态连通性通过' : graphValidation.issues[0] ?? '等待校验'}</small></span></li>{checks.map((check) => <li className={verifications[check.key] ? 'pass' : ''} key={check.key}><button type="button" disabled={!canReview} onClick={() => onToggleVerification(check.key)}>{verifications[check.key] ? <CheckCircle2 size={17} /> : <TriangleAlert size={17} />}<span><strong>{check.title}</strong><small>{canReview ? verifications[check.key] ? '本人已现场确认' : check.note : '提交人不能复核同一版本'}</small></span></button></li>)}</ul><div className="approval-note"><ShieldCheck size={17} />{canReview ? '两名不同管理员均完成五项现场复核后，服务端才允许发布。' : '您提交了当前版本，请由另外两名管理员分别完成现场复核。'}</div><button className="primary-wide" type="button" onClick={onPublish} disabled={!graphValidation.valid || verifiedCount !== 5 || reviewCount < 2 || reviewState === 'published'}><ShieldCheck size={17} />{reviewState === 'published' ? '当前版本已发布' : reviewCount < 2 ? '等待第二人复核' : '发布地图'}</button></aside>
     </div>
   </section>;
 }
@@ -296,7 +312,7 @@ function LiveOperations({ closedGroups, mapStatus, onCorridor }: { closedGroups:
 }
 
 function NoticesView({ notices, onCreate }: { notices: Notice[]; onCreate: () => void }) {
-  return <section><PageHeading eyebrow="定向消息" title="通知" description="支持按角色与受影响范围发送。" action={<button className="primary heading-primary" type="button" onClick={onCreate}><Plus size={17} />发布通知</button>} />{notices.length ? <div className="notice-list">{notices.map((notice) => <article key={notice.id}><span className="notice-icon"><Megaphone size={20} /></span><div><small>{notice.createdAt} · {notice.audience}</small><strong>{notice.title}</strong><p>{notice.content}</p></div><span className="status-pill published">{notice.status}</span></article>)}</div> : <div className="large-empty portal-empty"><span><Megaphone size={31} /></span><h1>暂无已发布通知</h1><p>活动变化、通道关闭和闭馆提醒可以按范围发布。</p><button type="button" onClick={onCreate}>发布第一条通知</button></div>}</section>;
+  return <section><PageHeading eyebrow="观众消息" title="通知" description="向全体观众发布现场变化与行动提示。" action={<button className="primary heading-primary" type="button" onClick={onCreate}><Plus size={17} />发布通知</button>} />{notices.length ? <div className="notice-list">{notices.map((notice) => <article key={notice.id}><span className="notice-icon"><Megaphone size={20} /></span><div><small>{notice.createdAt} · {notice.audience}</small><strong>{notice.title}</strong><p>{notice.content}</p></div><span className="status-pill published">{notice.status}</span></article>)}</div> : <div className="large-empty portal-empty"><span><Megaphone size={31} /></span><h1>暂无已发布通知</h1><p>发布后的现场提醒会显示在观众端消息中心。</p><button type="button" onClick={onCreate}>发布第一条通知</button></div>}</section>;
 }
 
 function TicketDispatch({ tickets, onCreate, onAdvance }: { tickets: OpsTicket[]; onCreate: () => void; onAdvance: (ticketId: string) => void }) {
@@ -351,7 +367,15 @@ function OperationsAnalyticsView() {
   return <section><PageHeading eyebrow="匿名聚合数据" title="分析" description="汇总观众发现、规划、导航与预约行为，不展示个人轨迹。" /><div className="analytics-range"><BarChart3 size={17} /><span><strong>{analytics.range.label}</strong><small>{new Date(analytics.range.until).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })} 更新 · 除活跃会话外均为操作次数</small></span></div><div className="metric-grid analytics-metrics">{cards.map(([key, label, note, Icon]) => <article key={key}><div><span>{label}</span><small>{note}</small></div><strong>{analytics.metrics[key].value ?? '已保护'}</strong><Icon size={20} /></article>)}</div><div className="content-grid two-one analytics-lower"><section className="panel-card"><div className="card-head"><div><h2>观众操作漏斗</h2><p>同一会话可能产生多次操作</p></div></div><div className="ops-funnel">{cards.slice(3).map(([key, label], index) => <div key={key}><span>{index + 1}</span><strong>{label}</strong><b>{analytics.metrics[key].value ?? '已保护'}</b></div>)}</div></section><aside className="panel-card"><div className="card-head"><div><h2>热门搜索词</h2><p>至少出现 3 次才显示</p></div></div>{analytics.keywords.length ? <ol className="keyword-list">{analytics.keywords.map((item) => <li key={item.keyword}><span>{item.keyword}</span><strong>{item.total}</strong></li>)}</ol> : <div className="empty-inline analytics-empty"><Search size={25} /><div><strong>暂无可展示搜索词</strong><p>达到最小聚合数量后显示。</p></div></div>}</aside></div></section>;
 }
 
-type AuditEntry = { id: string; actor_label: string; action: string; created_at: string };
+type AuditEntry = { id: string; actor_label: string; action: string; changed_fields: string[]; created_at: string };
+const auditFieldLabels: Record<string, string> = {
+  boothTitle: '展位标题', intro: '展位简介', tags: '展位标签', profileStatus: '内容状态',
+  receptionStatus: '接待状态', reservationsEnabled: '预约开关', activityStatus: '活动状态',
+  activityTitle: '活动标题', activityStart: '活动时间', activityDuration: '活动时长', activityCapacity: '活动名额',
+  closedGroups: '通道状态', notices: '观众通知', tickets: '服务工单', openPlaceIds: '地点开放状态',
+  mapStatus: '地图发布状态', reviewedMapVersion: '地图版本', mapReviews: '现场复核', submittedBy: '提交人',
+  members: '运营成员',
+};
 const auditActionLabels: Record<string, string> = {
   booth_profile_saved: '保存了展位内容草稿',
   booth_profile_submitted: '提交了展位内容审核',
@@ -364,12 +388,15 @@ const auditActionLabels: Record<string, string> = {
   service_ticket_created: '创建了服务工单',
   service_ticket_status_updated: '更新了服务工单状态',
   notice_published: '发布了观众通知',
+  activity_change_notice_published: '发布了活动变更通知',
   route_group_closed: '关闭了现场通道',
   route_group_reopened: '恢复了现场通道',
   map_review_submitted: '提交了地图现场复核',
   map_verification_updated: '更新了地图复核结果',
   map_version_published: '发布了场馆地图版本',
   place_availability_updated: '更新了地点开放状态',
+  operations_member_invited: '邀请了场馆管理员',
+  operations_member_joined: '场馆管理员已接受邀请',
 };
 
 function SystemSettingsView({ mapStatus }: { mapStatus: OpsState['mapStatus'] }) {
@@ -383,7 +410,7 @@ function SystemSettingsView({ mapStatus }: { mapStatus: OpsState['mapStatus'] })
       .catch(() => { if (active) setMessage('操作记录加载失败，请刷新重试'); });
     return () => { active = false; };
   }, []);
-  return <section><PageHeading eyebrow="运行规则与操作记录" title="系统设置" description="查看当前活动的发布门禁、隐私规则和最近操作。" /><div className="settings-grid system-rule-grid"><section className="panel-card settings-section"><ShieldCheck size={24} /><h2>地图发布</h2><p>必须由两名不同管理员完成五项现场复核。</p><span className={`status-pill ${mapStatus === 'published' ? 'published' : 'review'}`}>{mapStatus === 'published' ? '导航已开放' : '等待完整复核'}</span></section><section className="panel-card settings-section"><Users size={24} /><h2>观众隐私</h2><p>核心浏览保持匿名；预约时单独请求最小必要授权。</p><span className="status-pill published">最小化采集</span></section><section className="panel-card settings-section"><BarChart3 size={24} /><h2>分析保护</h2><p>分析使用匿名聚合数据，小样本不展示具体数值。</p><span className="status-pill published">聚合展示</span></section></div><section className="panel-card audit-panel"><div className="card-head"><div><h2>最近操作</h2><p>内容、地图、通知与工单的变更记录</p></div></div>{message ? <p className="form-message">{message}</p> : entries.length ? <div className="audit-list">{entries.map((entry) => <article key={entry.id}><span><ClipboardCheck size={18} /></span><div><strong>{auditActionLabels[entry.action] ?? '记录了一项运营变更'}</strong><p>{entry.actor_label} · {new Date(entry.created_at).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}</p></div></article>)}</div> : <div className="table-empty compact"><ClipboardCheck size={29} /><h2>暂无操作记录</h2><p>首次保存内容或现场状态后会显示在这里。</p></div>}</section></section>;
+  return <section><PageHeading eyebrow="运行规则与操作记录" title="系统设置" description="查看当前活动的发布门禁、隐私规则和最近操作。" /><div className="settings-grid system-rule-grid"><section className="panel-card settings-section"><ShieldCheck size={24} /><h2>地图发布</h2><p>必须由两名不同管理员完成五项现场复核。</p><span className={`status-pill ${mapStatus === 'published' ? 'published' : 'review'}`}>{mapStatus === 'published' ? '导航已开放' : '等待完整复核'}</span></section><section className="panel-card settings-section"><Users size={24} /><h2>观众隐私</h2><p>核心浏览保持匿名；预约时单独请求最小必要授权。</p><span className="status-pill published">最小化采集</span></section><section className="panel-card settings-section"><BarChart3 size={24} /><h2>分析保护</h2><p>分析使用匿名聚合数据，小样本不展示具体数值。</p><span className="status-pill published">聚合展示</span></section></div><section className="panel-card audit-panel"><div className="card-head"><div><h2>最近操作</h2><p>内容、地图、通知与工单的变更记录</p></div></div>{message ? <p className="form-message">{message}</p> : entries.length ? <div className="audit-list">{entries.map((entry) => <article key={entry.id}><span><ClipboardCheck size={18} /></span><div><strong>{auditActionLabels[entry.action] ?? '记录了一项运营变更'}</strong><p>{entry.changed_fields.length ? entry.changed_fields.map((field) => auditFieldLabels[field] ?? '相关信息').join('、') : '记录已保存'} · {entry.actor_label} · {new Date(entry.created_at).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}</p></div></article>)}</div> : <div className="table-empty compact"><ClipboardCheck size={29} /><h2>暂无操作记录</h2><p>首次保存内容或现场状态后会显示在这里。</p></div>}</section></section>;
 }
 
 function AccountsView() {

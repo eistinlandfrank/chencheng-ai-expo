@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { ensureExhibitorAccess } from '@/db/access';
+import { syncReservationsForActivity } from '@/db/reservations';
 import { readState, StateConflictError, writeState } from '@/db/state';
 import { defaultExhibitorState, defaultOpsState, type ExhibitorState, type ExhibitorTicket, type OpsTicket } from '@/lib/state-types';
 import { venue } from '@/lib/venue';
@@ -104,12 +105,51 @@ export async function PUT(request: NextRequest) {
   else if (!['reception_status_updated', 'reservation_availability_updated', 'program_session_saved', 'program_session_status_updated'].includes(action)) {
     return NextResponse.json({ code: 'ACTION_NOT_SUPPORTED', message: '当前操作不受支持', request_id: requestId, details: null }, { status: 422 });
   }
+  if (['program_session_saved', 'program_session_status_updated'].includes(action) && state.activityStatus !== 'cancelled') {
+    const startsAt = state.activityStart.match(/[zZ]|[+-]\d\d:\d\d$/) ? new Date(state.activityStart) : new Date(`${state.activityStart}${/T\d\d:\d\d$/.test(state.activityStart) ? ':00' : ''}+08:00`);
+    if (!state.activityTitle || Number.isNaN(startsAt.getTime())) return NextResponse.json({ code: 'VALIDATION_FAILED', message: '请填写有效的活动名称与开始时间', request_id: requestId, details: null }, { status: 422 });
+    if (startsAt.getTime() + state.activityDuration * 60_000 <= Date.now()) return NextResponse.json({ code: 'ACTIVITY_IN_PAST', message: '活动结束时间必须晚于当前时间', request_id: requestId, details: null }, { status: 422 });
+  }
   let saved;
   try {
     saved = await writeState({ key: stateKey, tenantId, eventId: venue.eventId, scope: 'exhibitor', ownerId: membership.organizationId, actorId: user.userId, action, value: state, expectedRevision: existing.revision });
   } catch (writeError) {
     if (writeError instanceof StateConflictError) return NextResponse.json({ code: 'STATE_CONFLICT', message: '展位内容已更新，请刷新后重试', request_id: requestId, details: null }, { status: 409 });
     throw writeError;
+  }
+  if (['program_session_saved', 'program_session_status_updated'].includes(action)) {
+    await syncReservationsForActivity({
+      organizationId: membership.organizationId,
+      placeId: membership.placeId,
+      previousStart: existing.value.activityStart,
+      title: saved.value.activityTitle,
+      start: saved.value.activityStart,
+      duration: saved.value.activityDuration,
+      status: saved.value.activityStatus === 'cancelled' ? 'cancelled' : saved.value.activityStatus === 'delayed' ? 'delayed' : 'confirmed',
+      actorId: user.userId,
+    });
+    const activityChanged = existing.value.activityStatus !== saved.value.activityStatus || existing.value.activityStart !== saved.value.activityStart;
+    if (activityChanged && existing.value.activityStart && (existing.value.activityStart !== saved.value.activityStart || ['delayed', 'cancelled'].includes(saved.value.activityStatus))) {
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const opsRecord = await readState(`ops:${venue.eventId}`, defaultOpsState);
+        const cancelled = saved.value.activityStatus === 'cancelled';
+        const timeChanged = existing.value.activityStart !== saved.value.activityStart;
+        const notice = {
+          id: Date.now() + attempt,
+          title: cancelled ? `${saved.value.activityTitle} 已取消` : timeChanged ? `${saved.value.activityTitle} 时间有调整` : `${saved.value.activityTitle} 已延迟`,
+          content: cancelled ? '原活动安排已取消，请在“我的预约”和行程中查看最新状态。' : timeChanged ? '活动时间已调整，请在“我的预约”和行程中确认最新开始时间。' : '活动发生延迟，最新开始时间仍在确认，请留意后续通知。',
+          audience: '全体观众',
+          status: '已发布',
+          createdAt: new Date().toISOString(),
+        };
+        try {
+          await writeState({ key: `ops:${venue.eventId}`, tenantId, eventId: venue.eventId, scope: 'operations', ownerId: tenantId, actorId: user.userId, action: 'activity_change_notice_published', value: { ...opsRecord.value, notices: [notice, ...opsRecord.value.notices].slice(0, 100) }, expectedRevision: opsRecord.revision });
+          break;
+        } catch (noticeError) {
+          if (!(noticeError instanceof StateConflictError) || attempt === 1) throw noticeError;
+        }
+      }
+    }
   }
   const ops = await readState(`ops:${venue.eventId}`, defaultOpsState);
   return NextResponse.json({ request_id: requestId, ...saved, value: { ...saved.value, tickets: exhibitorTicketsFromOps(ops.value.tickets, membership.organizationId, membership.placeId) } });

@@ -102,8 +102,13 @@ export default function ExhibitorPortal({ displayName }: { displayName: string }
     try {
       const response = await fetch('/api/v1/exhibitor/state', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ state: next, action }) });
       if (!response.ok) {
-        const error = await response.json().catch(() => null) as { message?: string } | null;
-        throw new Error(error?.message ?? '保存失败');
+        const responseBody = await response.text();
+        let errorMessage = responseBody.trim();
+        try {
+          const parsed = JSON.parse(responseBody) as { message?: unknown };
+          if (typeof parsed.message === 'string' && parsed.message) errorMessage = parsed.message;
+        } catch {}
+        throw new Error(errorMessage || '保存失败');
       }
       const payload = await response.json() as { value: ExhibitorState };
       return payload.value;
@@ -238,6 +243,20 @@ function formatActivityStart(value: string) {
   };
 }
 
+function shanghaiDateTimeMinimum(now = new Date()) {
+  const values: Record<string, string> = {};
+  for (const part of new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(now)) values[part.type] = part.value;
+  return `${values.year}-${values.month}-${values.day}T${values.hour}:${values.minute}`;
+}
+
 function ExhibitorDashboard({ onTab, onTicket, profileStatus, receptionStatus, activityStatus, activityTitle, activityStart, activityDuration, ticketCount }: { onTab: (tab: Tab) => void; onTicket: () => void; profileStatus: 'draft' | 'review' | 'published'; receptionStatus: ExhibitorState['receptionStatus']; activityStatus: ExhibitorState['activityStatus']; activityTitle: string; activityStart: string; activityDuration: number; ticketCount: number }) {
   const receptionLabel = { pending: '待设置', open: '可接待', busy: '繁忙', closed: '暂停接待' }[receptionStatus];
   const activityLabel = { draft: '待配置', confirmed: '已确认', delayed: '已延迟', cancelled: '已取消' }[activityStatus];
@@ -256,17 +275,21 @@ function ExhibitorDashboard({ onTab, onTicket, profileStatus, receptionStatus, a
 
 type BoothReservation = {
   id: string;
-  email_snapshot: string;
+  email_snapshot: string | null;
   display_name: string;
   activity_title: string;
   slot_start_at: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  arrival_time: string;
+  attendee_note: string;
+  status: 'pending' | 'confirmed' | 'arrived' | 'completed' | 'no_show' | 'cancelled';
 };
 
 const reservationStatusLabels: Record<BoothReservation['status'], string> = {
   pending: '待确认',
   confirmed: '已确认',
+  arrived: '已到达',
   completed: '已完成',
+  no_show: '未到场',
   cancelled: '已取消',
 };
 
@@ -315,21 +338,30 @@ function ReservationsView({ enabled, activityConfigured, onGoActivity, onToggle 
   const normalizedQuery = query.trim().toLocaleLowerCase('zh-CN');
   const visibleReservations = reservations.filter((item) => {
     const matchesFilter = filter === 'all' || item.status === filter;
-    const matchesQuery = !normalizedQuery || `${item.display_name} ${item.email_snapshot} ${item.activity_title}`.toLocaleLowerCase('zh-CN').includes(normalizedQuery);
+    const matchesQuery = !normalizedQuery || `${item.display_name} ${item.email_snapshot ?? ''} ${item.activity_title}`.toLocaleLowerCase('zh-CN').includes(normalizedQuery);
     return matchesFilter && matchesQuery;
   });
   const pendingCount = reservations.filter((item) => item.status === 'pending').length;
   const confirmedCount = reservations.filter((item) => item.status === 'confirmed').length;
   const completedCount = reservations.filter((item) => item.status === 'completed').length;
 
-  return <section><PageHeading eyebrow="活动接待" title="预约与访客" description="确认活动预约并跟进到场状态。" action={<div className="heading-actions"><button type="button" onClick={onGoActivity}><CalendarDays size={17} />活动安排</button><button className={enabled ? '' : 'primary'} type="button" disabled={!activityConfigured && !enabled} onClick={() => void onToggle(!enabled)}>{enabled ? '暂停预约' : '开放预约'}</button></div>} />{!activityConfigured && <div className="policy-banner reservation-policy"><CalendarDays size={20} /><div><strong>请先确认活动安排</strong><p>活动名称与开始时间确认后，才可向观众开放预约。</p></div><button type="button" onClick={onGoActivity}>前往设置</button></div>}<div className="metric-grid reservation-metrics"><article><div><span>全部预约</span><small>当前活动记录</small></div><strong>{reservations.length}</strong><Users size={20} /></article><article><div><span>待确认</span><small>需要处理</small></div><strong>{pendingCount}</strong><Clock3 size={20} /></article><article><div><span>已确认</span><small>等待到场</small></div><strong>{confirmedCount}</strong><TicketCheck size={20} /></article><article><div><span>已完成</span><small>已完成接待</small></div><strong>{completedCount}</strong><CheckCircle2 size={20} /></article></div><section className="panel-card reservation-management"><div className="table-toolbar"><div className="filter-tabs" aria-label="预约状态筛选">{([['all', '全部'], ['pending', '待确认'], ['confirmed', '已确认'], ['completed', '已完成']] as const).map(([value, label]) => <button className={filter === value ? 'active' : ''} key={value} type="button" onClick={() => setFilter(value)}>{label}</button>)}</div><label><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索姓名或账号邮箱" aria-label="搜索预约" /></label></div>{message && <p className="form-message">{message}</p>}{loading ? <div className="table-empty compact"><Users size={29} /><h2>正在加载预约</h2></div> : visibleReservations.length ? <div className="booth-reservation-list">{visibleReservations.map((item) => <article key={item.id}><span className="visitor-avatar">{(item.display_name || '访').slice(0, 1)}</span><div><strong>{item.display_name || '已授权访客'}</strong><p>{item.email_snapshot}</p><small>{item.activity_title} · {new Date(item.slot_start_at).toLocaleString('zh-CN', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</small></div><span className={`status-pill ${item.status === 'confirmed' || item.status === 'completed' ? 'published' : item.status === 'cancelled' ? 'cancelled' : 'review'}`}>{reservationStatusLabels[item.status]}</span><div className="reservation-row-actions">{item.status === 'pending' && <button type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'confirmed')}>确认</button>}{item.status === 'confirmed' && <button type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'completed')}>完成</button>}{['pending', 'confirmed'].includes(item.status) && <button className="danger-outline" type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'cancelled')}>取消</button>}</div></article>)}</div> : <div className="table-empty compact"><Users size={29} /><h2>{reservations.length ? '没有符合条件的预约' : '暂无预约记录'}</h2><p>{reservations.length ? '调整筛选条件或搜索内容。' : enabled ? '观众提交预约后将显示在这里。' : '开放预约后，观众可在活动详情中提交。'}</p></div>}</section><div className="privacy-note reservation-privacy"><ShieldCheck size={18} />这里只显示访客在预约时明确授权提供的信息，仅用于本场活动确认与现场接待。</div></section>;
+  return <section><PageHeading eyebrow="活动接待" title="预约与访客" description="确认活动预约并跟进到场状态。" action={<div className="heading-actions"><button type="button" onClick={onGoActivity}><CalendarDays size={17} />活动安排</button><button className={enabled ? '' : 'primary'} type="button" disabled={!activityConfigured && !enabled} onClick={() => void onToggle(!enabled)}>{enabled ? '暂停预约' : '开放预约'}</button></div>} />{!activityConfigured && <div className="policy-banner reservation-policy"><CalendarDays size={20} /><div><strong>请先确认活动安排</strong><p>活动名称与开始时间确认后，才可向观众开放预约。</p></div><button type="button" onClick={onGoActivity}>前往设置</button></div>}<div className="metric-grid reservation-metrics"><article><div><span>全部预约</span><small>当前活动记录</small></div><strong>{reservations.length}</strong><Users size={20} /></article><article><div><span>待确认</span><small>需要处理</small></div><strong>{pendingCount}</strong><Clock3 size={20} /></article><article><div><span>已确认</span><small>等待到场</small></div><strong>{confirmedCount}</strong><TicketCheck size={20} /></article><article><div><span>已完成</span><small>已完成接待</small></div><strong>{completedCount}</strong><CheckCircle2 size={20} /></article></div><section className="panel-card reservation-management"><div className="table-toolbar"><div className="filter-tabs" aria-label="预约状态筛选">{([['all', '全部'], ['pending', '待确认'], ['confirmed', '已确认'], ['arrived', '已到达'], ['no_show', '未到场'], ['completed', '已完成']] as const).map(([value, label]) => <button className={filter === value ? 'active' : ''} key={value} type="button" onClick={() => setFilter(value)}>{label}</button>)}</div><label><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索姓名或账号邮箱" aria-label="搜索预约" /></label></div>{message && <p className="form-message">{message}</p>}{loading ? <div className="table-empty compact"><Users size={29} /><h2>正在加载预约</h2></div> : visibleReservations.length ? <div className="booth-reservation-list">{visibleReservations.map((item) => <article key={item.id}><span className="visitor-avatar">{(item.display_name || '访').slice(0, 1)}</span><div><strong>{item.display_name || '已授权访客'}</strong><p>{item.email_snapshot?.trim() || '联系方式已脱敏'}</p><small>{item.activity_title} · {new Date(item.slot_start_at).toLocaleString('zh-CN', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</small>{item.arrival_time && <small>预计 {item.arrival_time} 到达</small>}{item.attendee_note && <small>接待备注：{item.attendee_note}</small>}</div><span className={`status-pill ${item.status === 'confirmed' || item.status === 'arrived' || item.status === 'completed' ? 'published' : item.status === 'cancelled' ? 'cancelled' : 'review'}`}>{reservationStatusLabels[item.status]}</span><div className="reservation-row-actions">{item.status === 'pending' && <button type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'confirmed')}>确认</button>}{item.status === 'confirmed' && <><button type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'arrived')}>到达</button><button type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'no_show')}>未到场</button></>}{item.status === 'arrived' && <button type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'completed')}>完成</button>}{['pending', 'confirmed'].includes(item.status) && <button className="danger-outline" type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'cancelled')}>取消</button>}</div></article>)}</div> : <div className="table-empty compact"><Users size={29} /><h2>{reservations.length ? '没有符合条件的预约' : '暂无预约记录'}</h2><p>{reservations.length ? '调整筛选条件或搜索内容。' : enabled ? '观众提交预约后将显示在这里。' : '开放预约后，观众可在活动详情中提交。'}</p></div>}</section><div className="privacy-note reservation-privacy"><ShieldCheck size={18} />姓名与账号邮箱仅用于本场活动确认与现场接待，活动结束 7 天后自动脱敏。</div></section>;
 }
 
 function ActivitiesView({ status, title, start, duration, capacity, language, onTitle, onStart, onDuration, onCapacity, onLanguage, onSave, onStatus }: { status: ExhibitorState['activityStatus']; title: string; start: string; duration: number; capacity: number; language: string; onTitle: (value: string) => void; onStart: (value: string) => void; onDuration: (value: number) => void; onCapacity: (value: number) => void; onLanguage: (value: string) => void; onSave: (event: FormEvent<HTMLFormElement>) => void; onStatus: (status: ExhibitorState['activityStatus']) => void }) {
   const labels = { draft: '草稿', confirmed: '已确认', delayed: '已延迟', cancelled: '已取消' };
   const formatted = formatActivityStart(start);
   const configured = Boolean(title.trim() && start);
-  return <section><PageHeading eyebrow="演示与活动" title="活动管理" description="维护活动名称、开始时间、时长和现场状态。" /><div className="content-grid two-one"><form className="editor-card" onSubmit={onSave}><div className="card-head"><div><h2>活动安排</h2><p>保存后可继续更新现场状态。</p></div><span className={`status-pill ${status === 'confirmed' ? 'published' : status === 'draft' ? 'draft' : 'review'}`}>{labels[status]}</span></div><label><span>活动名称 *</span><input name="activityTitle" value={title} onChange={(event) => onTitle(event.target.value)} maxLength={100} required placeholder="例如：项目演示" /></label><label><span>开始时间 *</span><input name="activityStart" type="datetime-local" value={start} onChange={(event) => onStart(event.target.value)} required /></label><div className="form-row"><label><span>规划时长</span><select name="activityDuration" value={duration} onChange={(event) => onDuration(Number(event.target.value))}><option value="15">15 分钟</option><option value="30">30 分钟</option><option value="45">45 分钟</option><option value="60">60 分钟</option><option value="90">90 分钟</option></select></label><label><span>现场容量</span><input name="activityCapacity" type="number" min="0" max="10000" value={capacity} onChange={(event) => onCapacity(Number(event.target.value))} /><small>不限制时填写 0</small></label></div><label><span>活动语言</span><select name="activityLanguage" value={language} onChange={(event) => onLanguage(event.target.value)}><option value="中文">中文</option><option value="英文">英文</option><option value="中英文">中英文</option></select></label><button className="primary-wide" type="submit"><Save size={18} />保存并确认活动</button></form><aside className="preview-stack">{configured ? <div className="activity-card"><div className="activity-date"><strong>{new Date(start).getDate()}</strong><span>{new Date(start).getMonth() + 1}月</span></div><div className="activity-main"><div><span className="category-tag">现场活动</span><h2>{title}</h2><p><Clock3 size={15} />{formatted.date} {formatted.time} · {duration} 分钟</p><p><MapPin size={15} />项目开发区 · {capacity > 0 ? `容量 ${capacity} 人` : '不限人数'} · {language}</p></div><span className={`status-pill ${status === 'confirmed' ? 'published' : status === 'draft' ? 'draft' : 'review'}`}>{labels[status]}</span></div>{status !== 'draft' && <div className="activity-actions"><button type="button" onClick={() => onStatus('confirmed')}>确认</button><button type="button" onClick={() => onStatus('delayed')}>标记延迟</button><button type="button" onClick={() => onStatus('cancelled')}>取消</button></div>}</div> : <div className="large-empty portal-empty"><span><CalendarDays size={31} /></span><h1>尚未配置活动</h1><p>填写活动名称与开始时间后保存。</p></div>}</aside></div></section>;
+  const [minimumStart, setMinimumStart] = useState('');
+
+  useEffect(() => {
+    const refresh = () => setMinimumStart(shanghaiDateTimeMinimum());
+    refresh();
+    const timer = window.setInterval(refresh, 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return <section><PageHeading eyebrow="演示与活动" title="活动管理" description="维护活动名称、开始时间、时长和现场状态。" /><div className="content-grid two-one"><form className="editor-card" onSubmit={onSave}><div className="card-head"><div><h2>活动安排</h2><p>保存后可继续更新现场状态。</p></div><span className={`status-pill ${status === 'confirmed' ? 'published' : status === 'draft' ? 'draft' : 'review'}`}>{labels[status]}</span></div><label><span>活动名称 *</span><input name="activityTitle" value={title} onChange={(event) => onTitle(event.target.value)} maxLength={100} required placeholder="例如：项目演示" /></label><label><span>开始时间 *</span><input name="activityStart" type="datetime-local" min={minimumStart || undefined} value={start} onChange={(event) => onStart(event.target.value)} required /></label><div className="form-row"><label><span>规划时长</span><select name="activityDuration" value={duration} onChange={(event) => onDuration(Number(event.target.value))}><option value="15">15 分钟</option><option value="30">30 分钟</option><option value="45">45 分钟</option><option value="60">60 分钟</option><option value="90">90 分钟</option></select></label><label><span>现场容量</span><input name="activityCapacity" type="number" min="0" max="10000" value={capacity} onChange={(event) => onCapacity(Number(event.target.value))} /><small>不限制时填写 0</small></label></div><label><span>活动语言</span><select name="activityLanguage" value={language} onChange={(event) => onLanguage(event.target.value)}><option value="中文">中文</option><option value="英文">英文</option><option value="中英文">中英文</option></select></label><button className="primary-wide" type="submit"><Save size={18} />保存并确认活动</button></form><aside className="preview-stack">{configured ? <div className="activity-card"><div className="activity-date"><strong>{new Date(start).getDate()}</strong><span>{new Date(start).getMonth() + 1}月</span></div><div className="activity-main"><div><span className="category-tag">现场活动</span><h2>{title}</h2><p><Clock3 size={15} />{formatted.date} {formatted.time} · {duration} 分钟</p><p><MapPin size={15} />项目开发区 · {capacity > 0 ? `容量 ${capacity} 人` : '不限人数'} · {language}</p></div><span className={`status-pill ${status === 'confirmed' ? 'published' : status === 'draft' ? 'draft' : 'review'}`}>{labels[status]}</span></div>{status !== 'draft' && <div className="activity-actions"><button type="button" onClick={() => onStatus('confirmed')}>确认</button><button type="button" onClick={() => onStatus('delayed')}>标记延迟</button><button type="button" onClick={() => onStatus('cancelled')}>取消</button></div>}</div> : <div className="large-empty portal-empty"><span><CalendarDays size={31} /></span><h1>尚未配置活动</h1><p>填写活动名称与开始时间后保存。</p></div>}</aside></div></section>;
 }
 
 function TicketsView({ tickets, onCreate }: { tickets: Ticket[]; onCreate: () => void }) {

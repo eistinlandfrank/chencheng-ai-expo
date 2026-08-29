@@ -62,6 +62,13 @@ async function ensureAnalyticsTable() {
       ON app_analytics_events(event_id, event_name, created_at)`),
     env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_app_analytics_place_time
       ON app_analytics_events(event_id, place_id, event_name, created_at)`),
+    env.DB.prepare(`CREATE TABLE IF NOT EXISTS app_analytics_rate_limits (
+      key_hash TEXT PRIMARY KEY,
+      request_count INTEGER NOT NULL DEFAULT 0,
+      expires_at TEXT NOT NULL
+    )`),
+    env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_app_analytics_rate_expiry
+      ON app_analytics_rate_limits(expires_at)`),
   ]);
   initialized = true;
 }
@@ -93,13 +100,27 @@ function analyticsTimeBucket(date = new Date()) {
   return new Date(Math.floor(date.getTime() / bucketMs) * bucketMs).toISOString();
 }
 
-export async function analyticsRateAllowed(anonymousId: string) {
+export async function analyticsRateAllowed(anonymousId: string, ipAddress: string) {
   await ensureAnalyticsTable();
-  const anonymousIdHash = await sha256(anonymousId);
-  const row = await env.DB.prepare(`SELECT COUNT(*) AS total FROM app_analytics_events
-    WHERE event_id = ? AND anonymous_id_hash = ? AND created_at = ?`)
-    .bind(venue.eventId, anonymousIdHash, analyticsTimeBucket()).first<{ total: number }>();
-  return Number(row?.total ?? 0) < 120;
+  const bucket = analyticsTimeBucket();
+  const expiresAt = new Date(new Date(bucket).getTime() + 30 * 60 * 1000).toISOString();
+  const [sessionKey, networkKey] = await Promise.all([
+    sha256(`${venue.eventId}:session:${anonymousId}:${bucket}`),
+    sha256(`${venue.eventId}:network:${ipAddress}:${bucket}`),
+  ]);
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM app_analytics_rate_limits WHERE expires_at < ?').bind(new Date().toISOString()),
+    env.DB.prepare(`INSERT INTO app_analytics_rate_limits (key_hash, request_count, expires_at)
+      VALUES (?, 1, ?) ON CONFLICT(key_hash) DO UPDATE SET request_count = request_count + 1, expires_at = excluded.expires_at`)
+      .bind(sessionKey, expiresAt),
+    env.DB.prepare(`INSERT INTO app_analytics_rate_limits (key_hash, request_count, expires_at)
+      VALUES (?, 1, ?) ON CONFLICT(key_hash) DO UPDATE SET request_count = request_count + 1, expires_at = excluded.expires_at`)
+      .bind(networkKey, expiresAt),
+  ]);
+  const counts = await env.DB.prepare('SELECT key_hash, request_count FROM app_analytics_rate_limits WHERE key_hash IN (?, ?)')
+    .bind(sessionKey, networkKey).all<{ key_hash: string; request_count: number }>();
+  const byKey = new Map(counts.results.map((row) => [row.key_hash, Number(row.request_count)]));
+  return (byKey.get(sessionKey) ?? 0) <= 120 && (byKey.get(networkKey) ?? 0) <= 360;
 }
 
 export async function recordAnalyticsEvent(input: {
@@ -115,12 +136,20 @@ export async function recordAnalyticsEvent(input: {
   properties?: Record<string, unknown>;
 }) {
   await ensureAnalyticsTable();
+  const cleanedProperties = cleanProperties(input.eventName, input.properties);
+  const subjectScope = [
+    venue.eventId,
+    input.eventName,
+    input.placeId ?? '',
+    typeof cleanedProperties.query === 'string' ? cleanedProperties.query : '',
+    new Date().toISOString().slice(0, 10),
+  ].join(':');
   const [anonymousIdHash, userIdHash] = await Promise.all([
-    input.anonymousId ? sha256(input.anonymousId) : Promise.resolve(null),
-    input.userId ? sha256(input.userId) : Promise.resolve(null),
+    input.anonymousId ? sha256(`${subjectScope}:${input.anonymousId}`) : Promise.resolve(null),
+    input.userId ? sha256(`${subjectScope}:${input.userId}`) : Promise.resolve(null),
   ]);
   const subject = input.anonymousId ?? input.userId ?? crypto.randomUUID();
-  const recordId = input.dedupKey ? await sha256(`${subject}:${input.dedupKey}`) : crypto.randomUUID();
+  const recordId = input.dedupKey ? await sha256(`${subjectScope}:${subject}:${input.dedupKey}`) : crypto.randomUUID();
   const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
   await env.DB.batch([
     env.DB.prepare('DELETE FROM app_analytics_events WHERE event_id = ? AND created_at < ?').bind(venue.eventId, cutoff),
@@ -128,7 +157,7 @@ export async function recordAnalyticsEvent(input: {
       (id, tenant_id, event_id, role, anonymous_id_hash, user_id_hash, organization_id, place_id, event_name, map_version, request_id, properties_json, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO NOTHING`)
-      .bind(recordId, tenantId, venue.eventId, input.role, anonymousIdHash, userIdHash, input.organizationId ?? null, input.placeId ?? null, input.eventName, input.mapVersion ?? venue.mapVersion, input.requestId, JSON.stringify(cleanProperties(input.eventName, input.properties)), analyticsTimeBucket()),
+      .bind(recordId, tenantId, venue.eventId, input.role, anonymousIdHash, userIdHash, input.organizationId ?? null, input.placeId ?? null, input.eventName, input.mapVersion ?? venue.mapVersion, input.requestId, JSON.stringify(cleanedProperties), analyticsTimeBucket()),
   ]);
 }
 
@@ -139,6 +168,8 @@ function metric(value: number, subjects: number): AnalyticsMetric {
 
 async function countsSince(since: string, placeId?: string) {
   await ensureAnalyticsTable();
+  await env.DB.prepare('DELETE FROM app_analytics_events WHERE event_id = ? AND created_at < ?')
+    .bind(venue.eventId, new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString()).run();
   const where = placeId ? 'event_id = ? AND place_id = ? AND created_at >= ?' : 'event_id = ? AND created_at >= ?';
   const statement = env.DB.prepare(`SELECT event_name, COUNT(*) AS total,
     COUNT(DISTINCT COALESCE(anonymous_id_hash, user_id_hash, id)) AS subjects
@@ -153,7 +184,7 @@ export async function getOperationsAnalytics() {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const counts = await countsSince(since);
   const sessions = await env.DB.prepare(`SELECT COUNT(DISTINCT anonymous_id_hash) AS total FROM app_analytics_events
-    WHERE event_id = ? AND anonymous_id_hash IS NOT NULL AND created_at >= ?`).bind(venue.eventId, since).first<{ total: number }>();
+    WHERE event_id = ? AND event_name = 'visitor_session_started' AND anonymous_id_hash IS NOT NULL AND created_at >= ?`).bind(venue.eventId, since).first<{ total: number }>();
   const keywords = await env.DB.prepare(`SELECT json_extract(properties_json, '$.query') AS keyword, COUNT(*) AS total,
       COUNT(DISTINCT anonymous_id_hash) AS subjects
     FROM app_analytics_events

@@ -271,6 +271,7 @@ export const appState = sqliteTable('app_state', {
   ownerId: text('owner_id').notNull(),
   valueJson: text('value_json').notNull(),
   revision: integer('revision').notNull().default(0),
+  writeToken: text('write_token').notNull().default(''),
   updatedAt: text('updated_at').notNull(),
   updatedBy: text('updated_by').notNull(),
 }, (table) => [index('idx_app_state_event_scope').on(table.eventId, table.scope)]);
@@ -327,6 +328,12 @@ export const appReservations = sqliteTable('app_reservations', {
   slotEndAt: text('slot_end_at').notNull(),
   status: text('status').notNull().default('pending'),
   consentVersion: text('consent_version').notNull(),
+  contactExpiresAt: text('contact_expires_at').notNull().default(''),
+  activityStatus: text('activity_status').notNull().default('confirmed'),
+  changeMessage: text('change_message').notNull().default(''),
+  arrivalTime: text('arrival_time').notNull().default(''),
+  attendeeNote: text('attendee_note').notNull().default(''),
+  lastTransitionId: text('last_transition_id'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 }, (table) => [
@@ -341,6 +348,7 @@ export const appReservationUpdates = sqliteTable('app_reservation_updates', {
   actorId: text('actor_id').notNull(),
   fromStatus: text('from_status').notNull(),
   toStatus: text('to_status').notNull(),
+  changeMessage: text('change_message').notNull().default(''),
   createdAt: text('created_at').notNull(),
 }, (table) => [index('idx_app_reservation_updates_reservation').on(table.eventId, table.reservationId, table.createdAt)]);
 
@@ -362,3 +370,9 @@ export const appAnalyticsEvents = sqliteTable('app_analytics_events', {
   index('idx_app_analytics_event_time').on(table.eventId, table.eventName, table.createdAt),
   index('idx_app_analytics_place_time').on(table.eventId, table.placeId, table.eventName, table.createdAt),
 ]);
+
+export const appAnalyticsRateLimits = sqliteTable('app_analytics_rate_limits', {
+  keyHash: text('key_hash').primaryKey(),
+  requestCount: integer('request_count').notNull().default(0),
+  expiresAt: text('expires_at').notNull(),
+}, (table) => [index('idx_app_analytics_rate_expiry').on(table.expiresAt)]);

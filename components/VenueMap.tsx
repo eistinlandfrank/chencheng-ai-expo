@@ -18,11 +18,12 @@ type VenueMapProps = {
   closedGroups?: Array<'north-main' | 'south-main'>;
   showEditorGrid?: boolean;
   visibleLayer?: 'all' | 'base' | 'zones' | 'routes' | 'anchors';
+  routesEnabled?: boolean;
   className?: string;
 };
 
 const zones = [
-  { id: 'reserve', label: '预留区域', detail: '用途待现场确认', x: .5, y: 2, w: 25.8, h: 95, tone: 'reserve' },
+  { id: 'workshop', label: '预留区域', detail: '用途待现场确认', x: .5, y: 2, w: 25.8, h: 95, tone: 'reserve' },
   { id: 'sponsor', label: '赞助商区', detail: '合作伙伴展示', x: 39.95, y: 0, w: 11.46, h: 72.96, tone: 'sponsor' },
   { id: 'coding', label: '项目开发 / 展示区', detail: '按活动日期转换', x: 51.41, y: .5, w: 28.85, h: 98, tone: 'coding' },
   { id: 'ceremony-rest', label: '开闭幕式 / 休息区', detail: '日期时变区域', x: 82.14, y: 11, w: 12.39, h: 74.4, tone: 'rest' },
@@ -71,15 +72,21 @@ export default function VenueMap({
   closedGroups = [],
   showEditorGrid = false,
   visibleLayer = 'all',
+  routesEnabled = true,
   className = '',
 }: VenueMapProps) {
   const shows = (layer: Exclude<VenueMapProps['visibleLayer'], undefined>) => visibleLayer === 'all' || visibleLayer === layer;
-  const routePoints = route?.polyline
+  const showRoutes = routesEnabled && shows('routes');
+  const routePoints = showRoutes ? route?.polyline
     .map((point) => `${(point.x / venue.widthMeters) * 100},${100 - (point.y / venue.heightMeters) * 100}`)
-    .join(' ');
+    .join(' ') : undefined;
 
   return (
-    <div className={`venue-map ${showEditorGrid ? 'editor-grid' : ''} ${className}`}>
+    <div
+      className={`venue-map ${showEditorGrid ? 'editor-grid' : ''} ${className}`}
+      role="region"
+      aria-label="千人黑客松主会场导览图"
+    >
       <div className="map-title-row">
         <div>
           <span className="map-level">主会场</span>
@@ -87,8 +94,8 @@ export default function VenueMap({
         </div>
       </div>
 
-      <div className="hall-canvas" role="img" aria-label="千人黑客松主会场导览图，包含功能区域、主疏散通道、入口与服务设施">
-        {shows('routes') && <><div className={`main-corridor north ${closedGroups.includes('north-main') ? 'closed' : ''}`}>
+      <div className="hall-canvas">
+        {showRoutes && <><div className={`main-corridor north ${closedGroups.includes('north-main') ? 'closed' : ''}`}>
           <span>{closedGroups.includes('north-main') ? '上侧主疏散通道临时关闭' : '上侧主疏散通道'}</span>
         </div>
         <div className={`main-corridor south ${closedGroups.includes('south-main') ? 'closed' : ''}`}>
@@ -105,42 +112,60 @@ export default function VenueMap({
 
         {shows('base') && pillars.map((pillar, index) => <span className="map-pillar" key={index} style={{ left: `${pillar.x}%`, top: `${pillar.y}%` }} aria-hidden="true" />)}
 
-        {shows('zones') && zones.map((zone) => (
-          <button
-            className={`map-zone tone-${zone.tone} ${selectedPlaceId === zone.id ? 'selected' : ''}`}
-            key={zone.id}
-            style={{ left: `${zone.x}%`, top: `${zone.y}%`, width: `${zone.w}%`, height: `${zone.h}%` }}
-            type="button"
-            onClick={() => onSelectPlace?.(zone.id)}
-            aria-label={`${zone.label}，${zone.detail}`}
-          >
-            <strong>{zone.label}</strong>
-            <span>{zone.detail}</span>
-          </button>
-        ))}
+        {shows('zones') && zones.map((zone) => {
+          const zoneClassName = `map-zone tone-${zone.tone} ${selectedPlaceId === zone.id ? 'selected' : ''}`;
+          const zoneStyle = { left: `${zone.x}%`, top: `${zone.y}%`, width: `${zone.w}%`, height: `${zone.h}%` };
+          const zoneContent = <><strong>{zone.label}</strong><span>{zone.detail}</span></>;
 
-        {shows('anchors') && pois.map(({ id, label, x, y, icon: Icon }) => (
-          <button
-            className={`map-poi ${selectedPlaceId === id ? 'selected' : ''}`}
-            key={id}
-            style={{ left: `${x}%`, top: `${y}%` }}
-            type="button"
-            onClick={() => onSelectPlace?.(id)}
-            aria-label={label}
-          >
-            <Icon size={13} aria-hidden="true" />
-            <span>{label}</span>
-          </button>
-        ))}
+          return onSelectPlace ? (
+            <button
+              className={zoneClassName}
+              key={zone.id}
+              style={zoneStyle}
+              type="button"
+              onClick={() => onSelectPlace(zone.id)}
+              aria-label={`${zone.label}，${zone.detail}`}
+            >
+              {zoneContent}
+            </button>
+          ) : (
+            <div className={zoneClassName} key={zone.id} style={zoneStyle}>
+              {zoneContent}
+            </div>
+          );
+        })}
 
-        {shows('routes') && routePoints && (
+        {shows('anchors') && pois.map(({ id, label, x, y, icon: Icon }) => {
+          const poiClassName = `map-poi ${selectedPlaceId === id ? 'selected' : ''}`;
+          const poiStyle = { left: `${x}%`, top: `${y}%` };
+          const poiContent = <><Icon size={13} aria-hidden="true" /><span>{label}</span></>;
+
+          return onSelectPlace ? (
+            <button
+              className={poiClassName}
+              key={id}
+              style={poiStyle}
+              type="button"
+              onClick={() => onSelectPlace(id)}
+              aria-label={label}
+            >
+              {poiContent}
+            </button>
+          ) : (
+            <div className={poiClassName} key={id} style={poiStyle}>
+              {poiContent}
+            </div>
+          );
+        })}
+
+        {showRoutes && routePoints && (
           <svg className="route-layer" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             <polyline className="route-halo" points={routePoints} />
             <polyline className="route-path" points={routePoints} />
           </svg>
         )}
 
-        {shows('routes') && route && route.polyline.length > 1 && (
+        {showRoutes && route && route.polyline.length > 1 && (
           <>
             <span
               className="route-marker start"

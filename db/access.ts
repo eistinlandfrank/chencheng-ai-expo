@@ -49,6 +49,16 @@ async function ensureMembershipTable() {
     )`),
     env.DB.prepare(`CREATE UNIQUE INDEX IF NOT EXISTS uidx_app_pending_event_email_role
       ON app_pending_memberships(event_id, email_normalized, role)`),
+    env.DB.prepare(`CREATE TABLE IF NOT EXISTS app_audit (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      event_id TEXT NOT NULL,
+      actor_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      resource_key TEXT NOT NULL,
+      after_json TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )`),
   ]);
   initialized = true;
 }
@@ -80,6 +90,12 @@ export async function ensureOperationsAccess(user: ChatGPTUser): Promise<Members
       ]);
     }
     row = await findMembership(user.userId, 'venue_admin');
+    if (row && pending) {
+      await env.DB.prepare(`INSERT INTO app_audit
+        (id, tenant_id, event_id, actor_id, action, resource_key, after_json, created_at)
+        VALUES (?, ?, ?, ?, 'operations_member_joined', ?, ?, ?)`)
+        .bind(crypto.randomUUID(), tenantId, venue.eventId, user.userId, `membership:${venue.eventId}:venue_admin`, JSON.stringify({ changed_fields: ['members'] }), new Date().toISOString()).run();
+    }
   }
   return row ? { role: row.role, organizationId: row.organization_id, placeId: row.place_id } : null;
 }
@@ -122,9 +138,16 @@ export async function listOperationsMembers() {
 export async function inviteOperationsMember(email: string, actorId: string) {
   await ensureMembershipTable();
   const normalized = email.trim().toLowerCase();
-  await env.DB.prepare(`INSERT INTO app_pending_memberships
-    (id, tenant_id, event_id, email_normalized, role, invited_by, created_at, consumed_by)
-    VALUES (?, ?, ?, ?, 'venue_admin', ?, ?, NULL)
-    ON CONFLICT(event_id, email_normalized, role) DO UPDATE SET invited_by = excluded.invited_by, created_at = excluded.created_at, consumed_by = NULL`)
-    .bind(crypto.randomUUID(), tenantId, venue.eventId, normalized, actorId, new Date().toISOString()).run();
+  const now = new Date().toISOString();
+  await env.DB.batch([
+    env.DB.prepare(`INSERT INTO app_pending_memberships
+      (id, tenant_id, event_id, email_normalized, role, invited_by, created_at, consumed_by)
+      VALUES (?, ?, ?, ?, 'venue_admin', ?, ?, NULL)
+      ON CONFLICT(event_id, email_normalized, role) DO UPDATE SET invited_by = excluded.invited_by, created_at = excluded.created_at, consumed_by = NULL`)
+      .bind(crypto.randomUUID(), tenantId, venue.eventId, normalized, actorId, now),
+    env.DB.prepare(`INSERT INTO app_audit
+      (id, tenant_id, event_id, actor_id, action, resource_key, after_json, created_at)
+      VALUES (?, ?, ?, ?, 'operations_member_invited', ?, ?, ?)`)
+      .bind(crypto.randomUUID(), tenantId, venue.eventId, actorId, `membership:${venue.eventId}:venue_admin`, JSON.stringify({ changed_fields: ['members'] }), now),
+  ]);
 }

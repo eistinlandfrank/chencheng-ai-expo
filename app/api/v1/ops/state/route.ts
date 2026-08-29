@@ -63,6 +63,7 @@ function normalizeState(input: unknown, current: OpsState): OpsState | null {
       : current.openPlaceIds,
     mapStatus: current.mapStatus,
     reviewedMapVersion: current.reviewedMapVersion,
+    submittedBy: current.submittedBy,
     mapReviews: current.mapReviews,
   };
 }
@@ -77,8 +78,9 @@ export async function GET() {
   if (!user) return error(requestId, 'UNAUTHENTICATED', '请登录后继续', 401);
   if (!await ensureOperationsAccess(user)) return error(requestId, 'FORBIDDEN_SCOPE', '当前账号没有场馆运营权限', 403);
   const state = await readState(stateKey, defaultOpsState);
-  const value = state.value.reviewedMapVersion === venue.mapVersion ? state.value : { ...state.value, mapStatus: 'draft' as const, reviewedMapVersion: venue.mapVersion, mapReviews: [] };
-  return NextResponse.json({ request_id: requestId, ...state, value, current_review: currentReview(value, user.userId), graph_validation: validateVenueGraph() });
+  const exhibitor = await readState(`exhibitor:${venue.eventId}:org-hardware-robot:robot-dev`, defaultExhibitorState);
+  const value = state.value.reviewedMapVersion === venue.mapVersion ? state.value : { ...state.value, mapStatus: 'draft' as const, reviewedMapVersion: venue.mapVersion, submittedBy: '', mapReviews: [] };
+  return NextResponse.json({ request_id: requestId, ...state, value, current_review: currentReview(value, user.userId), can_review: value.submittedBy !== user.userId, graph_validation: validateVenueGraph(), content_review: { profile_status: exhibitor.value.profileStatus } });
 }
 
 export async function PUT(request: NextRequest) {
@@ -95,7 +97,7 @@ export async function PUT(request: NextRequest) {
   }
 
   const existing = await readState(stateKey, defaultOpsState);
-  const current = existing.value.reviewedMapVersion === venue.mapVersion ? existing.value : { ...existing.value, mapStatus: 'draft' as const, reviewedMapVersion: venue.mapVersion, mapReviews: [] };
+  const current = existing.value.reviewedMapVersion === venue.mapVersion ? existing.value : { ...existing.value, mapStatus: 'draft' as const, reviewedMapVersion: venue.mapVersion, submittedBy: '', mapReviews: [] };
   const normalized = normalizeState(payload.state, current);
   if (!normalized) return error(requestId, 'VALIDATION_FAILED', '提交内容不完整', 422);
   const action = String(payload.action ?? 'ops_state_updated').slice(0, 80);
@@ -127,15 +129,16 @@ export async function PUT(request: NextRequest) {
     if (candidate.status !== transitions[before.status]) return error(requestId, 'INVALID_TRANSITION', '当前工单不能执行此状态变更', 409);
     next = { ...current, tickets: current.tickets.map((ticket) => ticket.id === before.id ? { ...ticket, status: candidate.status, assignee: before.status === '待分派' ? user.displayName : ticket.assignee } : ticket) };
   } else if (action === 'map_review_submitted') {
-    next = { ...current, mapStatus: 'review', reviewedMapVersion: venue.mapVersion };
+    next = { ...current, mapStatus: 'review', reviewedMapVersion: venue.mapVersion, submittedBy: user.userId, mapReviews: [] };
   } else if (action === 'map_verification_updated') {
+    if (current.submittedBy === user.userId) return error(requestId, 'SUBMITTER_CANNOT_REVIEW', '地图提交人不能复核同一版本，请由其他管理员完成', 409);
     const checks = normalizeChecks(payload.verification);
     if (!checks) return error(requestId, 'VALIDATION_FAILED', '现场复核内容不完整', 422);
     const review = { actorId: user.userId, actorLabel: user.displayName, checks, reviewedAt: new Date().toISOString() };
     next = { ...current, mapStatus: 'review', reviewedMapVersion: venue.mapVersion, mapReviews: [...current.mapReviews.filter((item) => item.actorId !== user.userId), review] };
   } else if (action === 'map_version_published') {
     const graph = validateVenueGraph();
-    const completeReviews = current.mapReviews.filter((review) => checkKeys.every((key) => review.checks[key]));
+    const completeReviews = current.mapReviews.filter((review) => review.actorId !== current.submittedBy && checkKeys.every((key) => review.checks[key]));
     if (!graph.valid) return error(requestId, 'MAP_VALIDATION_FAILED', '通行图自动校验未通过', 422);
     if (new Set(completeReviews.map((review) => review.actorId)).size < 2) {
       return error(requestId, 'SECOND_REVIEW_REQUIRED', '需要另一名场馆管理员完成独立现场复核', 409);
@@ -162,6 +165,27 @@ export async function PUT(request: NextRequest) {
       }
     }
     next = { ...current, openPlaceIds: opening ? [...current.openPlaceIds, placeId] : current.openPlaceIds.filter((id) => id !== placeId) };
+  } else if (action === 'booth_profile_published') {
+    const exhibitorKey = `exhibitor:${venue.eventId}:org-hardware-robot:robot-dev`;
+    const exhibitor = await readState(exhibitorKey, defaultExhibitorState);
+    if (exhibitor.value.profileStatus !== 'review') return error(requestId, 'CONTENT_REVIEW_REQUIRED', '当前没有待发布的展位内容', 409);
+    try {
+      const published = await writeState({
+        key: exhibitorKey,
+        tenantId,
+        eventId: venue.eventId,
+        scope: 'exhibitor',
+        ownerId: 'org-hardware-robot',
+        actorId: user.userId,
+        action,
+        value: { ...exhibitor.value, profileStatus: 'published' as const, publishedProfile: { boothTitle: exhibitor.value.boothTitle, intro: exhibitor.value.intro, tags: exhibitor.value.tags, publishedAt: new Date().toISOString() } },
+        expectedRevision: exhibitor.revision,
+      });
+      return NextResponse.json({ request_id: requestId, ...existing, value: current, current_review: currentReview(current, user.userId), can_review: current.submittedBy !== user.userId, graph_validation: validateVenueGraph(), content_review: { profile_status: published.value.profileStatus } });
+    } catch (writeError) {
+      if (writeError instanceof StateConflictError) return error(requestId, 'STATE_CONFLICT', '展位内容已变化，请刷新后重试', 409);
+      throw writeError;
+    }
   } else {
     return error(requestId, 'ACTION_NOT_SUPPORTED', '当前操作不受支持', 422);
   }
@@ -173,5 +197,5 @@ export async function PUT(request: NextRequest) {
     if (writeError instanceof StateConflictError) return error(requestId, 'STATE_CONFLICT', '数据已被其他成员更新，请刷新后重试', 409);
     throw writeError;
   }
-  return NextResponse.json({ request_id: requestId, ...saved, current_review: currentReview(saved.value, user.userId), graph_validation: validateVenueGraph() });
+  return NextResponse.json({ request_id: requestId, ...saved, current_review: currentReview(saved.value, user.userId), can_review: saved.value.submittedBy !== user.userId, graph_validation: validateVenueGraph() });
 }

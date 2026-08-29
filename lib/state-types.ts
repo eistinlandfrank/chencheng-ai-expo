@@ -45,6 +45,7 @@ export type OpsState = {
   openPlaceIds: string[];
   mapStatus: 'draft' | 'review' | 'published';
   reviewedMapVersion: string;
+  submittedBy: string;
   mapReviews: MapReview[];
 };
 
@@ -55,6 +56,7 @@ export const defaultOpsState: OpsState = {
   openPlaceIds: [],
   mapStatus: 'draft',
   reviewedMapVersion: '',
+  submittedBy: '',
   mapReviews: [],
 };
 

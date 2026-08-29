@@ -166,7 +166,8 @@ function reflowStops(stops: Stop[], startNodeId: string, startTime: string, leav
     if (stop.fixed) elapsed = Math.max(elapsed, availableMinutes(startTime, stop.time));
     elapsed += stop.dwellMinutes;
     const leaveRisk = elapsed + 10 > availableMinutes(startTime, leaveBy);
-    const next = { ...stop, time: nextTime, walkMeters: route.distanceMeters, risk: lateForFixed ? '固定安排可能迟到' : leaveRisk ? '可能超过离场时间' : undefined };
+    const activityRisk = stop.risk?.startsWith('活动') ? stop.risk : undefined;
+    const next = { ...stop, time: nextTime, walkMeters: route.distanceMeters, risk: activityRisk ?? (lateForFixed ? '固定安排可能迟到' : leaveRisk ? '可能超过离场时间' : undefined) };
     cursor = place.nodeId;
     return next;
   });
@@ -216,10 +217,32 @@ export default function VisitorApp() {
           const state = JSON.parse(saved) as { favorites?: string[]; itinerary?: Stop[]; wheelchair?: boolean; currentNodeId?: string; mapVersion?: string };
           setFavorites(state.favorites ?? []);
           setItinerary(state.mapVersion === venue.mapVersion ? state.itinerary ?? [] : []);
-          setWheelchair(Boolean(state.wheelchair));
+          setWheelchair(venue.accessibilityVerified && Boolean(state.wheelchair));
           savedNodeId = state.currentNodeId && nodes.some((node) => node.id === state.currentNodeId) ? state.currentNodeId : null;
         } catch {
           window.localStorage.removeItem('expo-visitor-state');
+        }
+      }
+      const reservedFixed = window.localStorage.getItem('expo-reservation-fixed');
+      if (reservedFixed) {
+        try {
+          const reservation = JSON.parse(reservedFixed) as { placeId?: string; start?: string; duration?: number; status?: string; mapVersion?: string };
+          const reservedPlace = reservation.placeId ? getPlace(reservation.placeId) : null;
+          const reservedTime = reservation.start?.match(/T(\d{2}:\d{2})/)?.[1];
+          if (reservation.mapVersion === venue.mapVersion && reservedPlace && reservedTime && !['cancelled', 'completed'].includes(String(reservation.status))) {
+            const reservedMinutes = toMinutes(reservedTime);
+            const windowStart = Math.max(0, reservedMinutes - 30);
+            const windowEnd = Math.min(23 * 60 + 59, reservedMinutes + Math.max(5, Number(reservation.duration) || 30) + 10);
+            setFixedPlaceId(reservedPlace.id);
+            setFixedTime(reservedTime);
+            setStartTime(addMinutes('00:00', windowStart));
+            setLeaveBy(addMinutes('00:00', windowEnd));
+            setDuration(windowEnd - windowStart);
+          } else {
+            window.localStorage.removeItem('expo-reservation-fixed');
+          }
+        } catch {
+          window.localStorage.removeItem('expo-reservation-fixed');
         }
       }
       const params = new URLSearchParams(window.location.search);
@@ -253,31 +276,34 @@ export default function VisitorApp() {
       try {
         const response = await fetch('/api/v1/live-state', { cache: 'no-store' });
         if (!response.ok) return;
-        const payload = await response.json() as { state?: { map_status?: 'draft' | 'review' | 'published'; closed_groups?: ClosedGroup[]; open_place_ids?: string[]; notices?: OpsNotice[]; place_overrides?: Record<string, PublicPlaceOverride> } };
+        const payload = await response.json() as { map_version?: string; state?: { map_status?: 'draft' | 'review' | 'published'; closed_groups?: ClosedGroup[]; open_place_ids?: string[]; notices?: OpsNotice[]; place_overrides?: Record<string, PublicPlaceOverride> } };
         if (!active) return;
-        const nextMapStatus = payload.state?.map_status ?? 'review';
+        const responseMatchesMap = payload.map_version === venue.mapVersion;
+        const nextMapStatus = responseMatchesMap ? payload.state?.map_status ?? 'review' : 'review';
         const nextClosedGroups = payload.state?.closed_groups ?? [];
         setMapStatus(nextMapStatus);
-        setClosedGroups(nextClosedGroups);
-        setOpenPlaceIds(payload.state?.open_place_ids ?? []);
+        setClosedGroups(responseMatchesMap ? nextClosedGroups : []);
+        setOpenPlaceIds(responseMatchesMap ? payload.state?.open_place_ids ?? [] : []);
         setNotices(payload.state?.notices ?? []);
-        setPlaceOverrides(payload.state?.place_overrides ?? {});
-        window.localStorage.setItem('expo-live-cache', JSON.stringify({ mapStatus: nextMapStatus, closedGroups: nextClosedGroups, openPlaceIds: payload.state?.open_place_ids ?? [], notices: payload.state?.notices ?? [], placeOverrides: payload.state?.place_overrides ?? {} }));
+        setPlaceOverrides(responseMatchesMap ? payload.state?.place_overrides ?? {} : {});
+        window.localStorage.setItem('expo-live-cache', JSON.stringify({ mapVersion: payload.map_version ?? '', mapStatus: nextMapStatus, closedGroups: responseMatchesMap ? nextClosedGroups : [], openPlaceIds: responseMatchesMap ? payload.state?.open_place_ids ?? [] : [], notices: payload.state?.notices ?? [], placeOverrides: responseMatchesMap ? payload.state?.place_overrides ?? {} : {} }));
       } catch {
         if (!active) return;
         try {
           const cached = JSON.parse(window.localStorage.getItem('expo-live-cache') ?? '{}') as {
+            mapVersion?: string;
             mapStatus?: 'draft' | 'review' | 'published';
             closedGroups?: ClosedGroup[];
             openPlaceIds?: string[];
             notices?: OpsNotice[];
             placeOverrides?: Record<string, PublicPlaceOverride>;
           };
-          setMapStatus(cached.mapStatus ?? 'review');
-          setClosedGroups(cached.closedGroups ?? []);
-          setOpenPlaceIds(cached.openPlaceIds ?? []);
+          const cacheMatchesMap = cached.mapVersion === venue.mapVersion;
+          setMapStatus(cacheMatchesMap ? cached.mapStatus ?? 'review' : 'review');
+          setClosedGroups(cacheMatchesMap ? cached.closedGroups ?? [] : []);
+          setOpenPlaceIds(cacheMatchesMap ? cached.openPlaceIds ?? [] : []);
           setNotices(cached.notices ?? []);
-          setPlaceOverrides(cached.placeOverrides ?? {});
+          setPlaceOverrides(cacheMatchesMap ? cached.placeOverrides ?? {} : {});
         } catch {
           setMapStatus('review');
           setClosedGroups([]);
@@ -335,19 +361,28 @@ export default function VisitorApp() {
   useEffect(() => {
     if (!liveReady) return;
     const timer = window.setTimeout(() => {
-      if (mapStatus !== 'published') setNavigationActive(false);
+      if (mapStatus !== 'published') {
+        setNavigationActive(false);
+        if (!venue.accessibilityVerified) setWheelchair(false);
+      }
       setItinerary((current) => {
         const safeStops = current.map((stop) => {
-          if (['completed', 'skipped'].includes(stop.state)) return stop;
           if (!availablePlaceIds.includes(stop.placeId)) return { ...stop, state: 'cancelled' as const, walkMeters: 0, risk: '地点当前未开放' };
           if (mapStatus !== 'published') return { ...stop, state: stop.state === 'enroute' ? 'planned' as const : stop.state, walkMeters: 0, risk: '地图等待现场复核' };
+          const activity = placeOverrides[stop.placeId]?.activity;
+          if (activity?.status === 'cancelled') return { ...stop, state: 'cancelled' as const, walkMeters: 0, risk: '活动已取消' };
+          if (activity?.status === 'delayed') {
+            const updatedTime = activity.start.match(/T(\d{2}:\d{2})/)?.[1];
+            return { ...stop, time: stop.fixed && updatedTime ? updatedTime : stop.time, risk: '活动已延迟，请确认最新时间' };
+          }
+          if (['completed', 'skipped'].includes(stop.state)) return stop;
           return stop;
         });
         return mapStatus === 'published' && currentNodeId ? reflowStops(safeStops, currentNodeId, startTime, leaveBy, wheelchair, closedEdgeIds) : safeStops;
       });
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [availablePlaceIds, closedEdgeIds, currentNodeId, leaveBy, liveReady, mapStatus, startTime, wheelchair]);
+  }, [availablePlaceIds, closedEdgeIds, currentNodeId, leaveBy, liveReady, mapStatus, placeOverrides, startTime, wheelchair]);
 
   function submitSearch(event: FormEvent) {
     event.preventDefault();
@@ -365,6 +400,13 @@ export default function VisitorApp() {
   function showToast(message: string, type: NonNullable<ToastState>['type'] = 'success') {
     setToast({ message, type });
     window.setTimeout(() => setToast(null), 3400);
+  }
+
+  function accessibilityAvailable() {
+    if (venue.accessibilityVerified) return true;
+    setWheelchair(false);
+    showToast('无障碍路线信息尚待现场核验', 'warning');
+    return false;
   }
 
   async function shareContent(title: string, text: string) {
@@ -417,7 +459,10 @@ export default function VisitorApp() {
     setItinerary([]);
     setCurrentNodeId(null);
     setLocationSource(null);
+    setFixedPlaceId('');
     window.localStorage.removeItem('expo-visitor-state');
+    window.localStorage.removeItem('expo-reservation-fixed');
+    window.localStorage.removeItem('expo-live-cache');
     setPrivacyOpen(false);
     showToast('本机行程、收藏与位置记录已清除', 'info');
   }
@@ -524,14 +569,14 @@ export default function VisitorApp() {
     }
     setItinerary((current) => {
       const updated = current.map((stop) => stop.id === stopId ? { ...stop, state: nextState } : stop);
-      return currentNodeId ? reflowStops(updated, currentNodeId, startTime, leaveBy, wheelchair, closedEdgeIds) : updated;
+      return currentNodeId && mapStatus === 'published' ? reflowStops(updated, currentNodeId, startTime, leaveBy, wheelchair, closedEdgeIds) : updated;
     });
     const stop = itinerary.find((item) => item.id === stopId);
     if (!stop) return;
     const place = placeById.get(stop.placeId) ?? null;
     if (nextState === 'enroute' && place) navigateTo(place);
     if (nextState === 'arrived') trackVisitorEvent('stop_arrived', stop.placeId);
-    if (nextState === 'skipped') showToast('已跳过该站，后续到达时间已更新', 'info');
+    if (nextState === 'skipped') showToast(mapStatus === 'published' ? '已跳过该站，后续到达时间已更新' : '已跳过该站，地图复核后将重新计算时间', 'info');
     if (nextState === 'completed') {
       trackVisitorEvent('stop_completed', stop.placeId);
       showToast('这一站已完成');
@@ -543,7 +588,7 @@ export default function VisitorApp() {
       const updated = current.map((item) => item.id === stopId ? { ...item, dwellMinutes: item.dwellMinutes + 5 } : item);
       return currentNodeId && mapStatus === 'published' ? reflowStops(updated, currentNodeId, startTime, leaveBy, wheelchair, closedEdgeIds) : updated;
     });
-    showToast('已延长 5 分钟，后续到达时间已更新', 'info');
+    showToast(mapStatus === 'published' ? '已延长 5 分钟，后续到达时间已更新' : '已延长 5 分钟，地图复核后将重新计算时间', 'info');
   }
 
   function chooseLocation(nodeId: string) {
@@ -578,10 +623,7 @@ export default function VisitorApp() {
     if (actionId === 'plan') return setPlanOpen(true);
     if (actionId === 'route') return setView('map');
     if (actionId === 'accessible') {
-      if (!venue.accessibilityVerified) {
-        showToast('无障碍路线信息尚待现场核验', 'warning');
-        return;
-      }
+      if (!accessibilityAvailable()) return;
       setWheelchair(true);
       setView('map');
       showToast('已切换为无障碍路线', 'info');
@@ -652,7 +694,7 @@ export default function VisitorApp() {
               <section className="home-section">
                 <div className="section-title-row"><div><span>推荐路线</span><h2>{currentLocation ? `从${currentLocation.label}开始` : '确认位置后生成'}</h2></div><button type="button" onClick={() => setView('map')}>查看地图 <ChevronRight size={15} /></button></div>
                 <div className="route-card">
-                  <VenueMap route={route} selectedPlaceId={targetPlace?.id} className="mini" />
+                  <VenueMap route={route} routesEnabled={mapStatus === 'published'} selectedPlaceId={targetPlace?.id} className="mini" />
                   <div className="route-card-meta">
                     <div><span className="green-pin"><Navigation size={18} /></span><div><small>{targetPlace ? '已确认开放地点' : '等待运营确认'}</small><strong>{targetPlace?.name ?? '暂无可推荐地点'}</strong><p>{route?.instructions[0] ?? (mapStatus === 'published' ? '确认开放地点后可规划路线' : '完成现场双人复核后开放导航')}</p></div></div>
                     <dl><div><dt>估算距离</dt><dd>{route ? `约 ${Math.round(route.distanceMeters)} 米` : '—'}</dd></div><div><dt>估算步行</dt><dd>{route ? `约 ${route.durationMinutes} 分钟` : '—'}</dd></div></dl>
@@ -664,7 +706,7 @@ export default function VisitorApp() {
               <section className="home-section plan-glance">
                 <div className="section-title-row"><div><span>我的安排</span><h2>{itinerary.length ? `${itinerary.length} 站参观计划` : '还没有行程'}</h2></div><button type="button" onClick={() => itinerary.length ? setView('itinerary') : setPlanOpen(true)}>{itinerary.length ? '查看行程' : '立即规划'} <ChevronRight size={15} /></button></div>
                 {itinerary.length ? (
-                  <div className="glance-stops">{itinerary.slice(0, 3).map((stop) => { const place = placeById.get(stop.placeId); return <div key={stop.id}><time>{stop.time}</time><span /><p><strong>{place?.name}</strong><small>约 {stop.dwellMinutes} 分钟</small></p></div>; })}</div>
+                  <div className="glance-stops">{itinerary.slice(0, 3).map((stop) => { const place = placeById.get(stop.placeId); return <div key={stop.id}><time>{mapStatus === 'published' ? stop.time : '待复核'}</time><span /><p><strong>{place?.name}</strong><small>约 {stop.dwellMinutes} 分钟</small></p></div>; })}</div>
                 ) : (
                   <button className="empty-plan-card" type="button" onClick={() => setPlanOpen(true)}><Sparkles size={23} /><span><strong>按兴趣和可用时间生成路线</strong><small>只安排已确认开放的地点，并预留离场缓冲</small></span><ChevronRight size={18} /></button>
                 )}
@@ -674,31 +716,31 @@ export default function VisitorApp() {
 
           {view === 'map' && (
             <section className="map-screen">
-              <header className="screen-header"><button type="button" onClick={() => setView('home')} aria-label="返回"><ChevronLeft /></button><div><span>室内导航</span><strong>{navigationActive ? `前往${targetPlace?.name}` : '场馆地图'}</strong></div><button type="button" onClick={() => void shareContent('Expo Service AI 路线', targetPlace ? `前往${targetPlace.name}` : '场馆地图')} aria-label="分享路线"><Share2 /></button></header>
-              {navigationActive && route && (
+              <header className="screen-header"><button type="button" onClick={() => setView('home')} aria-label="返回"><ChevronLeft /></button><div><span>室内导航</span><strong>{navigationActive && mapStatus === 'published' ? `前往${targetPlace?.name}` : '场馆地图'}</strong></div><button type="button" onClick={() => void shareContent('Expo Service AI 路线', mapStatus === 'published' && targetPlace ? `前往${targetPlace.name}` : '场馆地图等待现场复核')} aria-label="分享路线"><Share2 /></button></header>
+              {navigationActive && mapStatus === 'published' && route && (
                 <div className="next-instruction"><span><Navigation size={21} /></span><div><small>下一步</small><strong>{route.instructions[0]}</strong></div><button type="button" onClick={() => setNavigationActive(false)}>退出</button></div>
               )}
               <div className="full-map-wrap">
-                <VenueMap route={route} selectedPlaceId={targetPlace?.id} onSelectPlace={(id) => { const place = placeById.get(id); if (place) viewPlace(place); }} />
+                <VenueMap route={route} routesEnabled={mapStatus === 'published'} selectedPlaceId={targetPlace?.id} onSelectPlace={(id) => { const place = placeById.get(id); if (place) viewPlace(place); }} />
                 <div className="map-fab-stack">
                   <button type="button" onClick={() => setLocationOpen(true)} aria-label="校准位置"><LocateFixed size={20} /></button>
-                  <button className={wheelchair ? 'active' : ''} type="button" onClick={() => setWheelchair((value) => !value)} aria-label="无障碍路线"><Accessibility size={20} /></button>
+                  <button className={venue.accessibilityVerified && wheelchair ? 'active' : ''} type="button" aria-disabled={!venue.accessibilityVerified} onClick={() => { if (!accessibilityAvailable()) return; setWheelchair((value) => !value); }} aria-label={venue.accessibilityVerified ? '切换无障碍路线' : '无障碍路线待现场核验'}><Accessibility size={20} /></button>
                   <button type="button" onClick={validateItinerary} aria-label="重新计算"><RefreshCw size={20} /></button>
                 </div>
               </div>
               <div className="navigation-sheet">
                 <div className="sheet-handle" />
                 <div className="destination-row"><div><span className="green-pin"><MapPin size={19} /></span><div><small>目的地</small><strong>{targetPlace?.name ?? '请选择目的地'}</strong><p>{targetPlace?.zone}</p></div></div><button type="button" disabled={!targetPlace} onClick={() => targetPlace && viewPlace(targetPlace)}>详情</button></div>
-                {route && <div className="nav-metrics"><div><span>估算步行</span><strong>约 {route.durationMinutes} 分钟</strong></div><div><span>估算距离</span><strong>约 {Math.round(route.distanceMeters)} 米</strong></div><div><span>路线</span><strong>{wheelchair ? '无障碍' : '少走路'}</strong></div></div>}
+                {route && <div className="nav-metrics"><div><span>估算步行</span><strong>约 {route.durationMinutes} 分钟</strong></div><div><span>估算距离</span><strong>约 {Math.round(route.distanceMeters)} 米</strong></div><div><span>路线</span><strong>{venue.accessibilityVerified && wheelchair ? '无障碍' : '少走路'}</strong></div></div>}
                 <ol className="instruction-list">{route?.instructions.map((instruction, index) => <li key={instruction}><span>{index + 1}</span>{instruction}</li>)}</ol>
-                {!navigationActive && <button className="primary-wide" type="button" disabled={!targetPlace || mapStatus !== 'published'} onClick={() => targetPlace && navigateTo(targetPlace)}><Navigation size={19} />{mapStatus === 'published' ? '开始导航' : '地图待现场复核'}</button>}
+                {(!navigationActive || mapStatus !== 'published') && <button className="primary-wide" type="button" disabled={!targetPlace || mapStatus !== 'published'} onClick={() => targetPlace && navigateTo(targetPlace)}><Navigation size={19} />{mapStatus === 'published' ? '开始导航' : '地图待现场复核'}</button>}
               </div>
             </section>
           )}
 
           {view === 'itinerary' && (
             <section className="itinerary-screen">
-              <header className="screen-header plain"><button type="button" onClick={() => setView('home')} aria-label="返回"><ChevronLeft /></button><div><strong>我的行程</strong></div><button type="button" onClick={() => void shareContent('Expo Service AI 行程', itinerary.map((stop) => `${stop.time} ${placeById.get(stop.placeId)?.name ?? ''}`).join('\n'))} aria-label="分享行程"><Share2 /></button></header>
+              <header className="screen-header plain"><button type="button" onClick={() => setView('home')} aria-label="返回"><ChevronLeft /></button><div><strong>我的行程</strong></div><button type="button" onClick={() => void shareContent('Expo Service AI 行程', itinerary.map((stop) => `${mapStatus === 'published' ? stop.time : '待复核'} ${placeById.get(stop.placeId)?.name ?? ''}`).join('\n'))} aria-label="分享行程"><Share2 /></button></header>
               {itinerary.length ? (
                 <>
                   <div className="progress-card">
@@ -711,7 +753,7 @@ export default function VisitorApp() {
                       const place = placeById.get(stop.placeId);
                       return (
                         <li className={`stop-card state-${stop.state}`} key={stop.id}>
-                          <time>{stop.time}</time><span className="timeline-node">{stop.state === 'completed' ? <Check size={13} /> : index + 1}</span>
+                          <time>{mapStatus === 'published' ? stop.time : '待复核'}</time><span className="timeline-node">{stop.state === 'completed' ? <Check size={13} /> : index + 1}</span>
                           <div className="stop-body"><div className="stop-head"><div><small>{place?.code} · {place?.zone}</small><strong>{place?.name}{stop.fixed ? ' · 固定安排' : ''}</strong></div><span className="state-label">{stopLabels[stop.state]}</span></div><p>{place?.summary}</p>{stop.risk && <p className="stop-risk">{stop.risk}</p>}<div className="stop-foot"><span><Clock3 size={14} />停留约 {stop.dwellMinutes} 分钟</span>{mapStatus === 'published' && stop.walkMeters > 0 && <span><Navigation size={14} />约 {Math.round(stop.walkMeters)} 米</span>}</div>
                             {stop.state === 'planned' && <div className="stop-buttons"><button type="button" onClick={() => updateStop(stop.id, 'skipped')}>跳过</button><button type="button" disabled={mapStatus !== 'published'} onClick={() => updateStop(stop.id, 'enroute')}><Navigation size={15} />{mapStatus === 'published' ? '前往' : '等待复核'}</button></div>}
                             {stop.state === 'enroute' && <div className="stop-buttons"><button type="button" onClick={() => updateStop(stop.id, 'skipped')}>跳过</button><button type="button" onClick={() => updateStop(stop.id, 'arrived')}><MapPin size={15} />我已到达</button></div>}
@@ -733,7 +775,7 @@ export default function VisitorApp() {
             <section className="profile-screen">
               <header className="profile-hero"><Brand compact /><div className="anonymous-avatar"><CircleUserRound size={35} /></div><h1>匿名访客</h1><p>无需注册也可以使用地图与行程</p><span><ShieldCheck size={14} />行程、收藏与位置保存在本机</span></header>
               <div className="profile-stats"><button type="button" onClick={() => { setSearchKind('all'); setQuery(''); setFavoritesOnly(true); setSearchOpen(true); }}><strong>{favorites.length}</strong><span>我的收藏</span></button><button type="button" onClick={() => setView('itinerary')}><strong>{itinerary.length}</strong><span>行程地点</span></button></div>
-              <section className="setting-card"><h2>出行偏好</h2><label><span><Accessibility size={20} /><span><strong>无障碍路线</strong><small>现场核验完成后开放</small></span></span><input type="checkbox" disabled={!venue.accessibilityVerified} checked={wheelchair} onChange={(event) => setWheelchair(event.target.checked)} /></label></section>
+              <section className="setting-card"><h2>出行偏好</h2><label><span><Accessibility size={20} /><span><strong>无障碍路线</strong><small>现场核验完成后开放</small></span></span><input type="checkbox" disabled={!venue.accessibilityVerified} checked={venue.accessibilityVerified && wheelchair} onChange={(event) => setWheelchair(event.target.checked)} /></label></section>
               <section className="setting-card links"><h2>服务与设置</h2><Link href="/reservations"><span><CalendarDays size={20} />我的预约</span><ChevronRight size={18} /></Link><button type="button" onClick={() => setLocationOpen(true)}><span><LocateFixed size={20} />当前位置与校准</span><ChevronRight size={18} /></button><button type="button" onClick={() => setMessagesOpen(true)}><span><Bell size={20} />消息中心</span><ChevronRight size={18} /></button><button type="button" onClick={() => setPrivacyOpen(true)}><span><Settings2 size={20} />隐私与本机数据</span><ChevronRight size={18} /></button></section>
               <button className="delete-session" type="button" onClick={clearLocalData}>清除本机记录</button>
               <footer className="visitor-footer"><Link href="/exhibitor">参展商入口</Link><span>·</span><Link href="/operations">场馆运营入口</Link></footer>
@@ -762,11 +804,11 @@ export default function VisitorApp() {
       </Modal>
 
       <Modal open={planOpen} title="规划参观行程" onClose={() => setPlanOpen(false)}>
-        <div className="plan-form"><div className="form-row"><label><span>开始时间</span><input type="time" value={startTime} onChange={(event) => { setStartTime(event.target.value); setLeaveBy(addMinutes(event.target.value, duration)); }} /></label><label><span>必须离场</span><input type="time" value={leaveBy} onChange={(event) => { setLeaveBy(event.target.value); setDuration(Math.max(0, availableMinutes(startTime, event.target.value))); }} /></label></div><fieldset><legend>可用时间</legend><div className="choice-row">{[60, 90, 120].map((value) => <button className={duration === value ? 'active' : ''} type="button" key={value} onClick={() => { setDuration(value); setLeaveBy(addMinutes(startTime, value)); }}>{value} 分钟</button>)}</div></fieldset><label><span>固定安排（可选）</span><select value={fixedPlaceId} onChange={(event) => setFixedPlaceId(event.target.value)}><option value="">不添加固定安排</option>{openPlaces.map((place) => <option key={place.id} value={place.id}>{place.name}</option>)}</select></label>{fixedPlaceId && <label><span>固定开始时间</span><input type="time" value={fixedTime} onChange={(event) => setFixedTime(event.target.value)} /></label>}<fieldset><legend>感兴趣的方向</legend><div className="interest-grid">{['硬件', '软件', '创客', '合作伙伴', '活动'].map((item) => <label key={item}><input type="checkbox" checked={interests.includes(item)} onChange={() => setInterests((current) => current.includes(item) ? current.filter((value) => value !== item) : [...current, item])} /><span>{item}</span></label>)}</div></fieldset><div className="plan-toggles"><label><span><Accessibility size={18} />无障碍路线待核验</span><input type="checkbox" disabled={!venue.accessibilityVerified} checked={wheelchair} onChange={(event) => setWheelchair(event.target.checked)} /></label></div><div className="buffer-note"><ShieldCheck size={18} /><span>{mapStatus === 'published' ? '仅使用已发布通行边与已确认开放地点，并预留 10 分钟离场缓冲。' : '地图完成现场双人复核并发布后，才能生成可执行行程。'}</span></div><button className="primary-wide" type="button" disabled={mapStatus !== 'published' || openPlaces.length === 0} onClick={createPlan}><Sparkles size={19} />生成行程</button></div>
+        <div className="plan-form"><div className="form-row"><label><span>开始时间</span><input type="time" value={startTime} onChange={(event) => { setStartTime(event.target.value); setLeaveBy(addMinutes(event.target.value, duration)); }} /></label><label><span>必须离场</span><input type="time" value={leaveBy} onChange={(event) => { setLeaveBy(event.target.value); setDuration(Math.max(0, availableMinutes(startTime, event.target.value))); }} /></label></div><fieldset><legend>可用时间</legend><div className="choice-row">{[60, 90, 120].map((value) => <button className={duration === value ? 'active' : ''} type="button" key={value} onClick={() => { setDuration(value); setLeaveBy(addMinutes(startTime, value)); }}>{value} 分钟</button>)}</div></fieldset><label><span>固定安排（可选）</span><select value={fixedPlaceId} onChange={(event) => setFixedPlaceId(event.target.value)}><option value="">不添加固定安排</option>{openPlaces.map((place) => <option key={place.id} value={place.id}>{place.name}</option>)}</select></label>{fixedPlaceId && <label><span>固定开始时间</span><input type="time" value={fixedTime} onChange={(event) => setFixedTime(event.target.value)} /></label>}<fieldset><legend>感兴趣的方向</legend><div className="interest-grid">{['硬件', '软件', '创客', '合作伙伴', '活动'].map((item) => <label key={item}><input type="checkbox" checked={interests.includes(item)} onChange={() => setInterests((current) => current.includes(item) ? current.filter((value) => value !== item) : [...current, item])} /><span>{item}</span></label>)}</div></fieldset><div className="plan-toggles"><label><span><Accessibility size={18} />无障碍路线待核验</span><input type="checkbox" disabled={!venue.accessibilityVerified} checked={venue.accessibilityVerified && wheelchair} onChange={(event) => setWheelchair(event.target.checked)} /></label></div><div className="buffer-note"><ShieldCheck size={18} /><span>{mapStatus === 'published' ? '仅使用已发布通行边与已确认开放地点，并预留 10 分钟离场缓冲。' : '地图完成现场双人复核并发布后，才能生成可执行行程。'}</span></div><button className="primary-wide" type="button" disabled={mapStatus !== 'published' || openPlaces.length === 0} onClick={createPlan}><Sparkles size={19} />生成行程</button></div>
       </Modal>
 
       <Modal open={locationOpen} title="确认当前位置" onClose={() => setLocationOpen(false)}>
-        <div className="location-options"><div className="current-anchor"><LocateFixed size={24} /><span><small>当前位置</small><strong>{currentLocation?.label ?? '尚未确认'}</strong><p>{locationSource === 'qr' ? '已通过现场定位标识确认' : currentLocation ? '已在本机确认' : '请选择入口或重新扫码'}</p></span>{currentLocation ? <CheckCircle2 size={20} /> : <CircleUserRound size={20} />}</div><button type="button" onClick={() => chooseLocation('gate-south')}><MapPin size={19} /><span><strong>图下入口</strong><small>主会场图下侧外部通口</small></span>{currentNodeId === 'gate-south' && <Check size={17} />}</button><button type="button" onClick={() => chooseLocation('gate-upper')}><MapPin size={19} /><span><strong>图上入口</strong><small>主会场图上侧外部通口</small></span>{currentNodeId === 'gate-upper' && <Check size={17} />}</button><button type="button" onClick={() => qrInputRef.current?.click()}><LocateFixed size={19} /><span><strong>扫描定位二维码</strong><small>拍摄或选择场馆定位二维码</small></span><ChevronRight size={17} /></button><button type="button" onClick={() => { setFavoritesOnly(false); setSearchKind('gate'); setQuery('入口'); setLocationOpen(false); setSearchOpen(true); }}><Compass size={19} /><span><strong>查看全部通口</strong><small>从已配置入口与出口中选择</small></span><ChevronRight size={17} /></button><input ref={qrInputRef} className="visually-hidden" type="file" accept="image/*" capture="environment" onChange={(event) => void scanQrImage(event)} /></div>
+        <div className="location-options"><div className="current-anchor"><LocateFixed size={24} /><span><small>当前位置</small><strong>{currentLocation?.label ?? '尚未确认'}</strong><p>{locationSource === 'qr' ? '已通过现场定位标识确认' : currentLocation ? '已在本机确认' : '请选择入口或重新扫码'}</p></span>{currentLocation ? <CheckCircle2 size={20} /> : <CircleUserRound size={20} />}</div><button type="button" onClick={() => chooseLocation('gate-south')}><MapPin size={19} /><span><strong>图下入口</strong><small>主会场图下侧外部通口</small></span>{currentNodeId === 'gate-south' && <Check size={17} />}</button><button type="button" onClick={() => chooseLocation('gate-upper')}><MapPin size={19} /><span><strong>图上入口</strong><small>主会场图上侧外部通口</small></span>{currentNodeId === 'gate-upper' && <Check size={17} />}</button><button type="button" onClick={() => qrInputRef.current?.click()}><LocateFixed size={19} /><span><strong>扫描定位二维码</strong><small>拍摄或选择场馆定位二维码</small></span><ChevronRight size={17} /></button><button type="button" onClick={() => { setFavoritesOnly(false); setSearchKind('gate'); setQuery(''); setLocationOpen(false); setSearchOpen(true); }}><Compass size={19} /><span><strong>查看全部通口</strong><small>从已配置入口与出口中选择</small></span><ChevronRight size={17} /></button><input ref={qrInputRef} className="visually-hidden" type="file" accept="image/*" capture="environment" onChange={(event) => void scanQrImage(event)} /></div>
       </Modal>
 
       <Modal open={messagesOpen} title="消息中心" onClose={() => setMessagesOpen(false)}>
@@ -774,7 +816,7 @@ export default function VisitorApp() {
       </Modal>
 
       <Modal open={privacyOpen} title="隐私与本机数据" onClose={() => setPrivacyOpen(false)}>
-        <div className="privacy-panel"><ShieldCheck size={28} /><h3>匿名使用，无需提供身份信息</h3><p>收藏、行程、偏好与手动确认的位置保存在当前设备；现场通知会短期缓存。为改善现场服务，操作次数按短期匿名会话汇总，原始记录在 48 小时内删除，小样本不会显示具体数值。预约时会另行说明授权范围。</p><button className="primary-wide" type="button" onClick={clearLocalData}>清除本机数据</button></div>
+        <div className="privacy-panel"><ShieldCheck size={28} /><h3>匿名使用，无需提供身份信息</h3><p>收藏、行程、偏好与手动确认的位置保存在当前设备；现场通知会短期缓存。为改善现场服务，操作次数按短期匿名会话汇总；系统会在后续产生新操作时清理已超过 48 小时的原始记录，因此实际清理时间可能晚于 48 小时。小样本不会显示具体数值，预约时会另行说明授权范围。</p><button className="primary-wide" type="button" onClick={clearLocalData}>清除本机数据</button></div>
       </Modal>
 
       <Toast toast={toast} onClose={() => setToast(null)} />

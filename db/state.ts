@@ -28,6 +28,7 @@ async function ensureStateTables() {
       owner_id TEXT NOT NULL,
       value_json TEXT NOT NULL,
       revision INTEGER NOT NULL DEFAULT 0,
+      write_token TEXT NOT NULL DEFAULT '',
       updated_at TEXT NOT NULL,
       updated_by TEXT NOT NULL
     )`),
@@ -50,7 +51,26 @@ async function ensureStateTables() {
   if (!columns.results.some((column) => column.name === 'revision')) {
     await d1.prepare('ALTER TABLE app_state ADD COLUMN revision INTEGER NOT NULL DEFAULT 0').run();
   }
+  if (!columns.results.some((column) => column.name === 'write_token')) {
+    await d1.prepare("ALTER TABLE app_state ADD COLUMN write_token TEXT NOT NULL DEFAULT ''").run();
+  }
   initialized = true;
+}
+
+function changedFields(previousJson: string | null, nextValue: unknown) {
+  let previous: Record<string, unknown> = {};
+  try {
+    const parsed = previousJson ? JSON.parse(previousJson) : {};
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) previous = parsed as Record<string, unknown>;
+  } catch {
+    previous = {};
+  }
+  const next = nextValue && typeof nextValue === 'object' && !Array.isArray(nextValue)
+    ? nextValue as Record<string, unknown>
+    : {};
+  return Array.from(new Set([...Object.keys(previous), ...Object.keys(next)]))
+    .filter((key) => JSON.stringify(previous[key]) !== JSON.stringify(next[key]))
+    .slice(0, 30);
 }
 
 export async function readState<T>(key: string, fallback: T): Promise<StateRecord<T>> {
@@ -92,24 +112,29 @@ export async function writeState<T>({
   expectedRevision: number;
 }) {
   await ensureStateTables();
+  const current = await env.DB.prepare('SELECT value_json FROM app_state WHERE key = ? AND revision = ?')
+    .bind(key, expectedRevision).first<{ value_json: string }>();
   const now = new Date().toISOString();
+  const writeToken = crypto.randomUUID();
   const serialized = JSON.stringify(value);
   const nextRevision = expectedRevision + 1;
+  const fields = changedFields(current?.value_json ?? null, value);
   const results = await env.DB.batch([
     env.DB.prepare(`INSERT INTO app_state
-      (key, tenant_id, event_id, scope, owner_id, value_json, revision, updated_at, updated_by)
-      VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
+      (key, tenant_id, event_id, scope, owner_id, value_json, revision, write_token, updated_at, updated_by)
+      VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?)
       ON CONFLICT(key) DO UPDATE SET
         value_json = excluded.value_json,
         revision = app_state.revision + 1,
+        write_token = excluded.write_token,
         updated_at = excluded.updated_at,
         updated_by = excluded.updated_by
-      WHERE app_state.revision = ?`).bind(key, tenantId, eventId, scope, ownerId, serialized, now, actorId, expectedRevision),
+      WHERE app_state.revision = ?`).bind(key, tenantId, eventId, scope, ownerId, serialized, writeToken, now, actorId, expectedRevision),
     env.DB.prepare(`INSERT INTO app_audit
       (id, tenant_id, event_id, actor_id, action, resource_key, after_json, created_at)
       SELECT ?, ?, ?, ?, ?, ?, ?, ?
-      WHERE EXISTS (SELECT 1 FROM app_state WHERE key = ? AND revision = ?)`)
-      .bind(crypto.randomUUID(), tenantId, eventId, actorId, action, key, JSON.stringify({ revision: nextRevision }), now, key, nextRevision),
+      WHERE EXISTS (SELECT 1 FROM app_state WHERE key = ? AND revision = ? AND write_token = ?)`)
+      .bind(crypto.randomUUID(), tenantId, eventId, actorId, action, key, JSON.stringify({ revision: nextRevision, changed_fields: fields }), now, key, nextRevision, writeToken),
   ]);
   const changes = Number((results[0].meta as { changes?: number } | undefined)?.changes ?? 0);
   if (changes !== 1) throw new StateConflictError();
