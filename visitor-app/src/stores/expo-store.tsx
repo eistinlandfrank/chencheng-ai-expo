@@ -71,8 +71,8 @@ function parseStoredState(raw: string | null): CoreState | null {
 
 export function ExpoStoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<CoreState>(EMPTY);
-  const [mapFrom, setMapFrom] = useState("02");
-  const [mapTo, setMapTo] = useState("04");
+  const [mapFrom, setMapFrom] = useState("01");
+  const [mapTo, setMapTo] = useState("75");
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
