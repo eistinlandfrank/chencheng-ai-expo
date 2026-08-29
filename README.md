@@ -92,9 +92,9 @@ DATABASE_PATH=/path/to/expo-service.sqlite npm run admin:set-password -- --email
 
 ## Docker 构建与运行
 
-`compose.production.yaml` 管理单端口网关、主平台、访客端和安全 webhook 接收器。Cloudflare Quick Tunnel 由宿主机系统 Docker 独立运行，应用发布和回滚不会重启它。镜像只用经过验证的完整 Git commit SHA 标记，真实密钥和数据目录全部保存在 Git 仓库外。
+`compose.production.yaml` 管理单端口网关、主平台、访客端和安全 webhook 接收器。Cloudflare Quick Tunnel 由宿主机系统 Docker 独立运行，并作为 Pages 边缘入口的回源通道；应用发布和回滚不会重启它。镜像只用经过验证的完整 Git commit SHA 标记，真实密钥和数据目录全部保存在 Git 仓库外。
 
-目标 OpenWrt 主机使用 NVMe 上的独立 Docker daemon 保存应用镜像与容器；所有公网请求只进入网关端口 `3100`。网关按路径分流到仅监听回环地址的主平台、访客端和 webhook，同一个 Quick Tunnel 地址即可访问全部页面。首次配置、GitHub webhook 自动部署和人工回滚见 [三端生产部署、自动发布与回滚](deploy/ROLLBACK.md)。
+目标 OpenWrt 主机使用 NVMe 上的独立 Docker daemon 保存应用镜像与容器；所有回源请求只进入网关端口 `3100`。网关按路径分流到仅监听回环地址的主平台、访客端和 webhook，正式公网入口 `https://chencheng-expo.pages.dev` 通过同一 Pages 代理覆盖全部页面。首次配置、GitHub webhook 自动部署和人工回滚见 [三端生产部署、自动发布与回滚](deploy/ROLLBACK.md)。
 
 ## 数据备份与回滚
 
@@ -104,7 +104,7 @@ DATABASE_PATH=/path/to/expo-service.sqlite npm run admin:set-password -- --email
 
 ## 外部访问
 
-当前部署保留目标机上已经验证的 `trycloudflare.com` Quick Tunnel，不创建自定义 DNS 记录，也不在应用发布时重启 tunnel。Quick Tunnel 主机名取自运行中容器的日志；如果该容器被重建，地址可能改变，因此应在变更 webhook URL 前重新做公网验收。
+正式入口为 `https://chencheng-expo.pages.dev`，对应独立 Cloudflare Pages 项目，不覆盖任何旧 Pages 站点。目标机上已经验证的 `trycloudflare.com` Quick Tunnel 仅作为 Pages 回源通道，不创建自定义 DNS 记录，也不在应用发布时重启 tunnel。若 Quick Tunnel 容器被重建，必须同步更新 Pages 代理中的回源地址并重新做公网验收。
 
 ## 发布边界
 
