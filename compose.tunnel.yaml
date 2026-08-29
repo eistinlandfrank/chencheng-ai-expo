@@ -1,0 +1,14 @@
+name: chencheng-ai-expo-tunnel
+
+services:
+  tunnel:
+    image: cloudflare/cloudflared:2026.5.0
+    container_name: chencheng-cloudflared
+    restart: unless-stopped
+    network_mode: host
+    command: ["tunnel", "--no-autoupdate", "--config", "/etc/cloudflared/config.yml", "run"]
+    volumes:
+      - type: bind
+        source: ${CLOUDFLARED_CONFIG_DIR:?CLOUDFLARED_CONFIG_DIR is required}
+        target: /etc/cloudflared
+        read_only: true

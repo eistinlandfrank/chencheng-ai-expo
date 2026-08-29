@@ -23,7 +23,7 @@ export class AIProviderUnavailableError extends Error {
 export async function createChatCompletion(messages: ChatMessage[]): Promise<ChatCompletion> {
   const baseUrl = process.env.AI_BASE_URL?.replace(/\/+$/, "");
   const apiKey = process.env.AI_API_KEY;
-  const model = process.env.AI_MODEL || "deepseek-v4-flash";
+  const model = process.env.AI_MODEL || "qwen-flash";
   if (!baseUrl || !apiKey) throw new AIProviderUnavailableError();
 
   const response = await fetch(`${baseUrl}/chat/completions`, {

@@ -12,14 +12,16 @@ fi
 # shellcheck disable=SC1090
 . "$DEPLOY_ENV_FILE"
 
+: "$APP_DOCKER_HOST"
 : "$SOURCE_DIR"
 : "$RELEASE_ROOT"
 : "$BACKUP_ROOT"
 : "$STATE_DIR"
 : "$DEPLOY_QUEUE_DIR"
 : "$SECRETS_DIR"
-: "$CLOUDFLARED_CONFIG_DIR"
 : "$PLATFORM_DATA_DIR"
+
+export DOCKER_HOST="$APP_DOCKER_HOST"
 
 LOCK_DIR="$STATE_DIR/deploy.lock"
 mkdir -p "$STATE_DIR" "$RELEASE_ROOT" "$BACKUP_ROOT" "$DEPLOY_QUEUE_DIR"
@@ -81,25 +83,21 @@ for file in platform.env visitor.env webhook.env; do
   fi
 done
 
-if [ ! -f "$CLOUDFLARED_CONFIG_DIR/config.yml" ] || [ ! -f "$CLOUDFLARED_CONFIG_DIR/credentials.json" ]; then
-  fail "Named Tunnel configuration is incomplete"
-fi
-
 export APP_VERSION="$COMMIT"
-export DEPLOY_QUEUE_DIR SECRETS_DIR CLOUDFLARED_CONFIG_DIR PLATFORM_DATA_DIR
+export DEPLOY_QUEUE_DIR SECRETS_DIR PLATFORM_DATA_DIR
 export PLATFORM_HOST_PORT VISITOR_HOST_PORT WEBHOOK_HOST_PORT
 COMPOSE_FILE="$RELEASE_DIR/compose.production.yaml"
 
 docker compose -f "$COMPOSE_FILE" config --quiet || fail "Compose configuration is invalid"
 
-docker run --rm \
+docker run --rm --network host \
   -v "$RELEASE_DIR:/app" \
   -w /app \
   node:22.23.1-bookworm-slim \
   sh -lc 'npm ci && npm run check && npm run build' \
   || fail "Platform verification failed"
 
-docker run --rm \
+docker run --rm --network host \
   -e NEXT_PUBLIC_APP_TITLE='智能展会导览' \
   -e NEXT_PUBLIC_APP_DESCRIPTION='智能展会导览与行程规划' \
   -v "$RELEASE_DIR/visitor-app:/app" \
@@ -114,17 +112,38 @@ BACKUP_ID=$(date -u +%Y%m%dT%H%M%SZ)-before-$COMMIT
 BACKUP_DIR="$BACKUP_ROOT/$BACKUP_ID"
 mkdir -p "$BACKUP_DIR"
 
-if docker inspect chencheng-platform >/dev/null 2>&1; then
-  docker stop -t 30 chencheng-platform >/dev/null || fail "Cannot stop platform for backup"
-  if ! tar -C "$PLATFORM_DATA_DIR" -cpf "$BACKUP_DIR/platform-data.tar" .; then
-    docker start chencheng-platform >/dev/null 2>&1 || true
-    fail "Platform backup failed"
-  fi
-  docker start chencheng-platform >/dev/null || fail "Cannot resume platform after backup"
-  sha256sum "$BACKUP_DIR/platform-data.tar" > "$BACKUP_DIR/platform-data.tar.sha256"
+LEGACY_PLATFORM_CONTAINER=${LEGACY_PLATFORM_CONTAINER:-}
+BACKUP_CONTAINER=''
+if docker inspect chencheng-platform >/dev/null 2>&1 \
+  && [ "$(docker inspect --format '{{.State.Running}}' chencheng-platform)" = true ]; then
+  BACKUP_CONTAINER=chencheng-platform
+elif [ -n "$LEGACY_PLATFORM_CONTAINER" ] \
+  && docker inspect "$LEGACY_PLATFORM_CONTAINER" >/dev/null 2>&1 \
+  && [ "$(docker inspect --format '{{.State.Running}}' "$LEGACY_PLATFORM_CONTAINER")" = true ]; then
+  BACKUP_CONTAINER=$LEGACY_PLATFORM_CONTAINER
 fi
 
-LEGACY_PLATFORM_CONTAINER=${LEGACY_PLATFORM_CONTAINER:-}
+if [ -n "$BACKUP_CONTAINER" ]; then
+  BACKUP_WAS_RUNNING=$(docker inspect --format '{{.State.Running}}' "$BACKUP_CONTAINER")
+  if [ "$BACKUP_WAS_RUNNING" = true ]; then
+    docker stop -t 30 "$BACKUP_CONTAINER" >/dev/null || fail "Cannot stop platform for backup"
+  fi
+fi
+
+if ! tar -C "$PLATFORM_DATA_DIR" -cpf "$BACKUP_DIR/platform-data.tar" .; then
+  if [ -n "$BACKUP_CONTAINER" ] && [ "$BACKUP_WAS_RUNNING" = true ]; then
+    docker start "$BACKUP_CONTAINER" >/dev/null 2>&1 || true
+  fi
+  fail "Platform backup failed"
+fi
+
+if [ -n "$BACKUP_CONTAINER" ]; then
+  if [ "$BACKUP_WAS_RUNNING" = true ]; then
+    docker start "$BACKUP_CONTAINER" >/dev/null || fail "Cannot resume platform after backup"
+  fi
+fi
+sha256sum "$BACKUP_DIR/platform-data.tar" > "$BACKUP_DIR/platform-data.tar.sha256"
+
 LEGACY_PLATFORM_WAS_RUNNING=0
 if [ -n "$LEGACY_PLATFORM_CONTAINER" ] && docker inspect "$LEGACY_PLATFORM_CONTAINER" >/dev/null 2>&1; then
   if [ "$(docker inspect --format '{{.State.Running}}' "$LEGACY_PLATFORM_CONTAINER")" = true ]; then
@@ -138,13 +157,23 @@ if [ -f "$STATE_DIR/current-version" ]; then
   PREVIOUS_VERSION=$(sed -n '1p' "$STATE_DIR/current-version")
 fi
 
-if ! docker compose -f "$COMPOSE_FILE" up -d --no-build platform visitor webhook tunnel; then
-  if [ -n "$PREVIOUS_VERSION" ] && [ "${#PREVIOUS_VERSION}" -eq 40 ]; then
-    APP_VERSION="$PREVIOUS_VERSION" docker compose -f "$COMPOSE_FILE" up -d --no-build platform visitor webhook tunnel || true
+restore_previous() {
+  if [ -n "$PREVIOUS_VERSION" ] && [ "${#PREVIOUS_VERSION}" -eq 40 ] \
+    && [ -f "$RELEASE_ROOT/$PREVIOUS_VERSION/source/compose.production.yaml" ]; then
+    APP_VERSION="$PREVIOUS_VERSION" docker compose \
+      -f "$RELEASE_ROOT/$PREVIOUS_VERSION/source/compose.production.yaml" \
+      up -d --no-build platform visitor webhook || true
+    return
   fi
+
+  docker rm -f chencheng-platform chencheng-visitor chencheng-deploy-webhook >/dev/null 2>&1 || true
   if [ "$LEGACY_PLATFORM_WAS_RUNNING" -eq 1 ]; then
     docker start "$LEGACY_PLATFORM_CONTAINER" >/dev/null 2>&1 || true
   fi
+}
+
+if ! docker compose -f "$COMPOSE_FILE" up -d --no-build platform visitor webhook; then
+  restore_previous
   fail "Service switch failed"
 fi
 
@@ -166,19 +195,17 @@ wait_healthy() {
 }
 
 if ! wait_healthy chencheng-platform || ! wait_healthy chencheng-visitor || ! wait_healthy chencheng-deploy-webhook; then
-  if [ -n "$PREVIOUS_VERSION" ] && [ "${#PREVIOUS_VERSION}" -eq 40 ]; then
-    APP_VERSION="$PREVIOUS_VERSION" docker compose -f "$COMPOSE_FILE" up -d --no-build platform visitor webhook tunnel || true
-  fi
-  if [ "$LEGACY_PLATFORM_WAS_RUNNING" -eq 1 ]; then
-    docker start "$LEGACY_PLATFORM_CONTAINER" >/dev/null 2>&1 || true
-  fi
+  restore_previous
   fail "New release failed health checks"
 fi
 
-curl --fail --silent --show-error "http://127.0.0.1:$PLATFORM_HOST_PORT/operations" >/dev/null || fail "Operations origin check failed"
-curl --fail --silent --show-error "http://127.0.0.1:$PLATFORM_HOST_PORT/exhibitor" >/dev/null || fail "Exhibitor origin check failed"
-curl --fail --silent --show-error "http://127.0.0.1:$VISITOR_HOST_PORT/booths" >/dev/null || fail "Visitor origin check failed"
-curl --fail --silent --show-error "http://127.0.0.1:$WEBHOOK_HOST_PORT/healthz" >/dev/null || fail "Webhook origin check failed"
+if ! curl --fail --silent --show-error "http://127.0.0.1:$PLATFORM_HOST_PORT/operations" >/dev/null \
+  || ! curl --fail --silent --show-error "http://127.0.0.1:$PLATFORM_HOST_PORT/exhibitor" >/dev/null \
+  || ! curl --fail --silent --show-error "http://127.0.0.1:$VISITOR_HOST_PORT/booths" >/dev/null \
+  || ! curl --fail --silent --show-error "http://127.0.0.1:$WEBHOOK_HOST_PORT/healthz" >/dev/null; then
+  restore_previous
+  fail "Release origin checks failed"
+fi
 
 printf '%s\n' "$COMMIT" > "$STATE_DIR/current-version"
 printf '%s|%s|%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$COMMIT" "$BACKUP_ID" >> "$STATE_DIR/releases.log"

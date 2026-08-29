@@ -62,7 +62,7 @@ npm start
 | `EXPO_INTERNAL_ORIGIN` | 可选；首次管理员命令访问容器内服务的地址，默认使用本机服务端口。 |
 | `VECTRUST_API_KEY` | 可选；仅在服务端调用 AI 助手的密钥，绝不能放入浏览器、Git 或客户端日志。 |
 | `AI_BASE_URL` | 可选；OpenAI 兼容网关地址，默认 `https://api.openai-next.com/v1`。 |
-| `AI_MODEL` | 可选；默认 `deepseek-v4-flash`，用于低成本中文问答。 |
+| `AI_MODEL` | 可选；默认 `qwen-flash`，用于低成本中文问答。 |
 
 生产环境中的 `APP_ORIGIN` 必须使用 HTTPS。`WEBAUTHN_RP_ID` 必须等于该主机名或其可接受的父域，否则通行密钥验证会拒绝启动。
 
@@ -84,9 +84,9 @@ docker exec -it chencheng-web node scripts/bootstrap-admin.mjs \
 
 ## Docker 构建与运行
 
-`compose.production.yaml` 同时管理主平台、访客端、安全 webhook 接收器和 Cloudflare Named Tunnel。镜像只用经过验证的完整 Git commit SHA 标记，真实密钥、tunnel 凭据和数据目录全部保存在 Git 仓库外。
+`compose.production.yaml` 管理主平台、访客端和安全 webhook 接收器；`compose.tunnel.yaml` 由宿主机系统 Docker 单独管理 Cloudflare Named Tunnel。这样应用发布和回滚不会重启固定域名隧道。镜像只用经过验证的完整 Git commit SHA 标记，真实密钥、tunnel 凭据和数据目录全部保存在 Git 仓库外。
 
-生产默认只监听宿主机回环地址：主平台 `3101`、访客端 `3102`、webhook `3103`。Cloudflare tunnel 容器使用 host network 转发这三个 origin。首次配置、GitHub webhook 自动部署和人工回滚见 [三端生产部署、自动发布与回滚](deploy/ROLLBACK.md)。
+目标 OpenWrt 主机使用 NVMe 上的独立 Docker daemon 保存应用镜像与容器；三个服务和 tunnel 都使用 host network，主平台监听 `3100`、访客端 `3102`、webhook `3103`。首次配置、GitHub webhook 自动部署和人工回滚见 [三端生产部署、自动发布与回滚](deploy/ROLLBACK.md)。
 
 ## 数据备份与回滚
 

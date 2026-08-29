@@ -6,6 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      network: host
       args:
         APP_VERSION: ${APP_VERSION:?APP_VERSION must be a full Git commit SHA}
     container_name: chencheng-platform
@@ -17,11 +18,10 @@ services:
       NODE_ENV: production
       HOST: 0.0.0.0
       HOSTNAME: 0.0.0.0
-      PORT: 3000
+      PORT: ${PLATFORM_HOST_PORT:-3100}
       DATA_DIR: /data
       DATABASE_PATH: /data/expo-service.sqlite
-    ports:
-      - "127.0.0.1:${PLATFORM_HOST_PORT:-3101}:3000"
+    network_mode: host
     volumes:
       - type: bind
         source: ${PLATFORM_DATA_DIR:?PLATFORM_DATA_DIR is required}
@@ -40,6 +40,7 @@ services:
     build:
       context: ./visitor-app
       dockerfile: Dockerfile
+      network: host
       args:
         APP_VERSION: ${APP_VERSION:?APP_VERSION must be a full Git commit SHA}
     container_name: chencheng-visitor
@@ -50,10 +51,9 @@ services:
     environment:
       NODE_ENV: production
       HOSTNAME: 0.0.0.0
-      PORT: 3000
+      PORT: ${VISITOR_HOST_PORT:-3102}
       NEXT_TELEMETRY_DISABLED: 1
-    ports:
-      - "127.0.0.1:${VISITOR_HOST_PORT:-3102}:3000"
+    network_mode: host
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=64m,mode=1777
@@ -68,6 +68,7 @@ services:
     build:
       context: ./deploy/webhook
       dockerfile: Dockerfile
+      network: host
       args:
         APP_VERSION: ${APP_VERSION:?APP_VERSION must be a full Git commit SHA}
     container_name: chencheng-deploy-webhook
@@ -77,10 +78,9 @@ services:
       - ${SECRETS_DIR:?SECRETS_DIR is required}/webhook.env
     environment:
       NODE_ENV: production
-      PORT: 3000
+      PORT: ${WEBHOOK_HOST_PORT:-3103}
       QUEUE_DIR: /queue
-    ports:
-      - "127.0.0.1:${WEBHOOK_HOST_PORT:-3103}:3000"
+    network_mode: host
     volumes:
       - type: bind
         source: ${DEPLOY_QUEUE_DIR:?DEPLOY_QUEUE_DIR is required}
@@ -92,22 +92,3 @@ services:
       - ALL
     security_opt:
       - no-new-privileges:true
-
-  tunnel:
-    image: cloudflare/cloudflared:2026.5.0
-    container_name: chencheng-cloudflared
-    restart: unless-stopped
-    network_mode: host
-    command: ["tunnel", "--no-autoupdate", "--config", "/etc/cloudflared/config.yml", "run"]
-    volumes:
-      - type: bind
-        source: ${CLOUDFLARED_CONFIG_DIR:?CLOUDFLARED_CONFIG_DIR is required}
-        target: /etc/cloudflared
-        read_only: true
-    depends_on:
-      platform:
-        condition: service_healthy
-      visitor:
-        condition: service_healthy
-      webhook:
-        condition: service_healthy
