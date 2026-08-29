@@ -1,0 +1,8 @@
+{
+  "route": "",
+  "name": "工作台",
+  "nav_type": "tab",
+  "order_index": 0,
+  "icon": "layout-dashboard",
+  "summary": "今日关键指标与待接待预约"
+}

@@ -1,0 +1,8 @@
+{
+  "route": "leads",
+  "name": "访客线索",
+  "nav_type": "tab",
+  "order_index": 3,
+  "icon": "users",
+  "summary": "线索分类、来源、热度与跟进"
+}

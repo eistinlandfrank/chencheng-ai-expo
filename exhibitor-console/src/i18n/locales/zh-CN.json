@@ -1,0 +1,203 @@
+{
+  "common": {
+    "signIn": "登录",
+    "signOut": "退出登录",
+    "loading": "加载中…",
+    "on": "开",
+    "off": "关",
+    "close": "关闭",
+    "save": "保存",
+    "cancel": "取消",
+    "edit": "编辑",
+    "delete": "删除",
+    "userId": "用户 ID"
+  },
+  "language": {
+    "label": "语言",
+    "triggerLabel": "语言：{{language}}",
+    "followSystem": "跟随系统",
+    "followSystemWithLanguage": "跟随系统（{{language}}）",
+    "enUS": "English",
+    "zhCN": "中文"
+  },
+  "nav": {
+    "home": "工作台",
+    "booth": "我的展位",
+    "appointments": "预约",
+    "leads": "线索",
+    "audience": "观众",
+    "account": "我的"
+  },
+  "auth": {
+    "required": "登录后管理你的展位",
+    "requiredDesc": "展商登录后可编辑展位、查看谁选了你并回复观众。",
+    "login": "展商登录",
+    "loading": "加载中…"
+  },
+  "account": {
+    "kicker": "ACCOUNT",
+    "title": "我的",
+    "subtitle": "展商账号与展位绑定",
+    "roleExhibitor": "展商",
+    "boundBooth": "已绑定展位",
+    "boothId": "展位编号",
+    "boothStatus": "审核状态",
+    "status": { "draft": "草稿", "pending": "待审核", "approved": "已通过" },
+    "editBooth": "去编辑展位",
+    "signOut": "退出登录"
+  },
+  "app": {
+    "exhibitorTag": "T-E05 · EXHIBITOR",
+    "boothName": "智能教育机器人",
+    "sample": "示例数据 · 演示原型"
+  },
+  "home": {
+    "kicker": "T-E05 · EXHIBITOR",
+    "subtitle": "我的展位经营数据",
+    "metric": {
+      "interest": "收藏数",
+      "itinerary": "加入行程",
+      "reserve": "预约数",
+      "checkin": "打卡数"
+    },
+    "todayNew": "今日新增 {{count}}",
+    "quickEdit": "编辑展位",
+    "quickAudience": "查看名单",
+    "range": { "today": "今日", "week": "本周", "month": "本月" },
+    "headline": "展位浏览",
+    "sourceTitle": "来源分布",
+    "source": { "search": "搜索", "recommend": "推荐" },
+    "trendTitle": "近 7 天新增趋势",
+    "trendRange": "收藏 / 行程 / 预约 / 打卡",
+    "empty": "还没有观众数据，去完善展位吸引更多观众吧"
+  },
+  "booth": {
+    "kicker": "BOOTH",
+    "title": "我的展位",
+    "subtitle": "同步到观众端展位详情",
+    "syncNote": "以下内容保存后会同步到观众端的「展位详情」页。",
+    "previewBadge": "观众端预览",
+    "editBadge": "可编辑",
+    "upload": "上传",
+    "uploading": "上传中…",
+    "replace": "更换",
+    "reupload": "重新上传",
+    "tapToEdit": "点击编辑",
+    "save": "保存展位",
+    "saving": "保存中…",
+    "saved": "已保存，观众端即时同步",
+    "saveFailed": "保存失败，请重试",
+    "uploadFailed": "上传失败，请重试",
+    "emptyHint": "点击填写",
+    "sections": {
+      "media": "展位视频 / 封面",
+      "video": "展位视频",
+      "cover": "封面图",
+      "basic": "名称与类别",
+      "name": "展位名称",
+      "category": "类别",
+      "area": "所在区域",
+      "duration": "推荐参观时长（分钟）",
+      "tags": "关键词标签",
+      "intro": "展位简介",
+      "manager": "负责人信息",
+      "ownerName": "负责人姓名",
+      "ownerRole": "职位",
+      "ownerOrg": "所属公司",
+      "ownerContact": "联络方式"
+    },
+    "category": {
+      "robot": "机器人",
+      "ai": "AI",
+      "chip": "芯片",
+      "hardware": "智能硬件",
+      "software": "软件",
+      "service": "服务"
+    },
+    "placeholder": {
+      "video": "上传展位讲解视频",
+      "cover": "上传封面图"
+    }
+  },
+  "appt": {
+    "kicker": "RESERVE",
+    "title": "预约与接待",
+    "subtitle": "预约了我展位的观众",
+    "count": "共 {{count}} 位预约观众",
+    "party": "预约于 {{time}}",
+    "message": "留言",
+    "messagePlaceholder": "给这位观众留言…",
+    "send": "发送",
+    "sent": "留言已发送",
+    "cancel": "取消",
+    "tabShort": "预约",
+    "empty": "还没有观众预约你的展位"
+  },
+  "leads": {
+    "kicker": "AUDIENCE",
+    "title": "访客名单",
+    "subtitle": "选择了我展位的观众",
+    "filter": {
+      "all": "全部",
+      "interest": "收藏",
+      "itinerary": "加入行程",
+      "reserve": "预约"
+    },
+    "kind": {
+      "interest": "收藏",
+      "itinerary": "行程",
+      "reserve": "预约",
+      "checkin": "打卡"
+    },
+    "anonymous": "观众",
+    "message": "留言",
+    "tabShort": "名单",
+    "empty": "该分类下暂无观众"
+  },
+  "errors": {
+    "notFound": {
+      "code": "404",
+      "title": "页面未找到",
+      "description": "你访问的页面不存在，或已被移动。",
+      "backHome": "返回首页"
+    },
+    "generic": {
+      "title": "出了点问题",
+      "description": "发生了意外错误。你可以重试，或返回首页继续。",
+      "tryAgain": "重试",
+      "backHome": "返回首页"
+    }
+  },
+  "starter": {
+    "badge": "Eazo 应用模板",
+    "title": "用 Eazo 构建你的下一个应用",
+    "subtitle": "你现在拥有干净的基础：认证、数据访问与平台能力已就绪，可直接开发产品功能。",
+    "steps": {
+      "readDocs": {
+        "title": "阅读文档",
+        "desc": "打开 AGENTS.md 与 README.md，了解模板架构与约定。",
+        "code": "AGENTS.md + README.md"
+      },
+      "replacePage": {
+        "title": "替换本页",
+        "desc": "将产品 UI 放到 src/components 下，并保持 page.tsx 为薄入口。",
+        "code": "src/app/page.tsx"
+      },
+      "firstFeature": {
+        "title": "开发第一个功能",
+        "desc": "在 src/app/api 添加接口，并通过 src/lib/api 中的类型化 helper 调用。",
+        "code": "src/app/api/*"
+      },
+      "translations": {
+        "title": "补充翻译",
+        "desc": "在 src/i18n/locales 编辑中英文文案；layout 已接入 LanguageSwitcher 与 I18nProvider。",
+        "code": "src/i18n/locales/"
+      }
+    },
+    "nextCommand": {
+      "title": "下一步命令",
+      "desc": "启动开发服务器，实时迭代你的产品。",
+      "command": "bun dev"
+    }
+  }
+}

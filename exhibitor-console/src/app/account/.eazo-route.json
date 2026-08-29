@@ -1,0 +1,8 @@
+{
+  "route": "account",
+  "name": "我的",
+  "nav_type": "tab",
+  "order_index": 4,
+  "icon": "user",
+  "summary": "展商账号与展位绑定"
+}

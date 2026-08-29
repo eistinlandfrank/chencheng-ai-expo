@@ -1,0 +1,8 @@
+{
+  "route": "booth",
+  "name": "我的展位",
+  "nav_type": "tab",
+  "order_index": 1,
+  "icon": "store",
+  "summary": "展位信息预览与上传编辑"
+}
