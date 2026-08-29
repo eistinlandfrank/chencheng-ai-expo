@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authenticatedWriteAllowed, getRequestAuthSession } from '@/app/auth';
 import { ensureExhibitorAccess } from '@/db/access';
 import { listExhibitorReservations, updateExhibitorReservation, type ReservationRecord } from '@/db/reservations';
+import { publicPortalShowcaseEnabled } from '@/lib/showcase';
 
 async function authorize(request: NextRequest) {
   const session = await getRequestAuthSession(request);
@@ -12,6 +13,7 @@ async function authorize(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   const requestId = crypto.randomUUID();
+  if (publicPortalShowcaseEnabled()) return NextResponse.json({ request_id: requestId, reservations: [], read_only: true });
   const { session, membership } = await authorize(request);
   if (!session) return NextResponse.json({ code: 'UNAUTHENTICATED', message: '请登录后继续', request_id: requestId }, { status: 401 });
   if (!membership?.organizationId || !membership.placeId) return NextResponse.json({ code: 'FORBIDDEN', message: '当前账号没有展位预约权限', request_id: requestId }, { status: 403 });

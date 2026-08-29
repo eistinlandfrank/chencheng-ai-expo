@@ -44,7 +44,7 @@ const nav: Array<{ id: Tab; label: string; icon: typeof LayoutDashboard }> = [
   { id: 'team', label: '团队与设置', icon: Settings },
 ];
 
-export default function ExhibitorPortal({ displayName }: { displayName: string }) {
+export default function ExhibitorPortal({ displayName, readOnly = false }: { displayName: string; readOnly?: boolean }) {
   const [tab, setTab] = useState<Tab>('dashboard');
   const [profileStatus, setProfileStatus] = useState<'draft' | 'review' | 'published'>('draft');
   const [boothTitle, setBoothTitle] = useState('硬件机器人开发区');
@@ -101,6 +101,10 @@ export default function ExhibitorPortal({ displayName }: { displayName: string }
   }
 
   async function saveState(next: ExhibitorState, action: string) {
+    if (readOnly) {
+      notify('公开演示模式仅供查看，数据不会被修改', 'info');
+      return null;
+    }
     try {
       const response = await fetch('/api/v1/exhibitor/state', { method: 'PUT', headers: protectedJsonHeaders(), body: JSON.stringify({ state: next, action }) });
       if (!response.ok) {
@@ -182,7 +186,7 @@ export default function ExhibitorPortal({ displayName }: { displayName: string }
   }
 
   return (
-    <main className="portal-shell">
+    <main className={`portal-shell ${readOnly ? 'showcase-readonly' : ''}`}>
       <aside className="portal-sidebar">
         <Brand href="/exhibitor" />
         <div className="portal-role"><span><Building2 size={18} /></span><div><small>参展商工作台</small><strong>硬件机器人开发区</strong></div></div>
@@ -192,8 +196,9 @@ export default function ExhibitorPortal({ displayName }: { displayName: string }
       </aside>
 
       <section className="portal-main">
-        <header className="portal-topbar"><div className="event-switcher"><small>当前展会</small><strong>千人黑客松 · 8月30日</strong></div><div className="topbar-actions"><div className="account-button"><span>展</span><div><strong>{displayName}</strong><small>展位管理员</small></div></div><LogoutButton compact /></div></header>
+        <header className="portal-topbar"><div className="event-switcher"><small>当前展会</small><strong>千人黑客松 · 8月30日</strong></div><div className="topbar-actions">{readOnly && <span className="status-pill published">公开演示 · 只读</span>}<div className="account-button"><span>{readOnly ? '演' : '展'}</span><div><strong>{displayName}</strong><small>{readOnly ? 'MVP 演示访客' : '展位管理员'}</small></div></div>{!readOnly && <LogoutButton compact />}</div></header>
         <div className="portal-content">
+          {readOnly && <div className="policy-banner showcase-banner"><Eye size={20} /><div><strong>公开 MVP 展示模式</strong><p>全部功能界面均可浏览；个人预约明细保持隐藏，保存、发布和工单操作不会修改数据。</p></div></div>}
           {tab === 'dashboard' && <ExhibitorDashboard onTab={setTab} onTicket={() => setTicketOpen(true)} profileStatus={profileStatus} receptionStatus={receptionStatus} activityStatus={activityStatus} activityTitle={activityTitle} activityStart={activityStart} activityDuration={activityDuration} ticketCount={tickets.length} />}
           {tab === 'booth' && (
             <section>
@@ -210,7 +215,7 @@ export default function ExhibitorPortal({ displayName }: { displayName: string }
               </div>
             </section>
           )}
-          {tab === 'visitors' && <ReservationsView enabled={reservationsEnabled} activityConfigured={Boolean(activityTitle && activityStart && ['confirmed', 'delayed'].includes(activityStatus))} onGoActivity={() => setTab('activities')} onToggle={(enabled) => updateSetting('reservationsEnabled', enabled, 'reservation_availability_updated', enabled ? '活动预约已开放' : '活动预约已暂停')} />}
+          {tab === 'visitors' && <ReservationsView enabled={reservationsEnabled} activityConfigured={Boolean(activityTitle && activityStart && ['confirmed', 'delayed'].includes(activityStatus))} onGoActivity={() => setTab('activities')} onToggle={(enabled) => updateSetting('reservationsEnabled', enabled, 'reservation_availability_updated', enabled ? '活动预约已开放' : '活动预约已暂停')} readOnly={readOnly} />}
           {tab === 'activities' && <ActivitiesView status={activityStatus} title={activityTitle} start={activityStart} duration={activityDuration} capacity={activityCapacity} language={activityLanguage} onTitle={(value) => { setActivityTitle(value); setActivityStatus('draft'); }} onStart={(value) => { setActivityStart(value); setActivityStatus('draft'); }} onDuration={(value) => { setActivityDuration(value); setActivityStatus('draft'); }} onCapacity={(value) => { setActivityCapacity(value); setActivityStatus('draft'); }} onLanguage={(value) => { setActivityLanguage(value); setActivityStatus('draft'); }} onSave={saveActivity} onStatus={(status) => updateSetting('activityStatus', status, 'program_session_status_updated', status === 'confirmed' ? '活动状态已确认' : status === 'delayed' ? '活动已标记延迟' : '活动已取消')} />}
           {tab === 'tickets' && <TicketsView tickets={tickets} onCreate={() => setTicketOpen(true)} />}
           {tab === 'analytics' && <ExhibitorAnalyticsView />}
@@ -295,7 +300,7 @@ const reservationStatusLabels: Record<BoothReservation['status'], string> = {
   cancelled: '已取消',
 };
 
-function ReservationsView({ enabled, activityConfigured, onGoActivity, onToggle }: { enabled: boolean; activityConfigured: boolean; onGoActivity: () => void; onToggle: (enabled: boolean) => Promise<void> | void }) {
+function ReservationsView({ enabled, activityConfigured, onGoActivity, onToggle, readOnly }: { enabled: boolean; activityConfigured: boolean; onGoActivity: () => void; onToggle: (enabled: boolean) => Promise<void> | void; readOnly: boolean }) {
   const [reservations, setReservations] = useState<BoothReservation[]>([]);
   const [filter, setFilter] = useState<'all' | BoothReservation['status']>('all');
   const [query, setQuery] = useState('');
@@ -323,6 +328,10 @@ function ReservationsView({ enabled, activityConfigured, onGoActivity, onToggle 
   }, [loadReservations]);
 
   async function updateReservation(id: string, status: BoothReservation['status']) {
+    if (readOnly) {
+      setMessage('公开演示模式不能修改预约状态');
+      return;
+    }
     setUpdatingId(id);
     setMessage('');
     try {
@@ -347,7 +356,7 @@ function ReservationsView({ enabled, activityConfigured, onGoActivity, onToggle 
   const confirmedCount = reservations.filter((item) => item.status === 'confirmed').length;
   const completedCount = reservations.filter((item) => item.status === 'completed').length;
 
-  return <section><PageHeading eyebrow="活动接待" title="预约与访客" description="确认活动预约并跟进到场状态。" action={<div className="heading-actions"><button type="button" onClick={onGoActivity}><CalendarDays size={17} />活动安排</button><button className={enabled ? '' : 'primary'} type="button" disabled={!activityConfigured && !enabled} onClick={() => void onToggle(!enabled)}>{enabled ? '暂停预约' : '开放预约'}</button></div>} />{!activityConfigured && <div className="policy-banner reservation-policy"><CalendarDays size={20} /><div><strong>请先确认活动安排</strong><p>活动名称与开始时间确认后，才可向观众开放预约。</p></div><button type="button" onClick={onGoActivity}>前往设置</button></div>}<div className="metric-grid reservation-metrics"><article><div><span>全部预约</span><small>当前活动记录</small></div><strong>{reservations.length}</strong><Users size={20} /></article><article><div><span>待确认</span><small>需要处理</small></div><strong>{pendingCount}</strong><Clock3 size={20} /></article><article><div><span>已确认</span><small>等待到场</small></div><strong>{confirmedCount}</strong><TicketCheck size={20} /></article><article><div><span>已完成</span><small>已完成接待</small></div><strong>{completedCount}</strong><CheckCircle2 size={20} /></article></div><section className="panel-card reservation-management"><div className="table-toolbar"><div className="filter-tabs" aria-label="预约状态筛选">{([['all', '全部'], ['pending', '待确认'], ['confirmed', '已确认'], ['arrived', '已到达'], ['no_show', '未到场'], ['completed', '已完成']] as const).map(([value, label]) => <button className={filter === value ? 'active' : ''} key={value} type="button" onClick={() => setFilter(value)}>{label}</button>)}</div><label><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索姓名或账号邮箱" aria-label="搜索预约" /></label></div>{message && <p className="form-message">{message}</p>}{loading ? <div className="table-empty compact"><Users size={29} /><h2>正在加载预约</h2></div> : visibleReservations.length ? <div className="booth-reservation-list">{visibleReservations.map((item) => <article key={item.id}><span className="visitor-avatar">{(item.display_name || '访').slice(0, 1)}</span><div><strong>{item.display_name || '已授权访客'}</strong><p>{item.email_snapshot?.trim() || '联系方式已脱敏'}</p><small>{item.activity_title} · {new Date(item.slot_start_at).toLocaleString('zh-CN', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</small>{item.arrival_time && <small>预计 {item.arrival_time} 到达</small>}{item.attendee_note && <small>接待备注：{item.attendee_note}</small>}</div><span className={`status-pill ${item.status === 'confirmed' || item.status === 'arrived' || item.status === 'completed' ? 'published' : item.status === 'cancelled' ? 'cancelled' : 'review'}`}>{reservationStatusLabels[item.status]}</span><div className="reservation-row-actions">{item.status === 'pending' && <button type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'confirmed')}>确认</button>}{item.status === 'confirmed' && <><button type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'arrived')}>到达</button><button type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'no_show')}>未到场</button></>}{item.status === 'arrived' && <button type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'completed')}>完成</button>}{['pending', 'confirmed'].includes(item.status) && <button className="danger-outline" type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'cancelled')}>取消</button>}</div></article>)}</div> : <div className="table-empty compact"><Users size={29} /><h2>{reservations.length ? '没有符合条件的预约' : '暂无预约记录'}</h2><p>{reservations.length ? '调整筛选条件或搜索内容。' : enabled ? '观众提交预约后将显示在这里。' : '开放预约后，观众可在活动详情中提交。'}</p></div>}</section><div className="privacy-note reservation-privacy"><ShieldCheck size={18} />姓名与账号邮箱仅用于本场活动确认与现场接待，活动结束 7 天后自动脱敏。</div></section>;
+  return <section><PageHeading eyebrow="活动接待" title="预约与访客" description={readOnly ? '公开展示不读取姓名、邮箱或接待备注。' : '确认活动预约并跟进到场状态。'} action={<div className="heading-actions"><button type="button" onClick={onGoActivity}><CalendarDays size={17} />活动安排</button><button className={enabled ? '' : 'primary'} type="button" disabled={!activityConfigured && !enabled} onClick={() => void onToggle(!enabled)}>{enabled ? '暂停预约' : '开放预约'}</button></div>} />{!activityConfigured && <div className="policy-banner reservation-policy"><CalendarDays size={20} /><div><strong>请先确认活动安排</strong><p>活动名称与开始时间确认后，才可向观众开放预约。</p></div><button type="button" onClick={onGoActivity}>前往设置</button></div>}<div className="metric-grid reservation-metrics"><article><div><span>全部预约</span><small>{readOnly ? '公开展示已隐藏' : '当前活动记录'}</small></div><strong>{reservations.length}</strong><Users size={20} /></article><article><div><span>待确认</span><small>{readOnly ? '不读取个人记录' : '需要处理'}</small></div><strong>{pendingCount}</strong><Clock3 size={20} /></article><article><div><span>已确认</span><small>{readOnly ? '不读取个人记录' : '等待到场'}</small></div><strong>{confirmedCount}</strong><TicketCheck size={20} /></article><article><div><span>已完成</span><small>{readOnly ? '不读取个人记录' : '已完成接待'}</small></div><strong>{completedCount}</strong><CheckCircle2 size={20} /></article></div><section className="panel-card reservation-management"><div className="table-toolbar"><div className="filter-tabs" aria-label="预约状态筛选">{([['all', '全部'], ['pending', '待确认'], ['confirmed', '已确认'], ['arrived', '已到达'], ['no_show', '未到场'], ['completed', '已完成']] as const).map(([value, label]) => <button className={filter === value ? 'active' : ''} key={value} type="button" onClick={() => setFilter(value)}>{label}</button>)}</div><label><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索姓名或账号邮箱" aria-label="搜索预约" /></label></div>{message && <p className="form-message">{message}</p>}{loading ? <div className="table-empty compact"><Users size={29} /><h2>正在加载预约</h2></div> : visibleReservations.length ? <div className="booth-reservation-list">{visibleReservations.map((item) => <article key={item.id}><span className="visitor-avatar">{(item.display_name || '访').slice(0, 1)}</span><div><strong>{item.display_name || '已授权访客'}</strong><p>{item.email_snapshot?.trim() || '联系方式已脱敏'}</p><small>{item.activity_title} · {new Date(item.slot_start_at).toLocaleString('zh-CN', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</small>{item.arrival_time && <small>预计 {item.arrival_time} 到达</small>}{item.attendee_note && <small>接待备注：{item.attendee_note}</small>}</div><span className={`status-pill ${item.status === 'confirmed' || item.status === 'arrived' || item.status === 'completed' ? 'published' : item.status === 'cancelled' ? 'cancelled' : 'review'}`}>{reservationStatusLabels[item.status]}</span><div className="reservation-row-actions">{item.status === 'pending' && <button type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'confirmed')}>确认</button>}{item.status === 'confirmed' && <><button type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'arrived')}>到达</button><button type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'no_show')}>未到场</button></>}{item.status === 'arrived' && <button type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'completed')}>完成</button>}{['pending', 'confirmed'].includes(item.status) && <button className="danger-outline" type="button" disabled={updatingId === item.id} onClick={() => void updateReservation(item.id, 'cancelled')}>取消</button>}</div></article>)}</div> : <div className="table-empty compact"><Users size={29} /><h2>{readOnly ? '个人预约明细已隐藏' : reservations.length ? '没有符合条件的预约' : '暂无预约记录'}</h2><p>{readOnly ? '登录后的展商账号才能查看和处理个人预约。' : reservations.length ? '调整筛选条件或搜索内容。' : enabled ? '观众提交预约后将显示在这里。' : '开放预约后，观众可在活动详情中提交。'}</p></div>}</section><div className="privacy-note reservation-privacy"><ShieldCheck size={18} />{readOnly ? '公开展示仅提供聚合分析，姓名、邮箱和接待备注不会发送到浏览器。' : '姓名与账号邮箱仅用于本场活动确认与现场接待，活动结束 7 天后自动脱敏。'}</div></section>;
 }
 
 function ActivitiesView({ status, title, start, duration, capacity, language, onTitle, onStart, onDuration, onCapacity, onLanguage, onSave, onStatus }: { status: ExhibitorState['activityStatus']; title: string; start: string; duration: number; capacity: number; language: string; onTitle: (value: string) => void; onStart: (value: string) => void; onDuration: (value: number) => void; onCapacity: (value: number) => void; onLanguage: (value: string) => void; onSave: (event: FormEvent<HTMLFormElement>) => void; onStatus: (status: ExhibitorState['activityStatus']) => void }) {

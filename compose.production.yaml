@@ -53,6 +53,7 @@ services:
       PORT: ${PLATFORM_HOST_PORT:-3101}
       DATA_DIR: /data
       DATABASE_PATH: /data/expo-service.sqlite
+      PUBLIC_PORTAL_SHOWCASE: ${PUBLIC_PORTAL_SHOWCASE:-true}
     network_mode: host
     volumes:
       - type: bind

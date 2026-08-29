@@ -10,6 +10,7 @@ import {
   ChevronRight,
   CircleAlert,
   ClipboardCheck,
+  Eye,
   GitBranch,
   Layers3,
   LayoutDashboard,
@@ -58,7 +59,7 @@ const opsNav: Array<{ id: OpsTab; label: string; icon: typeof LayoutDashboard }>
   { id: 'settings', label: '系统设置', icon: Settings },
 ];
 
-export default function OperationsPortal({ displayName }: { displayName: string }) {
+export default function OperationsPortal({ displayName, readOnly = false }: { displayName: string; readOnly?: boolean }) {
   const [tab, setTab] = useState<OpsTab>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [closedGroups, setClosedGroups] = useState<ClosedGroup[]>([]);
@@ -113,6 +114,10 @@ export default function OperationsPortal({ displayName }: { displayName: string 
   }
 
   async function saveState(next: OpsState, action: string, verification?: MapFieldChecks) {
+    if (readOnly) {
+      notify('公开演示模式仅供查看，数据不会被修改', 'info');
+      return null;
+    }
     try {
         const response = await fetch('/api/v1/ops/state', { method: 'PUT', headers: protectedJsonHeaders(), body: JSON.stringify({ state: next, action, verification }) });
       if (!response.ok) {
@@ -226,7 +231,7 @@ export default function OperationsPortal({ displayName }: { displayName: string 
   }
 
   return (
-    <main className={`portal-shell ops-shell ${sidebarOpen ? '' : 'sidebar-collapsed'}`}>
+    <main className={`portal-shell ops-shell ${readOnly ? 'showcase-readonly' : ''} ${sidebarOpen ? '' : 'sidebar-collapsed'}`}>
       <aside className="portal-sidebar ops-sidebar">
         <div className="sidebar-logo-row"><Brand href="/operations" subtitle="展会智能服务管理平台" /><button type="button" onClick={() => setSidebarOpen(false)} aria-label="收起侧栏"><PanelLeftClose size={18} /></button></div>
         <div className="portal-role"><span><ShieldCheck size={18} /></span><div><small>首都会展集团</small><strong>{activeVenue.name} · {activeVenue.hall}</strong></div></div>
@@ -236,9 +241,10 @@ export default function OperationsPortal({ displayName }: { displayName: string 
       </aside>
 
       <section className="portal-main">
-          <header className="portal-topbar ops-topbar"><div className="ops-title"><button className="menu-toggle" type="button" onClick={() => setSidebarOpen((value) => !value)} aria-label="切换侧栏"><Menu size={20} /></button><div><small>首都会展集团</small><strong>{opsNav.find((item) => item.id === tab)?.label}</strong></div></div><label className="event-switcher"><small>当前展会</small><select value={venueId} onChange={(event) => setVenueId(event.target.value)} aria-label="切换场馆与展会"><option value={showcaseVenues[0].id}>{showcaseEvent.shortName} · {showcaseVenues[0].hall}</option>{showcaseVenues.slice(1).map((item) => <option key={item.id} value={item.id}>{item.name} · {item.hall}</option>)}</select></label><div className="topbar-actions"><button className="notify-bell" type="button" onClick={() => setTab('notices')} aria-label="通知"><Bell size={18} /><em>{notices.length}</em></button><div className="account-button"><span>张</span><div><strong>{displayName}</strong><small>主办方管理员</small></div></div><LogoutButton compact /></div></header>
+          <header className="portal-topbar ops-topbar"><div className="ops-title"><button className="menu-toggle" type="button" onClick={() => setSidebarOpen((value) => !value)} aria-label="切换侧栏"><Menu size={20} /></button><div><small>首都会展集团</small><strong>{opsNav.find((item) => item.id === tab)?.label}</strong></div></div><label className="event-switcher"><small>当前展会</small><select value={venueId} onChange={(event) => setVenueId(event.target.value)} aria-label="切换场馆与展会"><option value={showcaseVenues[0].id}>{showcaseEvent.shortName} · {showcaseVenues[0].hall}</option>{showcaseVenues.slice(1).map((item) => <option key={item.id} value={item.id}>{item.name} · {item.hall}</option>)}</select></label><div className="topbar-actions">{readOnly && <span className="status-pill published">公开演示 · 只读</span>}<button className="notify-bell" type="button" onClick={() => setTab('notices')} aria-label="通知"><Bell size={18} /><em>{notices.length}</em></button><div className="account-button"><span>{readOnly ? '演' : '张'}</span><div><strong>{displayName}</strong><small>{readOnly ? 'MVP 演示访客' : '主办方管理员'}</small></div></div>{!readOnly && <LogoutButton compact />}</div></header>
 
         <div className="portal-content ops-content">
+          {readOnly && <div className="policy-banner showcase-banner"><Eye size={20} /><div><strong>公开 MVP 展示模式</strong><p>全部功能界面均可浏览；成员、审计和个人预约信息保持隐藏，保存与发布操作不会修改数据。</p></div></div>}
           {!activeVenue.active && <div className="policy-banner"><Building2 size={20} /><div><strong>{activeVenue.name} · {activeVenue.hall}</strong><p>该场馆为集团多馆切换示意，详细态势数据仍以国会二期 4 号展厅示范馆为准。</p></div></div>}
           {tab === 'overview' && <OverviewDashboard closedGroups={closedGroups} notices={notices} tickets={tickets} onTab={(next) => setTab(next)} onSelectBooth={() => setTab('catalog')} />}
           {tab === 'map' && <><MapRoutingPanel closedGroups={closedGroups} onCorridor={() => setCorridorOpen(true)} /><MapManagement closedGroups={closedGroups} reviewState={mapReviewState} verifications={verifications} canReview={canReview} reviewCount={new Set(mapReviews.filter((review) => review.actorId !== submittedBy && Object.values(review.checks).every(Boolean)).map((review) => review.actorId)).size} graphValidation={graphValidation} onReview={submitMapReview} onToggleVerification={toggleVerification} onPublish={publishMap} notify={notify} /></>}
@@ -246,8 +252,8 @@ export default function OperationsPortal({ displayName }: { displayName: string 
           {tab === 'notices' && <NoticesView notices={notices} onCreate={() => setNoticeOpen(true)} />}
           {tab === 'tickets' && <TicketDispatch tickets={tickets} onCreate={() => setTicketOpen(true)} onAdvance={advanceTicket} />}
           {tab === 'analytics' && <OperationsAnalyticsPanel />}
-          {tab === 'accounts' && <AccountsView />}
-          {tab === 'settings' && <SystemSettingsView mapStatus={mapReviewState} />}
+          {tab === 'accounts' && <AccountsView readOnly={readOnly} />}
+          {tab === 'settings' && <SystemSettingsView mapStatus={mapReviewState} readOnly={readOnly} />}
           <footer className="ops-footer"><span>Expo Service AI 管理平台 v1.0.0</span><span>© 首都会展集团 · AITEX 2026 示范馆</span></footer>
         </div>
       </section>
@@ -349,32 +355,38 @@ const auditActionLabels: Record<string, string> = {
   operations_member_joined: '场馆管理员已接受邀请',
 };
 
-function SystemSettingsView({ mapStatus }: { mapStatus: OpsState['mapStatus'] }) {
+function SystemSettingsView({ mapStatus, readOnly }: { mapStatus: OpsState['mapStatus']; readOnly: boolean }) {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(readOnly ? '公开演示模式不展示真实操作记录' : '');
   useEffect(() => {
+    if (readOnly) return;
     let active = true;
     void fetch('/api/v1/ops/audit', { cache: 'no-store' })
       .then((response) => response.ok ? response.json() as Promise<{ entries: AuditEntry[] }> : Promise.reject())
       .then((payload) => { if (active) setEntries(payload.entries); })
       .catch(() => { if (active) setMessage('操作记录加载失败，请刷新重试'); });
     return () => { active = false; };
-  }, []);
+  }, [readOnly]);
   return <section><PageHeading eyebrow="运行规则与操作记录" title="系统设置" description="查看当前活动的发布门禁、隐私规则和最近操作。" /><div className="settings-grid system-rule-grid"><section className="panel-card settings-section"><ShieldCheck size={24} /><h2>地图发布</h2><p>必须由两名不同管理员完成五项现场复核。</p><span className={`status-pill ${mapStatus === 'published' ? 'published' : 'review'}`}>{mapStatus === 'published' ? '导航已开放' : '等待完整复核'}</span></section><section className="panel-card settings-section"><Users size={24} /><h2>观众隐私</h2><p>核心浏览保持匿名；预约时单独请求最小必要授权。</p><span className="status-pill published">最小化采集</span></section><section className="panel-card settings-section"><BarChart3 size={24} /><h2>分析保护</h2><p>分析使用匿名聚合数据，小样本不展示具体数值。</p><span className="status-pill published">聚合展示</span></section></div><section className="panel-card audit-panel"><div className="card-head"><div><h2>最近操作</h2><p>内容、地图、通知与工单的变更记录</p></div></div>{message ? <p className="form-message">{message}</p> : entries.length ? <div className="audit-list">{entries.map((entry) => <article key={entry.id}><span><ClipboardCheck size={18} /></span><div><strong>{auditActionLabels[entry.action] ?? '记录了一项运营变更'}</strong><p>{entry.changed_fields.length ? entry.changed_fields.map((field) => auditFieldLabels[field] ?? '相关信息').join('、') : '记录已保存'} · {entry.actor_label} · {new Date(entry.created_at).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}</p></div></article>)}</div> : <div className="table-empty compact"><ClipboardCheck size={29} /><h2>暂无操作记录</h2><p>首次保存内容或现场状态后会显示在这里。</p></div>}</section></section>;
 }
 
-function AccountsView() {
+function AccountsView({ readOnly }: { readOnly: boolean }) {
   const [members, setMembers] = useState<Array<{ user_id: string; email_snapshot: string; display_name: string; role: string }>>(demoMembers);
   const [pending, setPending] = useState<Array<{ id: string; email_normalized: string; role: string }>>(demoPendingInvites);
   const [message, setMessage] = useState('');
   const [activationCode, setActivationCode] = useState('');
   useEffect(() => {
+    if (readOnly) return;
     let active = true;
     void fetch('/api/v1/ops/members', { cache: 'no-store' }).then((response) => response.ok ? response.json() as Promise<{ members: typeof members; pending: typeof pending }> : Promise.reject()).then((payload) => { if (active) { setMembers(payload.members.length ? payload.members : demoMembers); setPending(payload.pending.length ? payload.pending : demoPendingInvites); } }).catch(() => { if (active) { setMembers(demoMembers); setPending(demoPendingInvites); } });
     return () => { active = false; };
-  }, []);
+  }, [readOnly]);
   async function invite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (readOnly) {
+      setMessage('公开演示模式不能创建成员邀请');
+      return;
+    }
     const form = new FormData(event.currentTarget);
     const email = String(form.get('email') ?? '');
     const role = String(form.get('role') ?? 'venue_admin');
@@ -388,5 +400,5 @@ function AccountsView() {
     event.currentTarget.reset();
   }
   const roleLabels: Record<string, string> = { venue_admin: '场馆管理员', organizer_admin: '主办方管理员', map_editor: '地图编辑', map_reviewer: '地图复核', dispatcher: '工单调度', notice_publisher: '通知发布', audit_viewer: '审计查看' };
-  return <section><PageHeading eyebrow="最小权限与审计" title="账号权限" description="场馆管理员可独立复核地图；同一账号不能替代第二位复核人。" /><div className="content-grid two-one"><section className="panel-card"><div className="card-head"><div><h2>运营成员</h2><p>{members.length} 名已绑定 · {pending.length} 个待接受邀请</p></div></div>{members.map((member) => <div className="member-row" key={`${member.user_id}-${member.role}`}><span className="member-avatar">运</span><div><strong>{member.display_name}</strong><p>{member.email_snapshot} · {roleLabels[member.role] ?? '运营成员'}</p></div><span className="status-pill published">已启用</span></div>)}{pending.map((invite) => <div className="member-row" key={invite.id}><span className="member-avatar">待</span><div><strong>{invite.email_normalized}</strong><p>{roleLabels[invite.role] ?? '运营成员'} · 等待激活</p></div><span className="status-pill review">待激活</span></div>)}</section><aside className="panel-card permission-card"><ShieldCheck size={25} /><h2>邀请运营成员</h2><form className="invite-form" onSubmit={invite}><label><span>账号邮箱</span><input name="email" type="email" required placeholder="name@example.com" /></label><label><span>成员角色</span><select name="role" defaultValue="map_reviewer"><option value="venue_admin">场馆管理员</option><option value="organizer_admin">主办方管理员</option><option value="map_editor">地图编辑</option><option value="map_reviewer">地图复核</option><option value="dispatcher">工单调度</option><option value="notice_publisher">通知发布</option><option value="audit_viewer">审计查看</option></select></label><button className="primary-wide" type="submit"><Plus size={17} />创建邀请</button></form>{message && <p className="form-message">{message}</p>}{activationCode && <div className="approval-note"><ShieldCheck size={18} /><span><strong>一次性激活码</strong><br />{activationCode}</span></div>}</aside></div></section>;
+  return <section><PageHeading eyebrow="最小权限与审计" title="账号权限" description="场馆管理员可独立复核地图；同一账号不能替代第二位复核人。" /><div className="content-grid two-one"><section className="panel-card"><div className="card-head"><div><h2>{readOnly ? '演示成员' : '运营成员'}</h2><p>{readOnly ? '以下为虚构的权限结构示例' : `${members.length} 名已绑定 · ${pending.length} 个待接受邀请`}</p></div></div>{members.map((member) => <div className="member-row" key={`${member.user_id}-${member.role}`}><span className="member-avatar">运</span><div><strong>{member.display_name}</strong><p>{member.email_snapshot} · {roleLabels[member.role] ?? '运营成员'}</p></div><span className="status-pill published">已启用</span></div>)}{pending.map((invite) => <div className="member-row" key={invite.id}><span className="member-avatar">待</span><div><strong>{invite.email_normalized}</strong><p>{roleLabels[invite.role] ?? '运营成员'} · 等待激活</p></div><span className="status-pill review">待激活</span></div>)}</section><aside className="panel-card permission-card"><ShieldCheck size={25} /><h2>{readOnly ? '隐私保护已启用' : '邀请运营成员'}</h2>{readOnly ? <><p>公开展示不会读取真实成员邮箱，也不能创建邀请或修改角色。</p><div className="approval-note"><ShieldCheck size={18} />正式登录后才可执行账号管理操作。</div></> : <form className="invite-form" onSubmit={invite}><label><span>账号邮箱</span><input name="email" type="email" required placeholder="name@example.com" /></label><label><span>成员角色</span><select name="role" defaultValue="map_reviewer"><option value="venue_admin">场馆管理员</option><option value="organizer_admin">主办方管理员</option><option value="map_editor">地图编辑</option><option value="map_reviewer">地图复核</option><option value="dispatcher">工单调度</option><option value="notice_publisher">通知发布</option><option value="audit_viewer">审计查看</option></select></label><button className="primary-wide" type="submit"><Plus size={17} />创建邀请</button></form>}{message && <p className="form-message">{message}</p>}{activationCode && <div className="approval-note"><ShieldCheck size={18} /><span><strong>一次性激活码</strong><br />{activationCode}</span></div>}</aside></div></section>;
 }

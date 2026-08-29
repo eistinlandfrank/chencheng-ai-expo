@@ -5,6 +5,7 @@ import { syncReservationsForActivity } from '@/db/reservations';
 import { readState, StateConflictError, writeState } from '@/db/state';
 import { defaultExhibitorState, defaultOpsState, type ExhibitorState, type ExhibitorTicket, type OpsTicket } from '@/lib/state-types';
 import { venue } from '@/lib/venue';
+import { publicPortalShowcaseEnabled } from '@/lib/showcase';
 
 const tenantId = 'tenant-thousand-hackathon';
 
@@ -47,13 +48,19 @@ function normalizeState(input: unknown, current: ExhibitorState): ExhibitorState
 
 export async function GET(request: NextRequest) {
   const requestId = crypto.randomUUID();
+  if (publicPortalShowcaseEnabled()) {
+    const organizationId = 'org-hardware-robot';
+    const placeId = 'robot-dev';
+    const state = await readState(`exhibitor:${venue.eventId}:${organizationId}:${placeId}`, defaultExhibitorState);
+    return NextResponse.json({ request_id: requestId, ...state, updatedBy: '', value: { ...state.value, tickets: [] }, read_only: true });
+  }
   const session = await getRequestAuthSession(request);
   if (!session) return NextResponse.json({ code: 'UNAUTHENTICATED', message: '请登录后继续', request_id: requestId, details: null }, { status: 401 });
   const membership = await ensureExhibitorAccess(session.user);
   if (!membership?.organizationId || !membership.placeId) return NextResponse.json({ code: 'FORBIDDEN', message: '当前账号尚未绑定展位', request_id: requestId, details: null }, { status: 403 });
   const state = await readState(`exhibitor:${venue.eventId}:${membership.organizationId}:${membership.placeId}`, defaultExhibitorState);
   const ops = await readState(`ops:${venue.eventId}`, defaultOpsState);
-  return NextResponse.json({ request_id: requestId, ...state, value: { ...state.value, tickets: exhibitorTicketsFromOps(ops.value.tickets, membership.organizationId, membership.placeId) } });
+  return NextResponse.json({ request_id: requestId, ...state, value: { ...state.value, tickets: exhibitorTicketsFromOps(ops.value.tickets, membership.organizationId, membership.placeId) }, read_only: false });
 }
 
 export async function PUT(request: NextRequest) {

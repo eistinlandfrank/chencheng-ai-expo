@@ -11,6 +11,7 @@ import {
   type OpsState,
 } from '@/lib/state-types';
 import { places, validateVenueGraph, venue } from '@/lib/venue';
+import { publicPortalShowcaseEnabled } from '@/lib/showcase';
 
 const tenantId = 'tenant-thousand-hackathon';
 const stateKey = `ops:${venue.eventId}`;
@@ -75,13 +76,33 @@ function currentReview(state: OpsState, userId: string) {
 export async function GET(request: NextRequest) {
   const requestId = crypto.randomUUID();
   const session = await getRequestAuthSession(request);
-  if (!session) return error(requestId, 'UNAUTHENTICATED', '请登录后继续', 401);
-  const user = session.user;
-  if (!await ensureOperationsAccess(user, 'ops.read')) return error(requestId, 'FORBIDDEN_SCOPE', '当前账号没有场馆运营权限', 403);
+  const showcase = publicPortalShowcaseEnabled();
+  if (!showcase && !session) return error(requestId, 'UNAUTHENTICATED', '请登录后继续', 401);
+  if (!showcase && session && !await ensureOperationsAccess(session.user, 'ops.read')) return error(requestId, 'FORBIDDEN_SCOPE', '当前账号没有场馆运营权限', 403);
   const state = await readState(stateKey, defaultOpsState);
   const exhibitor = await readState(`exhibitor:${venue.eventId}:org-hardware-robot:robot-dev`, defaultExhibitorState);
   const value = state.value.reviewedMapVersion === venue.mapVersion ? state.value : { ...state.value, mapStatus: 'draft' as const, reviewedMapVersion: venue.mapVersion, submittedBy: '', mapReviews: [] };
-  return NextResponse.json({ request_id: requestId, ...state, value, current_review: currentReview(value, user.userId), can_review: value.submittedBy !== user.userId, graph_validation: validateVenueGraph(), content_review: { profile_status: exhibitor.value.profileStatus } });
+  if (showcase) {
+    const publicValue: OpsState = {
+      ...value,
+      submittedBy: value.submittedBy ? 'showcase-submitter' : '',
+      mapReviews: value.mapReviews.map((review, index) => ({ ...review, actorId: `showcase-reviewer-${index + 1}`, actorLabel: '现场复核员' })),
+      tickets: value.tickets.map((ticket) => ({
+        id: ticket.id,
+        category: ticket.category,
+        location: ticket.location,
+        priority: ticket.priority,
+        status: ticket.status,
+        assignee: ticket.assignee === '未分派' ? ticket.assignee : '现场服务组',
+        description: ticket.description,
+        source: ticket.source,
+        createdAt: ticket.createdAt,
+      })),
+    };
+    return NextResponse.json({ request_id: requestId, ...state, updatedBy: '', value: publicValue, current_review: emptyMapFieldChecks, can_review: false, read_only: true, graph_validation: validateVenueGraph(), content_review: { profile_status: exhibitor.value.profileStatus } });
+  }
+  const user = session!.user;
+  return NextResponse.json({ request_id: requestId, ...state, value, current_review: currentReview(value, user.userId), can_review: value.submittedBy !== user.userId, read_only: false, graph_validation: validateVenueGraph(), content_review: { profile_status: exhibitor.value.profileStatus } });
 }
 
 export async function PUT(request: NextRequest) {

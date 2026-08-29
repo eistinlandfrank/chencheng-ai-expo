@@ -1,11 +1,15 @@
 import OperationsClient from './OperationsClient';
 import { requireUser } from '@/app/auth';
 import { ensureOperationsAccess } from '@/db/access';
+import { publicPortalShowcaseEnabled } from '@/lib/showcase';
 import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
 export default async function OperationsPage() {
+  if (publicPortalShowcaseEnabled()) {
+    return <OperationsClient displayName="公开演示" readOnly />;
+  }
   if (process.env.NODE_ENV === 'development') {
     return <OperationsClient displayName="本地运营账号" />;
   }
