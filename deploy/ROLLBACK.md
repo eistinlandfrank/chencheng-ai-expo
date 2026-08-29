@@ -4,9 +4,12 @@
 
 | 入口 | Origin | 用途 |
 | --- | --- | --- |
-| 访客域名 | `127.0.0.1:3102` | 新观展页面；旧观展首页不再发布 |
+| 访客域名 | `127.0.0.1:3100` | 新观展页面；旧观展首页不再发布 |
 | 工作台域名 | `127.0.0.1:3100` | `/exhibitor` 展商端、`/operations` 运营端 |
-| 部署域名 | `127.0.0.1:3103` | 仅接收 `/webhooks/github` |
+| 部署域名 | `127.0.0.1:3100` | 仅接收 `/webhooks/github` |
+
+只有网关监听对外端口 `3100`。主平台 `3101`、访客端 `3102`、webhook `3103` 只监听
+`127.0.0.1`，由网关根据 hostname 分流，因此静态资源和鉴权 Cookie 不会互相冲突。
 
 Cloudflare 使用 Named Tunnel 和账户内 DNS 记录。不要把 Quick Tunnel 的随机
 `trycloudflare.com` 地址当作生产域名。
@@ -57,14 +60,15 @@ docker compose -f source/compose.tunnel.yaml up -d tunnel
 export DOCKER_HOST="$APP_DOCKER_HOST"
 export APP_VERSION="$(git rev-parse HEAD)"
 export DEPLOY_QUEUE_DIR SECRETS_DIR PLATFORM_DATA_DIR
-export PLATFORM_HOST_PORT VISITOR_HOST_PORT WEBHOOK_HOST_PORT
+export GATEWAY_HOST_PORT PLATFORM_HOST_PORT VISITOR_HOST_PORT WEBHOOK_HOST_PORT
+export VISITOR_HOSTNAME STAFF_HOSTNAME DEPLOY_HOSTNAME
 
 docker compose -f compose.production.yaml config --quiet
-docker compose -f compose.production.yaml build platform visitor webhook
-docker compose -f compose.production.yaml up -d platform visitor webhook
+docker compose -f compose.production.yaml build gateway platform visitor webhook
+docker compose -f compose.production.yaml up -d gateway platform visitor webhook
 ```
 
-确认 `chencheng-platform`、`chencheng-visitor`、`chencheng-deploy-webhook` 健康，并从公网
+确认 `chencheng-gateway`、`chencheng-platform`、`chencheng-visitor`、`chencheng-deploy-webhook` 健康，并从公网
 分别检查访客首页、`/exhibitor`、`/operations`。首次管理员仍通过服务器端
 `scripts/bootstrap-admin.mjs` 激活，不在 Git 或日志中记录激活码。
 
@@ -104,8 +108,9 @@ worker 每次只发布当前 `origin/main`：先跑主平台与访客端检查�
 export DOCKER_HOST="$APP_DOCKER_HOST"
 export APP_VERSION="<previous-40-character-sha>"
 export DEPLOY_QUEUE_DIR SECRETS_DIR PLATFORM_DATA_DIR
-export PLATFORM_HOST_PORT VISITOR_HOST_PORT WEBHOOK_HOST_PORT
-docker compose -f "releases/$APP_VERSION/source/compose.production.yaml" up -d --no-build platform visitor webhook
+export GATEWAY_HOST_PORT PLATFORM_HOST_PORT VISITOR_HOST_PORT WEBHOOK_HOST_PORT
+export VISITOR_HOSTNAME STAFF_HOSTNAME DEPLOY_HOSTNAME
+docker compose -f "releases/$APP_VERSION/source/compose.production.yaml" up -d --no-build gateway platform visitor webhook
 ```
 
 如果数据库迁移不向后兼容，不要直接启动旧镜像。先停止平台容器，校验对应

@@ -1,6 +1,41 @@
 name: chencheng-ai-expo-three-portals
 
 services:
+  gateway:
+    image: chencheng-ai-expo-gateway:${APP_VERSION:?APP_VERSION must be a full Git commit SHA}
+    build:
+      context: ./deploy/gateway
+      dockerfile: Dockerfile
+      network: host
+      args:
+        APP_VERSION: ${APP_VERSION:?APP_VERSION must be a full Git commit SHA}
+    container_name: chencheng-gateway
+    restart: unless-stopped
+    init: true
+    environment:
+      GATEWAY_HOST_PORT: ${GATEWAY_HOST_PORT:-3100}
+      PLATFORM_HOST_PORT: ${PLATFORM_HOST_PORT:-3101}
+      VISITOR_HOST_PORT: ${VISITOR_HOST_PORT:-3102}
+      WEBHOOK_HOST_PORT: ${WEBHOOK_HOST_PORT:-3103}
+      VISITOR_HOSTNAME: ${VISITOR_HOSTNAME:?VISITOR_HOSTNAME is required}
+      STAFF_HOSTNAME: ${STAFF_HOSTNAME:?STAFF_HOSTNAME is required}
+      DEPLOY_HOSTNAME: ${DEPLOY_HOSTNAME:?DEPLOY_HOSTNAME is required}
+    network_mode: host
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      platform:
+        condition: service_healthy
+      visitor:
+        condition: service_healthy
+      webhook:
+        condition: service_healthy
+
   platform:
     image: chencheng-ai-expo-platform:${APP_VERSION:?APP_VERSION must be a full Git commit SHA}
     build:
@@ -16,9 +51,9 @@ services:
       - ${SECRETS_DIR:?SECRETS_DIR is required}/platform.env
     environment:
       NODE_ENV: production
-      HOST: 0.0.0.0
-      HOSTNAME: 0.0.0.0
-      PORT: ${PLATFORM_HOST_PORT:-3100}
+      HOST: 127.0.0.1
+      HOSTNAME: 127.0.0.1
+      PORT: ${PLATFORM_HOST_PORT:-3101}
       DATA_DIR: /data
       DATABASE_PATH: /data/expo-service.sqlite
     network_mode: host
@@ -50,7 +85,7 @@ services:
       - ${SECRETS_DIR:?SECRETS_DIR is required}/visitor.env
     environment:
       NODE_ENV: production
-      HOSTNAME: 0.0.0.0
+      HOSTNAME: 127.0.0.1
       PORT: ${VISITOR_HOST_PORT:-3102}
       NEXT_TELEMETRY_DISABLED: 1
     network_mode: host
@@ -78,6 +113,7 @@ services:
       - ${SECRETS_DIR:?SECRETS_DIR is required}/webhook.env
     environment:
       NODE_ENV: production
+      LISTEN_HOST: 127.0.0.1
       PORT: ${WEBHOOK_HOST_PORT:-3103}
       QUEUE_DIR: /queue
     network_mode: host

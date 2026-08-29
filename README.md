@@ -86,7 +86,7 @@ docker exec -it chencheng-web node scripts/bootstrap-admin.mjs \
 
 `compose.production.yaml` 管理主平台、访客端和安全 webhook 接收器；`compose.tunnel.yaml` 由宿主机系统 Docker 单独管理 Cloudflare Named Tunnel。这样应用发布和回滚不会重启固定域名隧道。镜像只用经过验证的完整 Git commit SHA 标记，真实密钥、tunnel 凭据和数据目录全部保存在 Git 仓库外。
 
-目标 OpenWrt 主机使用 NVMe 上的独立 Docker daemon 保存应用镜像与容器；三个服务和 tunnel 都使用 host network，主平台监听 `3100`、访客端 `3102`、webhook `3103`。首次配置、GitHub webhook 自动部署和人工回滚见 [三端生产部署、自动发布与回滚](deploy/ROLLBACK.md)。
+目标 OpenWrt 主机使用 NVMe 上的独立 Docker daemon 保存应用镜像与容器；所有公网请求只进入网关端口 `3100`，网关再按固定 hostname 分流到仅监听回环地址的主平台、访客端和 webhook。首次配置、GitHub webhook 自动部署和人工回滚见 [三端生产部署、自动发布与回滚](deploy/ROLLBACK.md)。
 
 ## 数据备份与回滚
 

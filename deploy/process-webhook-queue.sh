@@ -20,6 +20,13 @@ fi
 : "$DEPLOY_QUEUE_DIR"
 : "$SECRETS_DIR"
 : "$PLATFORM_DATA_DIR"
+: "$GATEWAY_HOST_PORT"
+: "$PLATFORM_HOST_PORT"
+: "$VISITOR_HOST_PORT"
+: "$WEBHOOK_HOST_PORT"
+: "$VISITOR_HOSTNAME"
+: "$STAFF_HOSTNAME"
+: "$DEPLOY_HOSTNAME"
 
 export DOCKER_HOST="$APP_DOCKER_HOST"
 
@@ -85,7 +92,8 @@ done
 
 export APP_VERSION="$COMMIT"
 export DEPLOY_QUEUE_DIR SECRETS_DIR PLATFORM_DATA_DIR
-export PLATFORM_HOST_PORT VISITOR_HOST_PORT WEBHOOK_HOST_PORT
+export GATEWAY_HOST_PORT PLATFORM_HOST_PORT VISITOR_HOST_PORT WEBHOOK_HOST_PORT
+export VISITOR_HOSTNAME STAFF_HOSTNAME DEPLOY_HOSTNAME
 COMPOSE_FILE="$RELEASE_DIR/compose.production.yaml"
 
 docker compose -f "$COMPOSE_FILE" config --quiet || fail "Compose configuration is invalid"
@@ -106,7 +114,7 @@ docker run --rm --network host \
   sh -lc 'bun install --frozen-lockfile && bun run lint && bun run build' \
   || fail "Visitor verification failed"
 
-docker compose -f "$COMPOSE_FILE" build platform visitor webhook || fail "Image build failed"
+docker compose -f "$COMPOSE_FILE" build gateway platform visitor webhook || fail "Image build failed"
 
 BACKUP_ID=$(date -u +%Y%m%dT%H%M%SZ)-before-$COMMIT
 BACKUP_DIR="$BACKUP_ROOT/$BACKUP_ID"
@@ -162,17 +170,17 @@ restore_previous() {
     && [ -f "$RELEASE_ROOT/$PREVIOUS_VERSION/source/compose.production.yaml" ]; then
     APP_VERSION="$PREVIOUS_VERSION" docker compose \
       -f "$RELEASE_ROOT/$PREVIOUS_VERSION/source/compose.production.yaml" \
-      up -d --no-build platform visitor webhook || true
+      up -d --no-build gateway platform visitor webhook || true
     return
   fi
 
-  docker rm -f chencheng-platform chencheng-visitor chencheng-deploy-webhook >/dev/null 2>&1 || true
+  docker rm -f chencheng-gateway chencheng-platform chencheng-visitor chencheng-deploy-webhook >/dev/null 2>&1 || true
   if [ "$LEGACY_PLATFORM_WAS_RUNNING" -eq 1 ]; then
     docker start "$LEGACY_PLATFORM_CONTAINER" >/dev/null 2>&1 || true
   fi
 }
 
-if ! docker compose -f "$COMPOSE_FILE" up -d --no-build platform visitor webhook; then
+if ! docker compose -f "$COMPOSE_FILE" up -d --no-build gateway platform visitor webhook; then
   restore_previous
   fail "Service switch failed"
 fi
@@ -194,14 +202,17 @@ wait_healthy() {
   return 1
 }
 
-if ! wait_healthy chencheng-platform || ! wait_healthy chencheng-visitor || ! wait_healthy chencheng-deploy-webhook; then
+if ! wait_healthy chencheng-gateway \
+  || ! wait_healthy chencheng-platform \
+  || ! wait_healthy chencheng-visitor \
+  || ! wait_healthy chencheng-deploy-webhook; then
   restore_previous
   fail "New release failed health checks"
 fi
 
-if ! curl --fail --silent --show-error "http://127.0.0.1:$PLATFORM_HOST_PORT/operations" >/dev/null \
-  || ! curl --fail --silent --show-error "http://127.0.0.1:$PLATFORM_HOST_PORT/exhibitor" >/dev/null \
-  || ! curl --fail --silent --show-error "http://127.0.0.1:$VISITOR_HOST_PORT/booths" >/dev/null \
+if ! curl --fail --silent --show-error -H "Host: $STAFF_HOSTNAME" "http://127.0.0.1:$GATEWAY_HOST_PORT/operations" >/dev/null \
+  || ! curl --fail --silent --show-error -H "Host: $STAFF_HOSTNAME" "http://127.0.0.1:$GATEWAY_HOST_PORT/exhibitor" >/dev/null \
+  || ! curl --fail --silent --show-error -H "Host: $VISITOR_HOSTNAME" "http://127.0.0.1:$GATEWAY_HOST_PORT/booths" >/dev/null \
   || ! curl --fail --silent --show-error "http://127.0.0.1:$WEBHOOK_HOST_PORT/healthz" >/dev/null; then
   restore_previous
   fail "Release origin checks failed"

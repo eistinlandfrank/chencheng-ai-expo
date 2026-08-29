@@ -8,6 +8,7 @@ LABEL org.opencontainers.image.title="Expo Service AI deploy webhook" \
       org.opencontainers.image.revision="${APP_VERSION}"
 
 ENV NODE_ENV=production \
+    LISTEN_HOST=127.0.0.1 \
     PORT=3000 \
     QUEUE_DIR=/queue
 

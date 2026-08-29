@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import path from 'node:path';
 
 const port = Number(process.env.PORT ?? '3000');
+const listenHost = process.env.LISTEN_HOST ?? '127.0.0.1';
 const secret = process.env.GITHUB_WEBHOOK_SECRET ?? '';
 const repository = process.env.GITHUB_REPOSITORY ?? '';
 const queueDir = process.env.QUEUE_DIR ?? '/queue';
@@ -13,6 +14,7 @@ const maxBodyBytes = 1024 * 1024;
 if (!secret || secret.length < 32) throw new Error('GITHUB_WEBHOOK_SECRET must contain at least 32 characters');
 if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) throw new Error('GITHUB_REPOSITORY must be owner/name');
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('PORT is invalid');
+if (listenHost !== '127.0.0.1' && listenHost !== '::1') throw new Error('LISTEN_HOST must be loopback');
 
 await mkdir(queueDir, { recursive: true });
 
@@ -109,4 +111,4 @@ const server = createServer(async (request, response) => {
 
 server.requestTimeout = 10_000;
 server.headersTimeout = 12_000;
-server.listen(port, '0.0.0.0');
+server.listen(port, listenHost);
