@@ -1,0 +1,67 @@
+name: Deploy GX10
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: gx10-production
+  cancel-in-progress: true
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate and notify GX10
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -Eeuo pipefail
+          endpoint="$(tr -d '\r\n' < .github/gx10-endpoint)"
+          if [[ ! "$endpoint" =~ ^https://[a-zA-Z0-9-]+\.trycloudflare\.com$ ]]; then
+            echo "Invalid GX10 endpoint" >&2
+            exit 1
+          fi
+
+          token_response="$(curl --fail --silent --show-error \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=gx10-chencheng-deploy")"
+          id_token="$(TOKEN_RESPONSE="$token_response" node -e \
+            'const value=JSON.parse(process.env.TOKEN_RESPONSE).value; if(!value) process.exit(1); process.stdout.write(value)')"
+          echo "::add-mask::$id_token"
+
+          git archive --format=tar.gz --output=source.tar.gz "$EXPECTED_SHA"
+
+          curl --fail --silent --show-error \
+            --retry 4 --retry-all-errors --retry-delay 5 \
+            -X POST \
+            -H "Authorization: Bearer $id_token" \
+            -H "Content-Type: application/gzip" \
+            -H "X-GitHub-Sha: $EXPECTED_SHA" \
+            --data-binary @source.tar.gz \
+            "$endpoint/__gx10_deploy"
+
+          for attempt in $(seq 1 60); do
+            status="$(curl --fail --silent --show-error \
+              --retry 2 --retry-all-errors --retry-delay 3 \
+              "$endpoint/__gx10_deploy/status" || true)"
+            deployed="$(STATUS="$status" node -e \
+              'try { process.stdout.write(JSON.parse(process.env.STATUS).revision || "") } catch {}')"
+            if [[ "$deployed" == "$EXPECTED_SHA" ]]; then
+              echo "GX10 is running $EXPECTED_SHA"
+              exit 0
+            fi
+            sleep 15
+          done
+
+          echo "GX10 did not report the requested revision in time" >&2
+          exit 1
