@@ -1,12 +1,14 @@
 # 单入口生产部署、自动发布与回滚
 
-生产目标是同一台 Docker/OpenWrt 主机上的一个公网入口：
+生产主机为 `192.168.100.120`（2026-09-15 从 `192.168.100.1` 迁移）。
+固定公网入口为 `https://chencheng-expo.pages.dev`，内网入口为 `http://192.168.100.120:3100`。
+Cloudflare Pages 将请求转发至同一台 Docker/OpenWrt 主机上的网关：
 
 | 入口 | Origin | 用途 |
 | --- | --- | --- |
 | Quick Tunnel 地址 | `127.0.0.1:3100` | 新观展页面、`/exhibitor`、`/operations`、`/webhooks/github` |
 
-只有网关监听对外端口 `3100`。主平台 `3101`、访客端 `3102`、webhook `3103` 只监听
+只有网关监听对外端口 `3100`。主平台 `3111`、访客端 `3112`、webhook `3113` 只监听
 `127.0.0.1`，由网关根据路径分流；两套 `/_next` 静态资源使用哈希文件名和 404 回退分配到正确应用。
 
 Cloudflare 使用目标机上已经运行并验证的 Quick Tunnel。不要在应用发布中停止、重建或
@@ -15,8 +17,10 @@ Cloudflare 使用目标机上已经运行并验证的 Quick Tunnel。不要在�
 ## 服务器目录
 
 默认根目录为 `/mnt/nvme0n1-4/apps/chencheng-ai-expo`。服务器需要 Docker、
-Docker Compose、Git、curl、tar 和 sha256sum。应用使用 NVMe 上的独立 Docker daemon；
-系统 Docker 只运行 Cloudflare tunnel，防止应用镜像占用系统 overlay。创建以下目录：
+Docker Compose、Git、curl、tar 和 sha256sum。目标机的系统 Docker 数据目录已经位于
+`/mnt/nvme0n1-4/docker-data`，应用和 tunnel 共用该 daemon，不占用系统 overlay。
+迁移归档和目标机此前的部署保存在 `/mnt/nvme0n1-4/migration-chencheng-20260915`。
+创建以下目录：
 
 ```sh
 install -d -m 0750 /mnt/nvme0n1-4/apps/chencheng-ai-expo/{backups,data,deploy-queue,deploy-state,releases,secrets,source}
@@ -24,8 +28,9 @@ chown 10001:10001 /mnt/nvme0n1-4/apps/chencheng-ai-expo/deploy-queue
 chown 10001:10001 /mnt/nvme0n1-4/apps/chencheng-ai-expo/data
 ```
 
-将 `deploy/openwrt/chencheng-dockerd.init` 安装为 `/etc/init.d/chencheng-dockerd` 并启用。
-部署环境中的 `APP_DOCKER_HOST` 指向该 daemon 的 socket；worker 不得连接系统 Docker。
+部署环境中的 `APP_DOCKER_HOST=unix:///var/run/docker.sock` 指向系统 Docker。
+本机无需安装 `chencheng-dockerd` 独立 daemon。已有其他服务占用 `3101` 和 `3102`，
+因此必须使用上面的内部端口和实际 `deploy.env`，不要直接依赖 Compose 的默认端口。
 
 将 GitHub 仓库克隆到 `source`，并保持它只跟踪 `origin/main`。复制
 `deploy/deploy.env.example` 为根目录下的 `deploy.env`，按目标服务器目录调整。
@@ -63,9 +68,12 @@ docker compose -f compose.production.yaml up -d gateway platform visitor webhook
 
 ## GitHub webhook 自动发布
 
-在 GitHub 仓库添加 push webhook：
+当前自动发布由 `.github/workflows/deploy-server.yml` 使用 GitHub OIDC 向
+`https://chencheng-expo.pages.dev/webhooks/github/actions` 发起签名身份回调。
+Pages 转发地址和部署说明的独立修改只发布入口，不触发应用重建。
+如需额外使用传统 GitHub push webhook：
 
-- Payload URL：当前已验证 Quick Tunnel 地址的 `https://<trycloudflare-host>/webhooks/github`
+- Payload URL：`https://chencheng-expo.pages.dev/webhooks/github`
 - Content type：`application/json`
 - Secret：与服务器 `webhook.env` 的 `GITHUB_WEBHOOK_SECRET` 完全一致
 - Events：只选择 push
