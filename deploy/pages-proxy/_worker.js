@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://leaving-controlled-prot-duplicate.trycloudflare.com';
+const upstreamOrigin = 'https://ham-halifax-trademarks-too.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
