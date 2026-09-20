@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://see-soviet-ddr-wonder.trycloudflare.com';
+const upstreamOrigin = 'https://suggestions-specified-wells-mattress.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
