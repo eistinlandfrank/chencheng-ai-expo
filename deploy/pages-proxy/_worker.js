@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://suggestions-specified-wells-mattress.trycloudflare.com';
+const upstreamOrigin = 'https://leaving-controlled-prot-duplicate.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
