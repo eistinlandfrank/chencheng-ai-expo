@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://tire-gaming-ministry-chain.trycloudflare.com';
+const upstreamOrigin = 'https://see-soviet-ddr-wonder.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
