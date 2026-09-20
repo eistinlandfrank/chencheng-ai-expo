@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://interpreted-champagne-tour-announcement.trycloudflare.com';
+const upstreamOrigin = 'https://backed-moss-jacob-cashiers.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
