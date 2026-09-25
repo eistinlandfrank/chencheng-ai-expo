@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://quarter-treasures-placed-revolution.trycloudflare.com';
+const upstreamOrigin = 'https://system-infant-nation-implemented.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
