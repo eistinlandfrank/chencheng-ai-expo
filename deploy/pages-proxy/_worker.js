@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://glow-happening-figured-thumbs.trycloudflare.com';
+const upstreamOrigin = 'https://gate-courtesy-retain-ant.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
