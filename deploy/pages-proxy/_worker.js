@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://indiana-forms-supposed-river.trycloudflare.com';
+const upstreamOrigin = 'https://copyrights-mice-pts-judges.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
