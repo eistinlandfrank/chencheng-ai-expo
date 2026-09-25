@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://grammar-diff-prayers-seating.trycloudflare.com';
+const upstreamOrigin = 'https://combines-image-arizona-designer.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
