@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://checklist-boating-celebs-envelope.trycloudflare.com';
+const upstreamOrigin = 'https://movements-herald-huge-harper.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
