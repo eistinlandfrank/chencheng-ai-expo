@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://yearly-modules-financial-publisher.trycloudflare.com';
+const upstreamOrigin = 'https://autumn-lemon-strengthen-reveals.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
