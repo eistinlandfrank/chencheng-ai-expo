@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://parties-safely-tracy-gordon.trycloudflare.com';
+const upstreamOrigin = 'https://individual-acids-expires-against.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
