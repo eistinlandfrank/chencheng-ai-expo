@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://nearby-promise-symptoms-psychological.trycloudflare.com';
+const upstreamOrigin = 'https://found-disabilities-filtering-deviant.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
