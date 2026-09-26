@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://found-disabilities-filtering-deviant.trycloudflare.com';
+const upstreamOrigin = 'https://america-and-southern-ppm.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
