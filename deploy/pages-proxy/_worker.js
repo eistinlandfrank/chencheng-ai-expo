@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://individual-acids-expires-against.trycloudflare.com';
+const upstreamOrigin = 'https://rose-guidelines-tin-large.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
