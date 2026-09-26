@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://rose-guidelines-tin-large.trycloudflare.com';
+const upstreamOrigin = 'https://submissions-singles-department-removal.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
