@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://meaning-michael-those-animated.trycloudflare.com';
+const upstreamOrigin = 'https://fate-rip-entertaining-exceed.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
