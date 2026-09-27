@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://consumer-fighting-marijuana-acid.trycloudflare.com';
+const upstreamOrigin = 'https://method-tenant-while-parade.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
