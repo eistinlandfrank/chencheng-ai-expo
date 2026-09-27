@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://vinyl-sorts-gentle-florists.trycloudflare.com';
+const upstreamOrigin = 'https://elements-intranet-utc-postposted.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
