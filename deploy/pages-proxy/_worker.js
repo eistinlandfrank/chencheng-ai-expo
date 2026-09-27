@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://represent-asset-generator-allen.trycloudflare.com';
+const upstreamOrigin = 'https://pay-transmit-palace-auburn.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
