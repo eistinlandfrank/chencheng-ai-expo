@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://oasis-robertson-jul-school.trycloudflare.com';
+const upstreamOrigin = 'https://ccd-navigation-tackle-greatest.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
