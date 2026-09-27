@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://rider-initiative-evident-accountability.trycloudflare.com';
+const upstreamOrigin = 'https://psp-lyrics-guild-alot.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
