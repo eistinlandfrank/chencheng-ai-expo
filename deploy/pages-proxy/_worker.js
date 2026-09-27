@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://luke-shelter-pathology-distribute.trycloudflare.com';
+const upstreamOrigin = 'https://consumer-fighting-marijuana-acid.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
