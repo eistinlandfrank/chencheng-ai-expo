@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://greetings-ink-label-folding.trycloudflare.com';
+const upstreamOrigin = 'https://represent-asset-generator-allen.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
