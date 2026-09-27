@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://psp-lyrics-guild-alot.trycloudflare.com';
+const upstreamOrigin = 'https://comfortable-campus-tuesday-export.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
