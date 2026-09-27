@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://pay-transmit-palace-auburn.trycloudflare.com';
+const upstreamOrigin = 'https://biggest-engaging-joined-tanks.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
