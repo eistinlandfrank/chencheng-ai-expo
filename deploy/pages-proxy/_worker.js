@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://submissions-singles-department-removal.trycloudflare.com';
+const upstreamOrigin = 'https://rider-initiative-evident-accountability.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
