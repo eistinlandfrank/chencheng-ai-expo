@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://brave-diploma-legislative-retired.trycloudflare.com';
+const upstreamOrigin = 'https://dogs-images-antibody-coding.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
