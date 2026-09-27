@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://dogs-images-antibody-coding.trycloudflare.com';
+const upstreamOrigin = 'https://coordinator-researcher-anchor-clarity.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
