@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://auburn-heavy-contribute-menus.trycloudflare.com';
+const upstreamOrigin = 'https://principal-perry-nancy-controllers.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
