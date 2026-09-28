@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://links-utc-reservoir-springfield.trycloudflare.com';
+const upstreamOrigin = 'https://boys-ads-robust-acquire.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
