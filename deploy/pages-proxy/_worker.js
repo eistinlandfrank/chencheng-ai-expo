@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://checks-hub-compare-pics.trycloudflare.com';
+const upstreamOrigin = 'https://tap-deaths-cartridge-sys.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
