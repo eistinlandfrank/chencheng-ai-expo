@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://tap-deaths-cartridge-sys.trycloudflare.com';
+const upstreamOrigin = 'https://reservoir-consultancy-author-telephony.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
