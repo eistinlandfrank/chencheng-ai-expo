@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://alleged-witnesses-concert-andrews.trycloudflare.com';
+const upstreamOrigin = 'https://safer-spanking-wisconsin-spare.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
