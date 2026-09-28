@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://sip-increase-aims-lets.trycloudflare.com';
+const upstreamOrigin = 'https://cedar-estimated-honey-enhanced.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
