@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://boys-ads-robust-acquire.trycloudflare.com';
+const upstreamOrigin = 'https://laptops-may-oxide-independent.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
