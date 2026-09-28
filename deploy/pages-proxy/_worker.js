@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://reservoir-consultancy-author-telephony.trycloudflare.com';
+const upstreamOrigin = 'https://partial-layers-remarks-formed.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
