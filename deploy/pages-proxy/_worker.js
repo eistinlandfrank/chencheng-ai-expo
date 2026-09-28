@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://researchers-axis-released-harper.trycloudflare.com';
+const upstreamOrigin = 'https://links-utc-reservoir-springfield.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
