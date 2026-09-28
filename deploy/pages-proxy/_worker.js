@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://partial-layers-remarks-formed.trycloudflare.com';
+const upstreamOrigin = 'https://alleged-witnesses-concert-andrews.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
