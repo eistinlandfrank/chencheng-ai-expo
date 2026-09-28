@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://accessibility-demonstration-logging-conducting.trycloudflare.com';
+const upstreamOrigin = 'https://mechanical-grain-number-ban.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
