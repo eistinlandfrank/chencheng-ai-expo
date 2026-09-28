@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://reflects-attract-safe-bubble.trycloudflare.com';
+const upstreamOrigin = 'https://tall-herald-proposals-amd.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
