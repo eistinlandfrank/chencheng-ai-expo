@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://verified-gone-harper-clothing.trycloudflare.com';
+const upstreamOrigin = 'https://reflects-attract-safe-bubble.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
