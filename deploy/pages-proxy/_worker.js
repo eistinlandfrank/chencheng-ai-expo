@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://heading-beds-ideal-late.trycloudflare.com';
+const upstreamOrigin = 'https://buyer-motherboard-opposite-applies.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
