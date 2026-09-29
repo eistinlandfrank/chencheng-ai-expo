@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://males-losses-hurricane-yale.trycloudflare.com';
+const upstreamOrigin = 'https://hampton-define-notifications-branches.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
