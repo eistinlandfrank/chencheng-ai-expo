@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://tcp-victoria-grid-wondering.trycloudflare.com';
+const upstreamOrigin = 'https://prepaid-hardware-exports-delaware.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
