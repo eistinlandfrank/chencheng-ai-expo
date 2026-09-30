@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://licenses-tell-companion-twenty.trycloudflare.com';
+const upstreamOrigin = 'https://compatible-outlined-grain-tribunal.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
