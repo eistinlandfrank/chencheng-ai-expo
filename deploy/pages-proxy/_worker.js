@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://runtime-carb-gst-deputy.trycloudflare.com';
+const upstreamOrigin = 'https://unable-overview-fellowship-models.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
