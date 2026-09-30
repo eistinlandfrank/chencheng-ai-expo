@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://texas-prospect-gzip-itself.trycloudflare.com';
+const upstreamOrigin = 'https://total-pet-edgar-buildings.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
