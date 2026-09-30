@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://compatible-outlined-grain-tribunal.trycloudflare.com';
+const upstreamOrigin = 'https://ports-sisters-copied-zen.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
