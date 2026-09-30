@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://doctors-connect-neural-band.trycloudflare.com';
+const upstreamOrigin = 'https://signals-domain-fitness-freebsd.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
