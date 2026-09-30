@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://ads-consists-continuity-publish.trycloudflare.com';
+const upstreamOrigin = 'https://africa-olympic-spatial-dna.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
