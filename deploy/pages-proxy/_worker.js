@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://customise-sauce-therapeutic-unified.trycloudflare.com';
+const upstreamOrigin = 'https://ads-consists-continuity-publish.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
