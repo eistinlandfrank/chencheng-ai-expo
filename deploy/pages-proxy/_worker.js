@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://unable-overview-fellowship-models.trycloudflare.com';
+const upstreamOrigin = 'https://governmental-largest-bouquet-hundred.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
