@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://concerning-lit-validation-colors.trycloudflare.com';
+const upstreamOrigin = 'https://edges-defendant-philips-atm.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
