@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://tied-substitute-reports-conjunction.trycloudflare.com';
+const upstreamOrigin = 'https://remedies-jill-testing-vendors.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
