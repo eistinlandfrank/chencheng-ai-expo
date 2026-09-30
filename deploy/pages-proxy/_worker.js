@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://interim-sports-dried-mounted.trycloudflare.com';
+const upstreamOrigin = 'https://divide-colorado-gsm-kernel.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
