@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://administered-nickel-meaning-alignment.trycloudflare.com';
+const upstreamOrigin = 'https://appraisal-ronald-tried-shape.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
