@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://caps-integral-spa-campbell.trycloudflare.com';
+const upstreamOrigin = 'https://tests-magnificent-notifications-foo.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
