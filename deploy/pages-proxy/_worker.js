@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://tests-magnificent-notifications-foo.trycloudflare.com';
+const upstreamOrigin = 'https://plugins-insert-ion-attachment.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
