@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://plugins-insert-ion-attachment.trycloudflare.com';
+const upstreamOrigin = 'https://completion-warnings-exp-paste.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
