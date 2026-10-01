@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://loads-connected-murray-unix.trycloudflare.com';
+const upstreamOrigin = 'https://fountain-surveillance-creation-ste.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
