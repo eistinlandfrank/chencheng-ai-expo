@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://licensed-specialty-isa-species.trycloudflare.com';
+const upstreamOrigin = 'https://cdna-headers-pace-beverly.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
