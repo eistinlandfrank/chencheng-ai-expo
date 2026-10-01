@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://diet-lite-united-frequent.trycloudflare.com';
+const upstreamOrigin = 'https://benchmark-leaf-circuits-gap.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
