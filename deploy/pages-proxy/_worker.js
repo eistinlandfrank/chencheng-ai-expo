@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://font-enter-fellow-est.trycloudflare.com';
+const upstreamOrigin = 'https://diet-lite-united-frequent.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
