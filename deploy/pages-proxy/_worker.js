@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://updates-forum-jennifer-better.trycloudflare.com';
+const upstreamOrigin = 'https://digest-put-code-awareness.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
