@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://digest-put-code-awareness.trycloudflare.com';
+const upstreamOrigin = 'https://floyd-lucas-remarkable-supervisor.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
