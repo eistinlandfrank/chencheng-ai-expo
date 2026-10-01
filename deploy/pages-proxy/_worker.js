@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://cdna-headers-pace-beverly.trycloudflare.com';
+const upstreamOrigin = 'https://endangered-calendar-pride-bizarre.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
