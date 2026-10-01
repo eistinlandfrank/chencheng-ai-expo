@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://divide-colorado-gsm-kernel.trycloudflare.com';
+const upstreamOrigin = 'https://caps-integral-spa-campbell.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
