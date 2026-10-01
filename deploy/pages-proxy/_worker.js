@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://radios-declined-plasma-beer.trycloudflare.com';
+const upstreamOrigin = 'https://systems-excuse-twist-relation.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
