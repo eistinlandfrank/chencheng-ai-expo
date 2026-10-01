@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://systems-excuse-twist-relation.trycloudflare.com';
+const upstreamOrigin = 'https://licensed-specialty-isa-species.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
