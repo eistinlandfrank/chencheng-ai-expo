@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://completion-warnings-exp-paste.trycloudflare.com';
+const upstreamOrigin = 'https://throwing-kid-kept-allen.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
