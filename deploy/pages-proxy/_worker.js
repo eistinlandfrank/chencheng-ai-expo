@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://apparatus-specific-incurred-cubic.trycloudflare.com';
+const upstreamOrigin = 'https://stay-molecular-transit-granted.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
