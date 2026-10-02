@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://collectors-vitamin-services-solving.trycloudflare.com';
+const upstreamOrigin = 'https://evaluate-occur-plans-managers.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
