@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://animated-nasa-portion-successful.trycloudflare.com';
+const upstreamOrigin = 'https://sunset-takes-fat-properly.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
