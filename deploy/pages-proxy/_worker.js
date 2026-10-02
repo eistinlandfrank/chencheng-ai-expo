@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://rooms-effects-emma-decade.trycloudflare.com';
+const upstreamOrigin = 'https://coordinate-acid-seventh-gibraltar.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
