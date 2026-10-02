@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://istanbul-cube-pushing-populations.trycloudflare.com';
+const upstreamOrigin = 'https://forwarding-belong-accommodate-satisfied.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
