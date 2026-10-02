@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://grades-pocket-allan-carmen.trycloudflare.com';
+const upstreamOrigin = 'https://wool-noticed-actions-attributes.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
