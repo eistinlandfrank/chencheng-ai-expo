@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://naples-eric-high-advertisement.trycloudflare.com';
+const upstreamOrigin = 'https://theorem-providence-identify-libraries.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
