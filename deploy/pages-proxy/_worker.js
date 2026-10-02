@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://wool-noticed-actions-attributes.trycloudflare.com';
+const upstreamOrigin = 'https://indiana-telecharger-require-iii.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
