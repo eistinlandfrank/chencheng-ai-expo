@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://evaluate-occur-plans-managers.trycloudflare.com';
+const upstreamOrigin = 'https://animated-nasa-portion-successful.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
