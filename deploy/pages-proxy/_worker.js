@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://category-declaration-essay-utils.trycloudflare.com';
+const upstreamOrigin = 'https://deferred-actors-reaching-latin.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
