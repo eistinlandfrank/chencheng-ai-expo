@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://notre-league-comparison-anime.trycloudflare.com';
+const upstreamOrigin = 'https://category-declaration-essay-utils.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
