@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://corpus-alleged-montreal-monte.trycloudflare.com';
+const upstreamOrigin = 'https://inherited-indicate-paper-router.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
