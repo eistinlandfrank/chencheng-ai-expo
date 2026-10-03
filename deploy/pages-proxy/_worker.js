@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://nationally-biographies-minutes-paperbacks.trycloudflare.com';
+const upstreamOrigin = 'https://tex-january-wanna-minimum.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
