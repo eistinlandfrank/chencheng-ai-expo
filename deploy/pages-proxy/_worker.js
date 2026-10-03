@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://widescreen-books-association-cache.trycloudflare.com';
+const upstreamOrigin = 'https://puzzle-dome-utility-aggregate.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
