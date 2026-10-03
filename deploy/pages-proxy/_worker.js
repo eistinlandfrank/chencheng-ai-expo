@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://puzzle-dome-utility-aggregate.trycloudflare.com';
+const upstreamOrigin = 'https://establishing-alignment-henry-livecam.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
