@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://lens-glory-page-disposition.trycloudflare.com';
+const upstreamOrigin = 'https://screen-animated-part-foods.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
