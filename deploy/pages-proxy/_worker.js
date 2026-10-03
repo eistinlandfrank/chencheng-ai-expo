@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://subaru-jacksonville-visitor-ftp.trycloudflare.com';
+const upstreamOrigin = 'https://pierce-convenient-earned-thru.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
