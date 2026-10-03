@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://institution-suitable-logos-posts.trycloudflare.com';
+const upstreamOrigin = 'https://notre-league-comparison-anime.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
