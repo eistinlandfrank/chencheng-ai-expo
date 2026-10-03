@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://proprietary-explorer-cook-town.trycloudflare.com';
+const upstreamOrigin = 'https://came-experts-jewel-scientists.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
