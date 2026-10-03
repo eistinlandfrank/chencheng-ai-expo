@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://inherited-indicate-paper-router.trycloudflare.com';
+const upstreamOrigin = 'https://widescreen-books-association-cache.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
