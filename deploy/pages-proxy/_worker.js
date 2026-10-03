@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://hit-evaluations-string-military.trycloudflare.com';
+const upstreamOrigin = 'https://dude-complete-ranges-cache.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
