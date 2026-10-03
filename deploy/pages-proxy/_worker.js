@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://valued-serum-penn-link.trycloudflare.com';
+const upstreamOrigin = 'https://proprietary-explorer-cook-town.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
