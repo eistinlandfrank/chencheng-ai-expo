@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://deferred-actors-reaching-latin.trycloudflare.com';
+const upstreamOrigin = 'https://hit-evaluations-string-military.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
