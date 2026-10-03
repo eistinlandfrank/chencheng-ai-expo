@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://app-text-lynn-mail.trycloudflare.com';
+const upstreamOrigin = 'https://institution-suitable-logos-posts.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
