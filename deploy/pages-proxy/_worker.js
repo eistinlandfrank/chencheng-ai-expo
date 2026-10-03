@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://paxil-newman-judy-rebel.trycloudflare.com';
+const upstreamOrigin = 'https://lens-glory-page-disposition.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
