@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://hunter-interpreted-colored-sleeping.trycloudflare.com';
+const upstreamOrigin = 'https://acquisitions-arguments-brochure-kenny.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
