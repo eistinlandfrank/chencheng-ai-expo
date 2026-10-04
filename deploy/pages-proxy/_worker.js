@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://transmitted-cheaper-highlight-bronze.trycloudflare.com';
+const upstreamOrigin = 'https://lock-institute-horizon-namespace.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
