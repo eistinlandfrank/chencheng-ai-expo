@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://softball-mental-milan-publisher.trycloudflare.com';
+const upstreamOrigin = 'https://configuring-everyone-usr-advocate.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
