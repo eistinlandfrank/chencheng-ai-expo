@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://objects-tulsa-gmt-reliability.trycloudflare.com';
+const upstreamOrigin = 'https://caps-license-mumbai-block.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
