@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://vancouver-camcorder-controversial-armor.trycloudflare.com';
+const upstreamOrigin = 'https://parallel-ocean-fleece-programmes.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
