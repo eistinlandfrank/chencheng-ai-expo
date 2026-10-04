@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://zoning-math-stranger-openings.trycloudflare.com';
+const upstreamOrigin = 'https://buyer-gis-assume-became.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
