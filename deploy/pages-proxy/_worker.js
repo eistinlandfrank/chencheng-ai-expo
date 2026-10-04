@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://postage-plot-desire-extensive.trycloudflare.com';
+const upstreamOrigin = 'https://medal-americas-prairie-finite.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
