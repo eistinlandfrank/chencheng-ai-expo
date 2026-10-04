@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://medal-americas-prairie-finite.trycloudflare.com';
+const upstreamOrigin = 'https://created-forest-decisions-kodak.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
