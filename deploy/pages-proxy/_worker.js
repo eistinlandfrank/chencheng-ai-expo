@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://earned-tractor-michelle-she.trycloudflare.com';
+const upstreamOrigin = 'https://robinson-standard-suddenly-thriller.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
