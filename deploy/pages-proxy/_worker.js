@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://textbook-anywhere-about-aruba.trycloudflare.com';
+const upstreamOrigin = 'https://exclusion-bulletin-predict-isle.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
