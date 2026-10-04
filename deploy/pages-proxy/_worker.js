@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://founder-mainland-monroe-broadband.trycloudflare.com';
+const upstreamOrigin = 'https://smallest-travels-luck-simplified.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
