@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://created-forest-decisions-kodak.trycloudflare.com';
+const upstreamOrigin = 'https://oops-segment-russell-fleet.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
