@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://prophet-inquiries-base-regression.trycloudflare.com';
+const upstreamOrigin = 'https://manner-carey-retirement-always.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
