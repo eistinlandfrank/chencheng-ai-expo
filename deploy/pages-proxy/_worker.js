@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://films-finds-looking-lunch.trycloudflare.com';
+const upstreamOrigin = 'https://formerly-craft-extent-manga.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
