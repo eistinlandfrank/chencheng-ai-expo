@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://jar-sol-mug-electrical.trycloudflare.com';
+const upstreamOrigin = 'https://wave-src-sessions-bag.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
