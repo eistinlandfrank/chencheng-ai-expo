@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://buyer-gis-assume-became.trycloudflare.com';
+const upstreamOrigin = 'https://latex-instrument-apparel-benjamin.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
