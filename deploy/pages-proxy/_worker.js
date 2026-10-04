@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://mason-vocal-hide-success.trycloudflare.com';
+const upstreamOrigin = 'https://enjoyed-farmer-priorities-chip.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
