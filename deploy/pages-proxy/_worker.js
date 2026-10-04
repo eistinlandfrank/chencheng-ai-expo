@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://caps-license-mumbai-block.trycloudflare.com';
+const upstreamOrigin = 'https://mason-vocal-hide-success.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
