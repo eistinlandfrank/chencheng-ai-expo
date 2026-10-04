@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://configuring-everyone-usr-advocate.trycloudflare.com';
+const upstreamOrigin = 'https://locked-increases-opens-inline.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
