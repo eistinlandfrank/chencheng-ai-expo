@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://ripe-rated-conducting-grams.trycloudflare.com';
+const upstreamOrigin = 'https://softball-mental-milan-publisher.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
