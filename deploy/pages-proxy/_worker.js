@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://operate-warning-achieve-brandon.trycloudflare.com';
+const upstreamOrigin = 'https://objects-tulsa-gmt-reliability.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
