@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://python-plot-burst-aye.trycloudflare.com';
+const upstreamOrigin = 'https://module-inner-abc-length.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
