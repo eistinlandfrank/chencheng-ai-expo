@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://own-independent-sellers-stud.trycloudflare.com';
+const upstreamOrigin = 'https://cottages-element-succeed-yield.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
