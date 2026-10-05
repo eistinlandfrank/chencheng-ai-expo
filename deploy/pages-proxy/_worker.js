@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://cottages-element-succeed-yield.trycloudflare.com';
+const upstreamOrigin = 'https://valued-findlaw-alot-meets.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
