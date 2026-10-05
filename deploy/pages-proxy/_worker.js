@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://recognize-limitations-phenomenon-country.trycloudflare.com';
+const upstreamOrigin = 'https://scale-fees-holly-jets.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
