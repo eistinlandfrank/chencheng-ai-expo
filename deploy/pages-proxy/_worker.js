@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://davis-gather-todd-gourmet.trycloudflare.com';
+const upstreamOrigin = 'https://effects-along-auction-tramadol.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
