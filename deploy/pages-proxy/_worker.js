@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://remain-accountability-vcr-vessels.trycloudflare.com';
+const upstreamOrigin = 'https://cross-enabled-liked-demonstrates.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
