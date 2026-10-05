@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://nelson-signs-heat-arm.trycloudflare.com';
+const upstreamOrigin = 'https://clone-statistical-locate-quotations.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
