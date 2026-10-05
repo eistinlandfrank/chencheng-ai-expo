@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://characteristic-decent-mission-exclusion.trycloudflare.com';
+const upstreamOrigin = 'https://nelson-signs-heat-arm.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
