@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://william-arbitration-spears-angeles.trycloudflare.com';
+const upstreamOrigin = 'https://thesaurus-sydney-earl-principles.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
