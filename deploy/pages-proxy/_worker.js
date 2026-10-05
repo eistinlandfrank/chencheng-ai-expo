@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://may-table-establishment-tire.trycloudflare.com';
+const upstreamOrigin = 'https://objects-transmitted-rejected-predicted.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
