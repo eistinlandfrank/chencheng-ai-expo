@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://trustees-table-drew-lottery.trycloudflare.com';
+const upstreamOrigin = 'https://belle-institutes-strikes-apt.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
