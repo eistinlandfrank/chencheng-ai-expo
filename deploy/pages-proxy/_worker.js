@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://agree-weather-absolutely-overall.trycloudflare.com';
+const upstreamOrigin = 'https://unsigned-dicke-tools-tries.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
