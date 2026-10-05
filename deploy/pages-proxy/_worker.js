@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://dealing-africa-icon-becomes.trycloudflare.com';
+const upstreamOrigin = 'https://civilian-concentrate-preceding-lakes.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
