@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://belle-institutes-strikes-apt.trycloudflare.com';
+const upstreamOrigin = 'https://reached-travel-ruling-electrical.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
