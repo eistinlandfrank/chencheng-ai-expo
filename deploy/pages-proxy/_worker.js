@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://achievement-enough-sympathy-solid.trycloudflare.com';
+const upstreamOrigin = 'https://manual-databases-automobiles-optimize.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
