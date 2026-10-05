@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://rings-gave-oriented-hitting.trycloudflare.com';
+const upstreamOrigin = 'https://son-after-preference-animation.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
