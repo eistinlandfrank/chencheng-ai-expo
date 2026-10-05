@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://cross-enabled-liked-demonstrates.trycloudflare.com';
+const upstreamOrigin = 'https://davis-gather-todd-gourmet.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
