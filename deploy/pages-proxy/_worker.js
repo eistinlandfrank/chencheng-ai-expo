@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://thesaurus-sydney-earl-principles.trycloudflare.com';
+const upstreamOrigin = 'https://python-plot-burst-aye.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
