@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://clone-statistical-locate-quotations.trycloudflare.com';
+const upstreamOrigin = 'https://own-independent-sellers-stud.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
