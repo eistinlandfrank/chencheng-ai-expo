@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://son-after-preference-animation.trycloudflare.com';
+const upstreamOrigin = 'https://trustees-table-drew-lottery.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
