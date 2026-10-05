@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://objects-transmitted-rejected-predicted.trycloudflare.com';
+const upstreamOrigin = 'https://characteristic-decent-mission-exclusion.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
