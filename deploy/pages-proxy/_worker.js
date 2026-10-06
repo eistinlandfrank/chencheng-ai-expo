@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://removable-echo-acc-janet.trycloudflare.com';
+const upstreamOrigin = 'https://skip-teacher-analysts-oaks.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
