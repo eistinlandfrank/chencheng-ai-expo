@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://efficiency-bottom-expenses-brochure.trycloudflare.com';
+const upstreamOrigin = 'https://base-pushed-label-early.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
