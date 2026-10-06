@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://viewers-grows-lasting-agent.trycloudflare.com';
+const upstreamOrigin = 'https://ties-rogers-ranked-ids.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
