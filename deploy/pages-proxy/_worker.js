@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://crest-molecules-earnings-communist.trycloudflare.com';
+const upstreamOrigin = 'https://arc-highlight-duty-showed.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
