@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://facing-fuel-academy-grants.trycloudflare.com';
+const upstreamOrigin = 'https://crest-molecules-earnings-communist.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
