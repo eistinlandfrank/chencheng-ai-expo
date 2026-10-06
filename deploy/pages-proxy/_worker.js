@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://vintage-statements-underground-chain.trycloudflare.com';
+const upstreamOrigin = 'https://bryan-believed-usc-tide.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
