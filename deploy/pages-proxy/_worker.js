@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://vast-sees-spray-homepage.trycloudflare.com';
+const upstreamOrigin = 'https://treatments-combo-motor-sleeve.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
