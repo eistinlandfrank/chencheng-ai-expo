@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://achievement-virtually-namespace-pound.trycloudflare.com';
+const upstreamOrigin = 'https://madrid-fired-birthday-batteries.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
