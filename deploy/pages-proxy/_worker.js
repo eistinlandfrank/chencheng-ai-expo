@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://territory-carrying-attach-adipex.trycloudflare.com';
+const upstreamOrigin = 'https://connection-duck-initiated-badge.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
