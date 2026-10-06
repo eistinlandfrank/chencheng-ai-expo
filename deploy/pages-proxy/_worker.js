@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://mine-screens-certificates-medication.trycloudflare.com';
+const upstreamOrigin = 'https://plasma-prescribed-detect-italic.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
