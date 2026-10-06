@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://connection-duck-initiated-badge.trycloudflare.com';
+const upstreamOrigin = 'https://mine-screens-certificates-medication.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
