@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://atomic-inflation-workshop-definitely.trycloudflare.com';
+const upstreamOrigin = 'https://bass-replied-individuals-postings.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
