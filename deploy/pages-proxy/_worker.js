@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://base-pushed-label-early.trycloudflare.com';
+const upstreamOrigin = 'https://miracle-reef-beneficial-html.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
