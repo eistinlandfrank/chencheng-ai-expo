@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://damaged-garmin-puts-src.trycloudflare.com';
+const upstreamOrigin = 'https://myers-designs-matt-changelog.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
