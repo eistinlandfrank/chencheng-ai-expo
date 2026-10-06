@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://fork-actually-kent-tractor.trycloudflare.com';
+const upstreamOrigin = 'https://damaged-garmin-puts-src.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
