@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://treatments-combo-motor-sleeve.trycloudflare.com';
+const upstreamOrigin = 'https://viewers-grows-lasting-agent.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
