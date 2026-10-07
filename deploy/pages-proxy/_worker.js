@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://stretch-tin-sources-improved.trycloudflare.com';
+const upstreamOrigin = 'https://honest-pathology-deeply-heading.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
