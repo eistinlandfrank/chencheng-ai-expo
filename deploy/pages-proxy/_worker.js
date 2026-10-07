@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://ranch-saved-projector-collaborative.trycloudflare.com';
+const upstreamOrigin = 'https://scales-audience-successfully-apparatus.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
