@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://paper-where-maximum-depot.trycloudflare.com';
+const upstreamOrigin = 'https://numbers-between-slide-aside.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
