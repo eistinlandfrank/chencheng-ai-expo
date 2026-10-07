@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://era-phone-colored-turbo.trycloudflare.com';
+const upstreamOrigin = 'https://paper-where-maximum-depot.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
