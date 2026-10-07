@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://warner-slowly-identifies-gospel.trycloudflare.com';
+const upstreamOrigin = 'https://hist-performing-continued-housewares.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
