@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://download-produced-purchasing-frontpage.trycloudflare.com';
+const upstreamOrigin = 'https://stretch-tin-sources-improved.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
