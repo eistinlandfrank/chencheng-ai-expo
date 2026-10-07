@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://numbers-between-slide-aside.trycloudflare.com';
+const upstreamOrigin = 'https://benefit-renaissance-initially-flags.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
