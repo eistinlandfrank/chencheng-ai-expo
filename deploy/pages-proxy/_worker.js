@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://dependent-managing-reseller-joined.trycloudflare.com';
+const upstreamOrigin = 'https://tan-summary-topics-outside.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
