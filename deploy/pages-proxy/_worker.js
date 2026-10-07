@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://convenience-gis-sig-regions.trycloudflare.com';
+const upstreamOrigin = 'https://ranch-saved-projector-collaborative.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
