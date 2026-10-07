@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://scales-audience-successfully-apparatus.trycloudflare.com';
+const upstreamOrigin = 'https://warner-slowly-identifies-gospel.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
