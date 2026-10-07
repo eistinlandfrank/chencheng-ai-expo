@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://condos-pierce-die-inflation.trycloudflare.com';
+const upstreamOrigin = 'https://aruba-allowing-speakers-pioneer.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
