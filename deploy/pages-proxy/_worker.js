@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://aruba-allowing-speakers-pioneer.trycloudflare.com';
+const upstreamOrigin = 'https://convenience-gis-sig-regions.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
