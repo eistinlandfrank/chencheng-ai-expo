@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://commitment-stereo-spoken-vitamins.trycloudflare.com';
+const upstreamOrigin = 'https://davis-limousines-qualified-theories.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
