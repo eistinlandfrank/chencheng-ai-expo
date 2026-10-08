@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://michael-songs-sociology-reforms.trycloudflare.com';
+const upstreamOrigin = 'https://sister-displaying-tions-bright.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
