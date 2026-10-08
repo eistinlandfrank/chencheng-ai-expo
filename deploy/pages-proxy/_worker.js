@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://boxing-isolation-inquire-showed.trycloudflare.com';
+const upstreamOrigin = 'https://purchased-direction-concentrations-understand.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
