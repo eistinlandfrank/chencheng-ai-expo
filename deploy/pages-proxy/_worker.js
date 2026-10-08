@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://extended-lowest-obtaining-imaging.trycloudflare.com';
+const upstreamOrigin = 'https://posts-governments-boulevard-intelligence.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
