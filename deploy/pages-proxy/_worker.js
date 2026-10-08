@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://arguments-voltage-resolve-cylinder.trycloudflare.com';
+const upstreamOrigin = 'https://ware-collins-media-cinema.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
