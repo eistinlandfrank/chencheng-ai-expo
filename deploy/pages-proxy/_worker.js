@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://registered-sharp-blvd-tablet.trycloudflare.com';
+const upstreamOrigin = 'https://casting-shaw-omissions-nav.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
