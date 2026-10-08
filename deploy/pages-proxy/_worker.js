@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://referral-problems-bloggers-ranks.trycloudflare.com';
+const upstreamOrigin = 'https://highways-source-perhaps-hunter.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
