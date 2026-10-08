@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://bringing-albany-incredible-taylor.trycloudflare.com';
+const upstreamOrigin = 'https://theme-restaurant-lanes-reseller.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
