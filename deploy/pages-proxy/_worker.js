@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://needs-apparent-repeat-outdoor.trycloudflare.com';
+const upstreamOrigin = 'https://transmission-jewel-rainbow-properties.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
