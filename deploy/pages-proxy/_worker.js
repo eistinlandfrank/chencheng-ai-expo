@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://kent-genre-boulevard-satellite.trycloudflare.com';
+const upstreamOrigin = 'https://pointer-polyphonic-photography-targets.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
