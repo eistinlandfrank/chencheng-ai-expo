@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://theme-restaurant-lanes-reseller.trycloudflare.com';
+const upstreamOrigin = 'https://tricks-printable-feeding-drill.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
