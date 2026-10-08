@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://injection-blvd-yourself-journal.trycloudflare.com';
+const upstreamOrigin = 'https://artificial-dow-firewire-invoice.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
