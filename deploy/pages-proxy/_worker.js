@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://checking-int-accompanied-extras.trycloudflare.com';
+const upstreamOrigin = 'https://investigation-foam-builders-engineering.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
