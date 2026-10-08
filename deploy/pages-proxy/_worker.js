@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://evidence-incurred-duck-royalty.trycloudflare.com';
+const upstreamOrigin = 'https://strand-low-alerts-productions.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
