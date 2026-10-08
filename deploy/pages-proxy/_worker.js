@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://bonus-chronic-coordinator-lobby.trycloudflare.com';
+const upstreamOrigin = 'https://charging-convenience-flood-statements.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
