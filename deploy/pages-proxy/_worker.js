@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://discovered-along-dome-strategies.trycloudflare.com';
+const upstreamOrigin = 'https://narrative-bathroom-generated-itunes.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
