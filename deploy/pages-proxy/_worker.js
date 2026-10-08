@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://artificial-dow-firewire-invoice.trycloudflare.com';
+const upstreamOrigin = 'https://arguments-voltage-resolve-cylinder.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
