@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://longitude-cholesterol-immune-trials.trycloudflare.com';
+const upstreamOrigin = 'https://boxing-isolation-inquire-showed.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
