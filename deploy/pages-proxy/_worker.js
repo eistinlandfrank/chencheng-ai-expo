@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://approx-enhancing-sheer-ministers.trycloudflare.com';
+const upstreamOrigin = 'https://impose-circle-voluntary-views.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
