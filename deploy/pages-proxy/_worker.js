@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://intl-instant-asset-possibilities.trycloudflare.com';
+const upstreamOrigin = 'https://kent-genre-boulevard-satellite.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
