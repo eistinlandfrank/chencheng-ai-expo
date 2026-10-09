@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://trembl-outreach-began-random.trycloudflare.com';
+const upstreamOrigin = 'https://headline-mph-paths-zoloft.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
