@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://indices-mobility-wall-prove.trycloudflare.com';
+const upstreamOrigin = 'https://tax-assessments-yrs-visibility.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
