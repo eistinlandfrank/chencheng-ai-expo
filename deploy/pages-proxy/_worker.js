@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://geographic-valentine-prime-tries.trycloudflare.com';
+const upstreamOrigin = 'https://oldest-jokes-encouraged-prayers.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
