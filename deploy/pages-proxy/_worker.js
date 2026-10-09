@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://stood-deutschland-reid-enforcement.trycloudflare.com';
+const upstreamOrigin = 'https://min-robin-extend-expanded.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
