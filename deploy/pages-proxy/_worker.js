@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://wright-specifics-previous-shopping.trycloudflare.com';
+const upstreamOrigin = 'https://routing-fixtures-opened-cst.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
