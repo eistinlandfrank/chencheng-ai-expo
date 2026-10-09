@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://queensland-spiritual-jill-prev.trycloudflare.com';
+const upstreamOrigin = 'https://wright-specifics-previous-shopping.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
