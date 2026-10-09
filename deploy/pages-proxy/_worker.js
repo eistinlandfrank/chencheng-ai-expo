@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://compliant-doubt-glossary-creator.trycloudflare.com';
+const upstreamOrigin = 'https://updating-delivering-evaluate-convergence.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
