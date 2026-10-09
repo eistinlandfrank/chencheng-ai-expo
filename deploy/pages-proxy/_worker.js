@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://hammer-survive-registration-random.trycloudflare.com';
+const upstreamOrigin = 'https://ranks-bon-questions-integration.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
