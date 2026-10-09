@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://public-licensed-sampling-lender.trycloudflare.com';
+const upstreamOrigin = 'https://pan-advertisements-incl-percentage.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
