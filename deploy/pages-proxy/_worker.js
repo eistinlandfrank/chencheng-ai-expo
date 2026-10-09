@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://organized-believe-paper-paintball.trycloudflare.com';
+const upstreamOrigin = 'https://geographic-valentine-prime-tries.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
