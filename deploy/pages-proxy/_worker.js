@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://sources-bool-bee-avoid.trycloudflare.com';
+const upstreamOrigin = 'https://projector-spokesman-donors-ruby.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
