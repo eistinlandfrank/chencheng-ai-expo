@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://updating-delivering-evaluate-convergence.trycloudflare.com';
+const upstreamOrigin = 'https://public-licensed-sampling-lender.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
