@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://slides-firewall-method-longer.trycloudflare.com';
+const upstreamOrigin = 'https://hammer-survive-registration-random.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
