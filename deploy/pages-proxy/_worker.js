@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://treated-defining-evanescence-africa.trycloudflare.com';
+const upstreamOrigin = 'https://manga-bingo-copies-repair.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
