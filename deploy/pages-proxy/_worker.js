@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://davidson-vacancies-facilitate-poem.trycloudflare.com';
+const upstreamOrigin = 'https://compliant-doubt-glossary-creator.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
