@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://ranks-bon-questions-integration.trycloudflare.com';
+const upstreamOrigin = 'https://trembl-outreach-began-random.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
