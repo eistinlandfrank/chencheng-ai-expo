@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://pan-advertisements-incl-percentage.trycloudflare.com';
+const upstreamOrigin = 'https://friends-fat-quest-arrives.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
