@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://rehab-keyword-consumers-identifier.trycloudflare.com';
+const upstreamOrigin = 'https://slides-firewall-method-longer.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
