@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://rapid-controlled-mime-keen.trycloudflare.com';
+const upstreamOrigin = 'https://defines-copper-toddler-maps.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
