@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://routing-fixtures-opened-cst.trycloudflare.com';
+const upstreamOrigin = 'https://forums-faces-recommendation-munich.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
