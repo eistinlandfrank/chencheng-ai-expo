@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://defines-copper-toddler-maps.trycloudflare.com';
+const upstreamOrigin = 'https://organized-believe-paper-paintball.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
