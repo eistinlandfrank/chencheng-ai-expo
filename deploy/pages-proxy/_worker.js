@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://rand-hook-olive-pct.trycloudflare.com';
+const upstreamOrigin = 'https://mileage-secret-captured-contacting.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
