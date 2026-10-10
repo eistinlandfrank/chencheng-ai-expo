@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://builders-gas-eleven-prescription.trycloudflare.com';
+const upstreamOrigin = 'https://fed-locator-symptoms-councils.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
