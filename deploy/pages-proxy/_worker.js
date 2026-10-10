@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://blend-adjusted-elephant-marvel.trycloudflare.com';
+const upstreamOrigin = 'https://miss-cathedral-biggest-lightbox.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
