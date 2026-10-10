@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://florist-dietary-survivor-precision.trycloudflare.com';
+const upstreamOrigin = 'https://magnitude-beautiful-taxation-playlist.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
