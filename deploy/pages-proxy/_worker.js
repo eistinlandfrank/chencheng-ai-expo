@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://televisions-cuisine-homes-simulation.trycloudflare.com';
+const upstreamOrigin = 'https://sim-crop-illustrations-chest.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
