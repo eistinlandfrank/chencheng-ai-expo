@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://shaped-collected-clean-rent.trycloudflare.com';
+const upstreamOrigin = 'https://independently-resume-relationship-bin.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
