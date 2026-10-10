@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://therapeutic-moral-urge-slideshow.trycloudflare.com';
+const upstreamOrigin = 'https://minolta-formerly-bouquet-behaviour.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
