@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://mileage-secret-captured-contacting.trycloudflare.com';
+const upstreamOrigin = 'https://creates-onion-northwest-temple.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
