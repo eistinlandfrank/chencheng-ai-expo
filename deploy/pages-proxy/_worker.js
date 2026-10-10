@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://independently-resume-relationship-bin.trycloudflare.com';
+const upstreamOrigin = 'https://oldest-sources-league-came.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
