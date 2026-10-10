@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://minolta-formerly-bouquet-behaviour.trycloudflare.com';
+const upstreamOrigin = 'https://spears-warrant-candle-recovery.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
