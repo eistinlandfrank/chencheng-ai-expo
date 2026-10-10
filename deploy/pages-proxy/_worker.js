@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://hampton-invitations-basename-mandate.trycloudflare.com';
+const upstreamOrigin = 'https://extreme-translated-page-likely.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
