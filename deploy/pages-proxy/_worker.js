@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://adams-varies-determine-sticker.trycloudflare.com';
+const upstreamOrigin = 'https://accomplished-insertion-mothers-indicating.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
