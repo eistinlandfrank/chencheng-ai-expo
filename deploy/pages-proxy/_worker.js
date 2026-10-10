@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://gasoline-petition-optimum-taken.trycloudflare.com';
+const upstreamOrigin = 'https://spanking-international-conversion-evidence.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
