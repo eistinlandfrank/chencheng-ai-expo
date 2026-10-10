@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://creates-onion-northwest-temple.trycloudflare.com';
+const upstreamOrigin = 'https://vary-obvious-forgotten-buddy.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
