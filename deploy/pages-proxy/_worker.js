@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://region-portable-wholesale-seafood.trycloudflare.com';
+const upstreamOrigin = 'https://premium-ownership-adjusted-eye.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
