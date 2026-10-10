@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://miss-cathedral-biggest-lightbox.trycloudflare.com';
+const upstreamOrigin = 'https://adams-varies-determine-sticker.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
