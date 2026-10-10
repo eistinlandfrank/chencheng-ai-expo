@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://rated-shield-sbjct-divorce.trycloudflare.com';
+const upstreamOrigin = 'https://sustained-restrictions-clinical-teenage.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
