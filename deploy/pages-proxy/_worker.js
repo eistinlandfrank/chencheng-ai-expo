@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://ruling-photo-creates-separate.trycloudflare.com';
+const upstreamOrigin = 'https://beginner-village-tuner-gentle.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
