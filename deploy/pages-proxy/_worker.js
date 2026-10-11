@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://visited-analytical-ordinary-vendor.trycloudflare.com';
+const upstreamOrigin = 'https://initiated-linking-source-reviewing.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
