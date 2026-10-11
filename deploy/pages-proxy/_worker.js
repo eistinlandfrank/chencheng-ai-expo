@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://initiated-linking-source-reviewing.trycloudflare.com';
+const upstreamOrigin = 'https://turned-contracts-sms-think.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
