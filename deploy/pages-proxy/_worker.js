@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://underlying-clarity-russia-notify.trycloudflare.com';
+const upstreamOrigin = 'https://guidelines-originally-relation-dome.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
