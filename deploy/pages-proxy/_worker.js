@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://twiki-insight-nick-counties.trycloudflare.com';
+const upstreamOrigin = 'https://principles-messenger-trance-chart.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
