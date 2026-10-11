@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://away-cameron-flow-harbour.trycloudflare.com';
+const upstreamOrigin = 'https://honolulu-tones-see-anime.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
