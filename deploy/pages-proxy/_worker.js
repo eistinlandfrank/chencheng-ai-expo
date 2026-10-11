@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://tabs-eligible-nutritional-current.trycloudflare.com';
+const upstreamOrigin = 'https://cardiff-ranks-concerning-guys.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
