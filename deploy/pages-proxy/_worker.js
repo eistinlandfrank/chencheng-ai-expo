@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://pgp-arrange-vital-wall.trycloudflare.com';
+const upstreamOrigin = 'https://petroleum-instrumental-largely-accompanied.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
