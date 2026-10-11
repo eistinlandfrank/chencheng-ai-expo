@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://regards-tribal-notification-established.trycloudflare.com';
+const upstreamOrigin = 'https://away-cameron-flow-harbour.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
