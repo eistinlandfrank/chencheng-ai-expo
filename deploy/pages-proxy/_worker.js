@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://four-selections-mining-hearings.trycloudflare.com';
+const upstreamOrigin = 'https://twiki-insight-nick-counties.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
