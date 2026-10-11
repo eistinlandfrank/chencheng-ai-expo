@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://premium-ownership-adjusted-eye.trycloudflare.com';
+const upstreamOrigin = 'https://flexibility-bless-cap-recovered.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
