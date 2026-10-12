@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://andy-dietary-conflict-earnings.trycloudflare.com';
+const upstreamOrigin = 'https://diagram-dialog-intermediate-genuine.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
