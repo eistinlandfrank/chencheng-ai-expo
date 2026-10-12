@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://lucia-mil-photographic-candidate.trycloudflare.com';
+const upstreamOrigin = 'https://expenditures-antonio-branches-leave.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
