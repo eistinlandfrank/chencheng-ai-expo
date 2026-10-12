@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://boxing-legislative-them-supporters.trycloudflare.com';
+const upstreamOrigin = 'https://exports-fisher-poor-marker.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
