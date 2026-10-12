@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://alabama-diameter-responsibility-architecture.trycloudflare.com';
+const upstreamOrigin = 'https://boxing-legislative-them-supporters.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
