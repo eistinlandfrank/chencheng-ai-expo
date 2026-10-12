@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://jump-newspaper-sends-hidden.trycloudflare.com';
+const upstreamOrigin = 'https://ratings-holdem-imports-graphic.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
