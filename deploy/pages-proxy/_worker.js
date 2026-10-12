@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://cherry-affair-assembled-theories.trycloudflare.com';
+const upstreamOrigin = 'https://yeast-sunrise-platinum-folders.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
