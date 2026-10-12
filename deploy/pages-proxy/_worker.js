@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://sequence-entry-satisfaction-encountered.trycloudflare.com';
+const upstreamOrigin = 'https://reid-gates-independent-trace.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
