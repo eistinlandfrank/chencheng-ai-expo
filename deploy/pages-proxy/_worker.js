@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://communications-badly-heights-during.trycloudflare.com';
+const upstreamOrigin = 'https://dsc-fold-extract-graph.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
