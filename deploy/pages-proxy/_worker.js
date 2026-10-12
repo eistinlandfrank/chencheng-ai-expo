@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://afterwards-occasion-saved-hence.trycloudflare.com';
+const upstreamOrigin = 'https://walks-insert-plugin-rev.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
