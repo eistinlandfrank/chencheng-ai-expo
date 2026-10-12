@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://yeast-sunrise-platinum-folders.trycloudflare.com';
+const upstreamOrigin = 'https://ruled-club-nevada-poor.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
