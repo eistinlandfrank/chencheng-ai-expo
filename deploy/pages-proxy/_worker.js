@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://dsc-fold-extract-graph.trycloudflare.com';
+const upstreamOrigin = 'https://period-lenses-llp-lambda.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
