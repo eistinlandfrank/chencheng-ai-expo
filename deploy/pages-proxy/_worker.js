@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://reid-gates-independent-trace.trycloudflare.com';
+const upstreamOrigin = 'https://audio-induced-velvet-honor.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
