@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://audio-induced-velvet-honor.trycloudflare.com';
+const upstreamOrigin = 'https://float-basename-bouquet-refers.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
