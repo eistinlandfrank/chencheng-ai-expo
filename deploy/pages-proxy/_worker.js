@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://ratings-holdem-imports-graphic.trycloudflare.com';
+const upstreamOrigin = 'https://lay-skiing-fort-johnson.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
