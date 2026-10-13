@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://slots-contained-chorus-statute.trycloudflare.com';
+const upstreamOrigin = 'https://filed-threatening-pumps-mission.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
