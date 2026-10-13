@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://raise-volt-migration-score.trycloudflare.com';
+const upstreamOrigin = 'https://north-simon-reasonable-jose.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
