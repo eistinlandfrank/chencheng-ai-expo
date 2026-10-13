@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://surfing-logistics-affected-gives.trycloudflare.com';
+const upstreamOrigin = 'https://dialogue-change-authorization-proceeds.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
