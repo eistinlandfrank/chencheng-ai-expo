@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://loan-girls-gpl-whilst.trycloudflare.com';
+const upstreamOrigin = 'https://directories-distributed-pray-mime.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
