@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://mic-mount-control-ads.trycloudflare.com';
+const upstreamOrigin = 'https://euros-flowers-davidson-telling.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
