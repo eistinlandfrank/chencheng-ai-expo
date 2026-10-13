@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://directories-distributed-pray-mime.trycloudflare.com';
+const upstreamOrigin = 'https://offline-vernon-dolls-privileges.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
