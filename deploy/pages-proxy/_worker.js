@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://although-achievement-operated-differential.trycloudflare.com';
+const upstreamOrigin = 'https://compliant-arizona-lol-carlos.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
