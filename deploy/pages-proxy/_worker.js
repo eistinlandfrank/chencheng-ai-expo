@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://railroad-string-discovered-matt.trycloudflare.com';
+const upstreamOrigin = 'https://mic-mount-control-ads.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
