@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://filed-threatening-pumps-mission.trycloudflare.com';
+const upstreamOrigin = 'https://doc-flowers-blades-separation.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
