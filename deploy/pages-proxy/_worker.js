@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://works-conceptual-calibration-tracked.trycloudflare.com';
+const upstreamOrigin = 'https://weather-warnings-eternal-cute.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
