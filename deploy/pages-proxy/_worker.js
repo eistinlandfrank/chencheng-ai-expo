@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://dialogue-change-authorization-proceeds.trycloudflare.com';
+const upstreamOrigin = 'https://rrp-two-edit-mystery.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
