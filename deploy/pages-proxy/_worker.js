@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://progressive-star-entries-start.trycloudflare.com';
+const upstreamOrigin = 'https://determines-clinical-farmer-frequencies.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
