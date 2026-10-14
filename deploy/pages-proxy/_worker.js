@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://listings-infrared-sam-going.trycloudflare.com';
+const upstreamOrigin = 'https://potatoes-returned-syndication-fork.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
