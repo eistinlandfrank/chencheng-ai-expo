@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://believe-memo-listening-downloadable.trycloudflare.com';
+const upstreamOrigin = 'https://chuck-nuclear-score-pan.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
