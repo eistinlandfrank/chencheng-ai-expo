@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://belongs-exercise-associates-brakes.trycloudflare.com';
+const upstreamOrigin = 'https://progressive-star-entries-start.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
