@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://front-hook-lace-mitsubishi.trycloudflare.com';
+const upstreamOrigin = 'https://cms-guests-domain-episode.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
