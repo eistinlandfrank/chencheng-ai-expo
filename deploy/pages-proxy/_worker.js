@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://scenic-church-reply-techniques.trycloudflare.com';
+const upstreamOrigin = 'https://believe-memo-listening-downloadable.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
