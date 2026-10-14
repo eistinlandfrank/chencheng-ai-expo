@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://cms-guests-domain-episode.trycloudflare.com';
+const upstreamOrigin = 'https://foreign-addressing-legs-sustainability.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
