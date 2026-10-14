@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://social-robertson-dependent-fails.trycloudflare.com';
+const upstreamOrigin = 'https://salmon-gsm-widely-troubleshooting.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
