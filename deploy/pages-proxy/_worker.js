@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://dylan-dan-classical-elected.trycloudflare.com';
+const upstreamOrigin = 'https://consoles-children-stream-aggregate.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
