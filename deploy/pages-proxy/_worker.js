@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://located-utc-appears-adopted.trycloudflare.com';
+const upstreamOrigin = 'https://legitimate-gnu-vegetable-green.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
