@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://shift-matt-symposium-reflects.trycloudflare.com';
+const upstreamOrigin = 'https://endif-imposed-international-routing.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
