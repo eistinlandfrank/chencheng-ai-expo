@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://mailman-assistance-void-institutional.trycloudflare.com';
+const upstreamOrigin = 'https://reduces-preliminary-spencer-application.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
