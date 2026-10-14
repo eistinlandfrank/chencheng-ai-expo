@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://paris-sheets-throat-removing.trycloudflare.com';
+const upstreamOrigin = 'https://bennett-firm-obligation-horizon.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
