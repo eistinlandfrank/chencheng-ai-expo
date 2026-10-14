@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://lab-wisdom-immediately-clark.trycloudflare.com';
+const upstreamOrigin = 'https://located-utc-appears-adopted.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
