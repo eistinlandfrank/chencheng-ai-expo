@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://miles-nutrition-threshold-henry.trycloudflare.com';
+const upstreamOrigin = 'https://bon-reproduced-manufacture-across.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
