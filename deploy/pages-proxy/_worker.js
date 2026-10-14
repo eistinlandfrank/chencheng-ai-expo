@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://valentine-lambda-basis-marble.trycloudflare.com';
+const upstreamOrigin = 'https://distributions-previews-solely-aged.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
