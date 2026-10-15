@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://ribbon-less-fixes-ending.trycloudflare.com';
+const upstreamOrigin = 'https://distributors-boxed-feat-rubber.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
