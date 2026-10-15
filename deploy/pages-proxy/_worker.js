@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://evolution-drivers-due-agriculture.trycloudflare.com';
+const upstreamOrigin = 'https://termination-cup-denied-dat.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
