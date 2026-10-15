@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://rocket-meals-seafood-jpg.trycloudflare.com';
+const upstreamOrigin = 'https://packed-puts-politicians-routine.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
