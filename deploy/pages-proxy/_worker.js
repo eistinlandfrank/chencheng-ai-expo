@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://better-priorities-indication-forms.trycloudflare.com';
+const upstreamOrigin = 'https://letting-inn-session-dow.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
