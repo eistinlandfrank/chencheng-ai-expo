@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://mercury-adapted-trace-laptops.trycloudflare.com';
+const upstreamOrigin = 'https://gst-integration-committees-williams.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
