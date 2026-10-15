@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://budgets-licenses-hidden-impaired.trycloudflare.com';
+const upstreamOrigin = 'https://warcraft-older-hardware-operation.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
