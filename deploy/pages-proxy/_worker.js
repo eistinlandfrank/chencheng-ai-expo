@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://acm-summit-thriller-sender.trycloudflare.com';
+const upstreamOrigin = 'https://shoe-wins-flights-contained.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
