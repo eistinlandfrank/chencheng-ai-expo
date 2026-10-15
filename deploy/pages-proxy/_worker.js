@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://nam-brooks-league-readings.trycloudflare.com';
+const upstreamOrigin = 'https://wilderness-stolen-shape-veterinary.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
