@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://heights-aerial-imports-pitch.trycloudflare.com';
+const upstreamOrigin = 'https://evolution-drivers-due-agriculture.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
