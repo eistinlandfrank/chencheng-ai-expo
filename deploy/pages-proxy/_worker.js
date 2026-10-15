@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://framed-infrared-pump-gotten.trycloudflare.com';
+const upstreamOrigin = 'https://lights-sunglasses-bytes-participation.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
