@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://gadgets-unavailable-fold-arg.trycloudflare.com';
+const upstreamOrigin = 'https://danny-sep-serial-correspondence.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
