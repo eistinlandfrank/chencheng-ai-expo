@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://grant-physiology-sons-semester.trycloudflare.com';
+const upstreamOrigin = 'https://better-priorities-indication-forms.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
