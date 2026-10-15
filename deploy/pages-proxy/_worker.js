@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://euro-license-candy-tablets.trycloudflare.com';
+const upstreamOrigin = 'https://heights-aerial-imports-pitch.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
