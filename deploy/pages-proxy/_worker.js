@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://checkout-keyword-puzzle-treasurer.trycloudflare.com';
+const upstreamOrigin = 'https://answers-drives-questions-untitled.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
