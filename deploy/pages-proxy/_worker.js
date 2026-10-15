@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://leslie-troubleshooting-universities-visibility.trycloudflare.com';
+const upstreamOrigin = 'https://ribbon-less-fixes-ending.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
