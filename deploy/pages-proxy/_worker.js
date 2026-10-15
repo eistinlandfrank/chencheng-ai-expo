@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://has-description-shoppers-cedar.trycloudflare.com';
+const upstreamOrigin = 'https://rocket-meals-seafood-jpg.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
