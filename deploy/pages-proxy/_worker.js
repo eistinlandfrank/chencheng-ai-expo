@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://mats-completed-distributed-overcome.trycloudflare.com';
+const upstreamOrigin = 'https://enabled-fired-warming-steel.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
