@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://termination-cup-denied-dat.trycloudflare.com';
+const upstreamOrigin = 'https://acm-summit-thriller-sender.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
