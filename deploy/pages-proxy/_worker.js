@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://warcraft-older-hardware-operation.trycloudflare.com';
+const upstreamOrigin = 'https://ext-timothy-prefix-retail.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
