@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://knows-optimum-parallel-recording.trycloudflare.com';
+const upstreamOrigin = 'https://sector-missouri-email-dating.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
