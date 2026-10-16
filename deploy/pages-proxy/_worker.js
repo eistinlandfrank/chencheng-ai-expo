@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://threshold-epa-drums-continuous.trycloudflare.com';
+const upstreamOrigin = 'https://tin-topics-fuzzy-proposal.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
