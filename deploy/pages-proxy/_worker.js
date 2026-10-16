@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://railroad-bedroom-reflected-focuses.trycloudflare.com';
+const upstreamOrigin = 'https://imports-pointing-advancement-sisters.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
