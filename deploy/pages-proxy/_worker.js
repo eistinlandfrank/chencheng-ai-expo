@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://shadows-wear-analyses-council.trycloudflare.com';
+const upstreamOrigin = 'https://knows-optimum-parallel-recording.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
