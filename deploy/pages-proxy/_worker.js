@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://wagon-bee-marriage-native.trycloudflare.com';
+const upstreamOrigin = 'https://requests-involved-pollution-indicator.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
