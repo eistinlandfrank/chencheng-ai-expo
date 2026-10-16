@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://resumes-fathers-accordingly-def.trycloudflare.com';
+const upstreamOrigin = 'https://worldcat-permalink-sms-geometry.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
