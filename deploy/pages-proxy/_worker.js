@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://requests-involved-pollution-indicator.trycloudflare.com';
+const upstreamOrigin = 'https://sec-cute-alexander-stewart.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
