@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://hip-successful-jail-distances.trycloudflare.com';
+const upstreamOrigin = 'https://dealt-walker-automatic-thesis.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
