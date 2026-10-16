@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://aids-derek-tough-machine.trycloudflare.com';
+const upstreamOrigin = 'https://infectious-arts-fifteen-again.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
