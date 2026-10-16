@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://george-collins-dvds-robust.trycloudflare.com';
+const upstreamOrigin = 'https://robots-monte-manufactured-voice.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
