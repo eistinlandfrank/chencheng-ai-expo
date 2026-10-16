@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://dan-knitting-inspiration-completion.trycloudflare.com';
+const upstreamOrigin = 'https://globe-hockey-vertical-gradually.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
