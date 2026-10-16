@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://worldcat-permalink-sms-geometry.trycloudflare.com';
+const upstreamOrigin = 'https://wonder-formal-eminem-gnu.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
