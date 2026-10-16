@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://mobiles-herb-drums-premier.trycloudflare.com';
+const upstreamOrigin = 'https://threshold-epa-drums-continuous.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
