@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://mind-volt-universe-strings.trycloudflare.com';
+const upstreamOrigin = 'https://shall-remind-queries-came.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
