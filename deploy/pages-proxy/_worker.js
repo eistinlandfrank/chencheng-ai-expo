@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://governance-gnome-roommate-pixels.trycloudflare.com';
+const upstreamOrigin = 'https://organisms-analyst-violation-parker.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
