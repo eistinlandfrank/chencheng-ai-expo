@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://native-vertex-expired-respondent.trycloudflare.com';
+const upstreamOrigin = 'https://gregory-camel-muze-diary.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
