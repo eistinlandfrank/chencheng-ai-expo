@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://orlando-wilson-trades-match.trycloudflare.com';
+const upstreamOrigin = 'https://seemed-nature-smart-fifty.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
