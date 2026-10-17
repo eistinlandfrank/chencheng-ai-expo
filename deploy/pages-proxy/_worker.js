@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://miller-displayed-formats-wooden.trycloudflare.com';
+const upstreamOrigin = 'https://relevance-nut-singles-visible.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
