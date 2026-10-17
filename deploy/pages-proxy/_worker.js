@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://exec-gerald-very-migration.trycloudflare.com';
+const upstreamOrigin = 'https://illinois-greatest-songs-cause.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
