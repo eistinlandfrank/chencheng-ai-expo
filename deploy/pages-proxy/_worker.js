@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://drawn-film-hottest-interactive.trycloudflare.com';
+const upstreamOrigin = 'https://syntax-noted-endless-assembly.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
