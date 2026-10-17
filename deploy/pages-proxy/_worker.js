@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://soldiers-dont-referrals-isaac.trycloudflare.com';
+const upstreamOrigin = 'https://wear-locale-stable-harmony.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
