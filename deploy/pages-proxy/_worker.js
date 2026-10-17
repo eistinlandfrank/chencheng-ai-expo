@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://christine-auto-finding-companies.trycloudflare.com';
+const upstreamOrigin = 'https://wichita-soviet-annotation-observer.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
