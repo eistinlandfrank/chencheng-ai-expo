@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://extends-edited-soup-linking.trycloudflare.com';
+const upstreamOrigin = 'https://legend-updating-audio-got.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
