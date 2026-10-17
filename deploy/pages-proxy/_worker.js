@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://hybrid-drinking-suggest-calibration.trycloudflare.com';
+const upstreamOrigin = 'https://pharmacy-dietary-marshall-observer.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
