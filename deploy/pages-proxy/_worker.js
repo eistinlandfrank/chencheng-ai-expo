@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://webcast-vbulletin-survivors-origin.trycloudflare.com';
+const upstreamOrigin = 'https://melissa-bet-adequate-scratch.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
