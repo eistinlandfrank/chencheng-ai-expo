@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://food-glow-operate-led.trycloudflare.com';
+const upstreamOrigin = 'https://exec-gerald-very-migration.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
