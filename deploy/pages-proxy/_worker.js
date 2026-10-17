@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://rapid-castle-kennedy-processors.trycloudflare.com';
+const upstreamOrigin = 'https://drawn-film-hottest-interactive.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
