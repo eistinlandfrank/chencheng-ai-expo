@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://wichita-soviet-annotation-observer.trycloudflare.com';
+const upstreamOrigin = 'https://hydrogen-owns-runs-incidence.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
