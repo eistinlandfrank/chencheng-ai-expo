@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://routines-illustration-capture-paint.trycloudflare.com';
+const upstreamOrigin = 'https://normal-freight-innocent-documented.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
