@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://illinois-greatest-songs-cause.trycloudflare.com';
+const upstreamOrigin = 'https://extends-edited-soup-linking.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
