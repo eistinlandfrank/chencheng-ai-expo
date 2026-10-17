@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://kinase-collectors-over-responding.trycloudflare.com';
+const upstreamOrigin = 'https://webcast-vbulletin-survivors-origin.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
