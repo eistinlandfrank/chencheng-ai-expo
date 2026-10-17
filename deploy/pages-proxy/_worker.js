@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://diabetes-memorabilia-pamela-guidance.trycloudflare.com';
+const upstreamOrigin = 'https://kinase-collectors-over-responding.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
