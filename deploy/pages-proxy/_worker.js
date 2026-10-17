@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://empty-yukon-female-firmware.trycloudflare.com';
+const upstreamOrigin = 'https://helpful-genealogy-texts-mechanics.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
