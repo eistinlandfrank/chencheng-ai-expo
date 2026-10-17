@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://syntax-noted-endless-assembly.trycloudflare.com';
+const upstreamOrigin = 'https://water-rangers-kde-member.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
