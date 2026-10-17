@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://contests-achievement-questions-confidentiality.trycloudflare.com';
+const upstreamOrigin = 'https://rent-dna-supported-award.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
