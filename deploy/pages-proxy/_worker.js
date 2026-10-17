@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://burns-named-managers-publicity.trycloudflare.com';
+const upstreamOrigin = 'https://autumn-recognize-virtue-hear.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
