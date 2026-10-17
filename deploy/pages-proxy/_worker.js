@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://turning-congress-fred-analysis.trycloudflare.com';
+const upstreamOrigin = 'https://departments-inventory-discs-editors.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
