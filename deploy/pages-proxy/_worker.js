@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://sorted-dressing-reload-strengthening.trycloudflare.com';
+const upstreamOrigin = 'https://quit-endangered-backing-ignored.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
