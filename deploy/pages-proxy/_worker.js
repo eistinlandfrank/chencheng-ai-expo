@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://comfort-mask-newspapers-applicant.trycloudflare.com';
+const upstreamOrigin = 'https://tracker-controlling-like-legacy.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
