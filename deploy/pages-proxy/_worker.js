@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://milk-magic-administrator-finally.trycloudflare.com';
+const upstreamOrigin = 'https://currently-certificates-batteries-meditation.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
