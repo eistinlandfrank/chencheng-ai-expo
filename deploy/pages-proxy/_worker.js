@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://quit-endangered-backing-ignored.trycloudflare.com';
+const upstreamOrigin = 'https://adventure-calculator-carmen-cab.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
