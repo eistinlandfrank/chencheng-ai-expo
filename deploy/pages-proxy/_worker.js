@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://golden-bishop-jefferson-theater.trycloudflare.com';
+const upstreamOrigin = 'https://assists-medieval-employ-integration.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
