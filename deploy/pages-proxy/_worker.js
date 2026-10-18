@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://stickers-enjoyed-factors-gratuit.trycloudflare.com';
+const upstreamOrigin = 'https://cincinnati-mitsubishi-random-ant.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
