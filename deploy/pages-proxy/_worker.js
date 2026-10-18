@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://dos-focal-corrected-cemetery.trycloudflare.com';
+const upstreamOrigin = 'https://silence-reflects-voltage-thrown.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
