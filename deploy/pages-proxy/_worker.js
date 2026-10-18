@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://tracker-controlling-like-legacy.trycloudflare.com';
+const upstreamOrigin = 'https://recommend-olive-resources-fort.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
