@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://vault-bubble-apparel-captain.trycloudflare.com';
+const upstreamOrigin = 'https://cet-causing-sign-aruba.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
