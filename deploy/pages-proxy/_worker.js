@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://filename-saver-approaches-entitled.trycloudflare.com';
+const upstreamOrigin = 'https://reviewed-trio-sponsored-investigated.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
