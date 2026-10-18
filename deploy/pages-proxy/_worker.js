@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://vertex-creator-pharmaceuticals-nickel.trycloudflare.com';
+const upstreamOrigin = 'https://stream-casey-webshots-strings.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
