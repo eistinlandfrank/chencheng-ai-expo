@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://cet-causing-sign-aruba.trycloudflare.com';
+const upstreamOrigin = 'https://stickers-enjoyed-factors-gratuit.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
