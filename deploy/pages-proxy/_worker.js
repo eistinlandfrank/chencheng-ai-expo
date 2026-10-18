@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://craps-saver-innocent-remind.trycloudflare.com';
+const upstreamOrigin = 'https://handed-international-answer-rss.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
