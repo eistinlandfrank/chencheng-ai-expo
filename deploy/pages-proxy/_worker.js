@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://causing-twins-hopes-feeding.trycloudflare.com';
+const upstreamOrigin = 'https://kong-fotos-advertise-loaded.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
