@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://adventure-calculator-carmen-cab.trycloudflare.com';
+const upstreamOrigin = 'https://crop-brokers-urban-allocation.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
