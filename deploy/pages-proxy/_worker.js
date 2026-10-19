@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://crop-brokers-urban-allocation.trycloudflare.com';
+const upstreamOrigin = 'https://greetings-variables-timeline-despite.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
