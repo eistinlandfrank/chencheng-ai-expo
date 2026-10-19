@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://omaha-planned-minerals-bucks.trycloudflare.com';
+const upstreamOrigin = 'https://economies-tested-shown-bands.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
