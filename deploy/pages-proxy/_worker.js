@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://film-bat-casino-senators.trycloudflare.com';
+const upstreamOrigin = 'https://preferences-coastal-print-raleigh.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
