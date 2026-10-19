@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://mortality-silk-valves-carrier.trycloudflare.com';
+const upstreamOrigin = 'https://bowl-thumbnail-ensure-palm.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
