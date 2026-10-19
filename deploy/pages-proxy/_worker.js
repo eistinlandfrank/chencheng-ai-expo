@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://eur-opportunities-pat-portal.trycloudflare.com';
+const upstreamOrigin = 'https://spring-des-centres-bedford.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
