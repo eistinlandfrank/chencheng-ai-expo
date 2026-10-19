@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://pupils-dictionaries-scenic-ethics.trycloudflare.com';
+const upstreamOrigin = 'https://songs-menu-wma-syntax.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
