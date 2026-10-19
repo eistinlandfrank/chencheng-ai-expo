@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://northwest-wonderful-thehun-signatures.trycloudflare.com';
+const upstreamOrigin = 'https://actor-likely-acceptance-pipes.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
