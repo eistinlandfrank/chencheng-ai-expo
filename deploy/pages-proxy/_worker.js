@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://powell-noticed-utah-bucks.trycloudflare.com';
+const upstreamOrigin = 'https://happiness-sapphire-effectiveness-relay.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
