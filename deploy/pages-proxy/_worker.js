@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://songs-menu-wma-syntax.trycloudflare.com';
+const upstreamOrigin = 'https://aerospace-lucky-canal-hopkins.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
