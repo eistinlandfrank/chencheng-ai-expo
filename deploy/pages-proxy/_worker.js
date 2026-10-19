@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://happiness-sapphire-effectiveness-relay.trycloudflare.com';
+const upstreamOrigin = 'https://granted-assembled-drainage-chris.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
