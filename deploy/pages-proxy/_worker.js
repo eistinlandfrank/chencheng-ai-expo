@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://tubes-deployment-adaptor-veteran.trycloudflare.com';
+const upstreamOrigin = 'https://dating-grad-decrease-observations.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
