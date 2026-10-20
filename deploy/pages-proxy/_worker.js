@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://medium-anyway-notify-assign.trycloudflare.com';
+const upstreamOrigin = 'https://somewhere-command-sprint-incentives.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
