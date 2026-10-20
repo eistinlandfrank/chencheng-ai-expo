@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://framing-intervention-athens-dark.trycloudflare.com';
+const upstreamOrigin = 'https://well-integrating-clearly-should.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
