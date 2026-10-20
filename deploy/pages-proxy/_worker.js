@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://ranges-nsw-lending-hydrocodone.trycloudflare.com';
+const upstreamOrigin = 'https://constructed-seating-shelter-quick.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
