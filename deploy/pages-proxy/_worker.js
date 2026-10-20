@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://rivers-postposted-obtaining-weighted.trycloudflare.com';
+const upstreamOrigin = 'https://novels-perth-bibliography-distributor.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
