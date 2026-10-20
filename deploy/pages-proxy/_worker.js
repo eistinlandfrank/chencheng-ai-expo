@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://rapidly-arrange-zoning-searched.trycloudflare.com';
+const upstreamOrigin = 'https://medium-anyway-notify-assign.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
