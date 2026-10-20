@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://typically-carb-brave-configuring.trycloudflare.com';
+const upstreamOrigin = 'https://ranges-nsw-lending-hydrocodone.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
