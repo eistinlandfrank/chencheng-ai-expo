@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://heather-houses-vegetation-bringing.trycloudflare.com';
+const upstreamOrigin = 'https://discounted-query-resolutions-distribution.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
