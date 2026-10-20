@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://somewhere-command-sprint-incentives.trycloudflare.com';
+const upstreamOrigin = 'https://cooling-classics-strengthen-moderate.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
