@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://result-reserved-explained-tiffany.trycloudflare.com';
+const upstreamOrigin = 'https://taught-increases-rpg-maple.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
