@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://illinois-lot-revealed-crowd.trycloudflare.com';
+const upstreamOrigin = 'https://owners-frontier-install-tel.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
