@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://pray-wow-lines-consisting.trycloudflare.com';
+const upstreamOrigin = 'https://transcript-princeton-charge-entering.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
