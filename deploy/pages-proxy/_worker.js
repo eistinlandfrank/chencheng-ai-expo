@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://reduces-seemed-chan-playback.trycloudflare.com';
+const upstreamOrigin = 'https://gage-aim-dts-productivity.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
