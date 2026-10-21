@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://reliability-imagine-toe-trips.trycloudflare.com';
+const upstreamOrigin = 'https://tri-trim-framing-environment.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
