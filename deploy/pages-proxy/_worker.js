@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://nightlife-lender-minor-healthy.trycloudflare.com';
+const upstreamOrigin = 'https://pray-wow-lines-consisting.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
