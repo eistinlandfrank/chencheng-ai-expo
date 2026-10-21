@@ -1,4 +1,4 @@
-const upstreamOrigin = 'https://sampling-jvc-purse-input.trycloudflare.com';
+const upstreamOrigin = 'https://window-kate-boc-rom.trycloudflare.com';
 
 function upstreamUrlFor(request) {
   const incoming = new URL(request.url);
